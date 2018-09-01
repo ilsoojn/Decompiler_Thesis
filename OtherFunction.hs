@@ -17,22 +17,24 @@ import Text.Regex.Posix
 
 regexInit_fn, regexInit_bb, regex_fn, regex_bb, regex_block, regexEnd_fn, start_fn, start_bb::String
 regexInit_fn = "^define void @fn_(.*)\\(.*\\{"
+regexEnd_fn = "^}"
 regexInit_bb = "^bb_(.*):.*"
-regex_block = "(.*):(.*)"
+regex_block = "(.*): [^%](.*)"
 regex_fn = ".*?@fn_(.*)\\(.*\\{"
 regex_bb = ".*?%bb_(.*)\\ .*"
-regexEnd_fn = "^}"
 
 start_fn = "define void @fn_"
 start_bb = "bb_"
 
-
 regex_semi, regex_array, regex_sync, regex_pad, regex_landpad::String
-regex_semi = " = (.*):(.*)"
+regex_semi = "%(.*) : %(.*)"
 regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)"
 regex_pad = "(.*)[(.*)]"
 regex_landpad = ".*?\\{(.*)\\}(.*)"
+regex_fbpadding= "(.*)%[0-9a-zA-Z\\_\\-]*(.*)"
+regex_fb = ".*%([0-9a-zA-Z\\_\\-]*).*"
+regex_ab = ".* = %([0-9a-zA-Z\\_\\-\\+]*)"
 
 {-************** Regex **************-}
 
@@ -47,14 +49,31 @@ is_RegexMatch rgx str = bool False True (null (str =~ rgx :: [[String]]))
 
 {-************** Function and BasicBlock **************-}
 
-isFunction, isBasicBlock, isBlock :: String -> Bool
+isFunction, isBasicBlock, isBlock, isStackPtr, isFunctionEnd:: String -> Bool
 isFunction line = (not.null) $ map (head.tail) (line =~ regexInit_fn :: [[String]])
 isBasicBlock line = (not.null) $ map (head.tail) (line =~ regexInit_bb :: [[String]])
 isBlock line = (not.null) $ map (head.tail) (line =~ regex_block :: [[String]])
+isStackPtr line  = (not.null) $ map (head.tail) (line =~ ".* = .* %RSP_(.*),\\ (.*)" :: [[String]])
+isFunctionEnd line = (not.null) $ map (head.tail) (line =~ regexEnd_fn :: [[String]])
 
 getFunctionName, getBlockName :: String -> String
 getFunctionName line = "@fn_" ++ (unwords $ map (head.tail) (line =~ regexInit_fn :: [[String]]))
 getBlockName line = "%bb_" ++ (unwords  $ map (head.tail) (line =~ regexInit_bb :: [[String]]))
+
+getFrontBackPadding :: String -> (String, String)
+getFrontBackPadding s = do
+  let [front,back] = (tail.head)(s =~ regex_fbpadding :: [[String]])
+  (front,back)
+
+getFrontBackNonPadding :: String -> String
+getFrontBackNonPadding s = unwords $ map (head.tail) (s =~ regex_fb :: [[String]])
+
+{-************** Other Regex Functions **************-}
+isAequalB :: String -> Bool
+isAequalB s = (not.null) (s =~ regex_ab :: [[String]])
+
+getB :: String -> String
+getB s = unwords $ map (head.tail) (s =~ regex_ab :: [[String]])
 
 {-************** remove character or substring from String **************-}
 
@@ -95,7 +114,7 @@ popLast x = (strip $ last x, map strip $ init x)
 popFront :: String -> (String, String)
 popFront x = stripTuple ((head.words) x, (unwords.tail.words) x)
 popBack :: String -> (String, String)
-popBack x = stripTuple ((last.words) x, (unwords.tail.words) x)
+popBack x = stripTuple ((last.words) x, (unwords.init.words) x)
 
 {-************** Key and Value Pair **************-}
 
@@ -133,3 +152,62 @@ replaceWord old new string = do
       word = rmChar "," tmp
       new_word = bool tmp new (word == old)
   (new_word ++ " " ++ (replaceWord old new $ unwords otherwords))
+
+rpWord :: String -> String -> String -> String
+rpWord old new "" = ""
+rpWord old new line = do
+  let (x:xs) = words line
+      tmp = "%" ++ (getFrontBackNonPadding x)
+      --tmp = "%" ++ (filter isAlphaNum x)
+      word = bool x (replace old new x) (tmp == old)
+  strip (word ++ " " ++ (rpWord old new $ unwords xs))
+
+rp :: String -> String -> [String] -> [String]
+rp old new [] = []
+rp old new (line: content) = (rpWord old new line):(rp old new content)
+
+{-************** Variables **************-}
+
+addVariable :: String -> String -> [(String, String)] -> [(String, String)]
+addVariable v t varList = varList ++ [(v, t)]
+
+removeVariable :: String -> [(String, String)] -> [(String, String)]
+removeVariable v varList = filter (/= (v, getType v varList)) varList
+
+getType :: String -> [(String, String)] -> String
+getType v varList = bool (fromJust t) "none" (isNothing t)
+  where t = (lookup v varList)
+
+variableType :: VAR -> String
+variableType var
+  | (isVaArg var) = (argty var)
+  | (isCatchPad var) || (isCatchSwitch var) || (isCleanUpPad var) = "token"
+  | otherwise = do
+    if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
+      then (ty var)
+      else "none"
+
+detectVariable :: [String] -> String -> [(String, String)]
+detectVariable [] fname varSet = varList
+detectVariable (line:nextCont) fname varSet
+  | (isVarDeclare line fname) = do
+    let (v, (var, reg)) = statement line fname
+        newList = addVariable (fromJust v) (variableType var) varSet
+    detectVariable nextCont fname newList
+  | otherwise = detectVariable nextCont fname varSet
+
+{-************** USE(variable) **************-}
+
+usePropLine :: String -> String -> [String] -> [String]
+usePropLine old new [] = []
+usePropLine old new (x:xs)
+  | (not.null) rs = do
+    let (lpad : v : rpad :etc) = (tail.head) rs
+        new_word = bool x (lpad ++ new ++ rpad) ("%" ++ v == old)
+    (new_word : usePropLine old new xs)
+  | otherwise = (x : usePropLine old new xs)
+  where rs = (x =~ "(.*)%([0-9]*)(.*)" :: [[String]])
+
+usePropagation :: String -> String -> [String] -> [String]
+usePropagation old new [] = []
+usePropagation old new (x:xs) = ((unwords $ usePropLine old new $ words x):(usePropagation old new xs))
