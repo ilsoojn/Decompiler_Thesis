@@ -93,15 +93,54 @@ blockInfoBegin preContent (line:nextContent) = do
   if (is_RegexMatch regexInit_bb line)
     then blockInfo (preContent ++ [line]) nextContent ("bb_" ++ (get_RegexMatch regexInit_bb line)) []
     else blockInfoBegin (preContent ++ [line]) nextContent
+--
+-- functionInfo:: [String] -> [Function] -> [Function]
+-- functionInfo [] info = info
+-- functionInfo (line:content) info
+--   | (isInfixOf start_fn line) = do
+--     let fname = "fn_" ++ (get_RegexMatch regexInit_fn line)
+--     functionInfo content (info ++ [Function fname (blockInfoBegin [] content)])
+--   | (isVarDeclare line fname) = do
+--       let s = statement (strip line) fname
+--           v = fromJust (fst s)
+--           x = fst (snd s)
+--       if (isCatchSwitch x)
+--         then do
+--           addVariable v "cs"
+--
+--   | otherwise = functionInfo content info
 
-functionInfo:: [String] -> [Function] -> [Function]
-functionInfo [] info = info
-functionInfo (line:content) info = do
-  if isInfixOf start_fn line
-    then do
-      let fname = "fn_" ++ (get_RegexMatch regexInit_fn line)
-      functionInfo content (info ++ [Function fname (blockInfoBegin [] content)])
-    else functionInfo content info
+splitFunction :: [String] -> [String] -> [[String]] -> [[String]]
+splitFunction [] fline fset = fset
+splitFunction (line:content) fline fset
+  | (isFunction line) = splitFunction content [line] fset
+  | (isFunctionEnd line) = splitFunction content [] (fset ++ [fline ++ [line]])
+  | otherwise = splitFunction content (fline ++ [line]) fset
+
+
+splitFunction :: [String] -> [String] -> [(String, String)] -> [[String]] -> ([[String]], [[(String, String)]])
+splitFunction [] fname ls vs fls fvs = (fls, fvs)
+splitFunction (line:content) fname ls vs fls fvs
+  | (isFunction line) = splitFunction content (getFunctionName line) [line] [] fls fvs
+  | (isFunctionEnd line) = splitFunction content fname [] [] (fls ++ [ls ++ [line]]) (fvs ++ [vs])
+  | otherwise = do
+    if (isVarDeclare line fname)
+      then do
+        let (v, (var, reg)) = statement line fname
+            new_vs = addVariable (fromJust v) (variableType var) vs
+        splitFunction content (fline ++ [line]) new_vs fls fvs
+      else splitFunction content (fline ++ [line]) vs fls fvs
+
+{-************************************************************************
+                          Elimination & Propagation
+  *************************************************************************-}
+byFn_Elimination :: [[String]] -> [[(String, String)]] -> [[String]]
+byFn_Elimination [] [] = []
+-- byFn_Elimination (f:fs) = (propagation f "" 0 []):(byFn_Elimination fs)
+byFn_Elimination (f:fs) (v:vs) = do
+  let cont_p = (propagation f "" [])
+      --cont_t = (extensionTrim cont_p "" 0 [])
+  (elimination cont_p "" []):(byFn_Elimination fs vs)
 
 {-************************************************************************
                             BackTracking
@@ -193,13 +232,13 @@ main = do
           (tmpFile, handleTmp) <- openTempFile "." "tmpIR"
 
           let srcIR = rmReg $ (init.lines.fst) (strSplit "@main"  contentIr)
-              readyIR = nameReplacement srcIR 0 0 []
-              fInfo = functionInfo (filter (not.null) readyIR) []
-
+              readyIR = filter (not.null) $ map strip (nameReplacement srcIR 0 0 [])
+              (fset,vset) = splitFunction readyIR [] [] []
               -- storeLists = findInstr (readyIR) "" [] []
-              result = elimination (propagation readyIR "" 0 []) "" 0 []
+              -- result = elimination (propagation readyIR "" 0 []) "" 0 []
+              result = byFn_Elimination fset vset
 
-          hPutStr handleTmp $ unlines result
+          hPutStr handleTmp $ unlines (map unlines result)
           -- BEGIN EDITION
 
           -- CLOSE FILES & TERMINATE
