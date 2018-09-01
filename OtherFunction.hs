@@ -112,9 +112,9 @@ popLast :: [String] -> (String, [String])
 popLast x = (strip $ last x, map strip $ init x)
 
 popFront :: String -> (String, String)
-popFront x = stripTuple ((head.words) x, (unwords.tail.words) x)
+popFront x = (strip $ (head.words) x, strip $ (unwords.tail.words) x)
 popBack :: String -> (String, String)
-popBack x = stripTuple ((last.words) x, (unwords.init.words) x)
+popBack x = (strip $ (last.words) x, strip $ (unwords.init.words) x)
 
 {-************** Key and Value Pair **************-}
 
@@ -130,8 +130,8 @@ pairOneToOne (k:ks) (v:vs) = [(k, v)]++ (pairOneToOne ks vs)
 
 {-************** Modifing Functions **************-}
 
-strSplit' dlm str = stripTuple (strSplit dlm str)
-sBreak' dlm str = stripTuple (sBreak dlm str)
+strSplit' dlm str = (strip x, strip xs) where (x, xs) = strSplit dlm str
+sBreak' dlm str = (strip x, strip xs) where (x, xs) = sBreak dlm str
 splitOn' dlm str = map strip (splitOn dlm str)
 splitOneOf' dlm str = map strip (splitOneOf dlm str)
 
@@ -166,35 +166,6 @@ rp :: String -> String -> [String] -> [String]
 rp old new [] = []
 rp old new (line: content) = (rpWord old new line):(rp old new content)
 
-{-************** Variables **************-}
-
-addVariable :: String -> String -> [(String, String)] -> [(String, String)]
-addVariable v t varList = varList ++ [(v, t)]
-
-removeVariable :: String -> [(String, String)] -> [(String, String)]
-removeVariable v varList = filter (/= (v, getType v varList)) varList
-
-getType :: String -> [(String, String)] -> String
-getType v varList = bool (fromJust t) "none" (isNothing t)
-  where t = (lookup v varList)
-
-variableType :: VAR -> String
-variableType var
-  | (isVaArg var) = (argty var)
-  | (isCatchPad var) || (isCatchSwitch var) || (isCleanUpPad var) = "token"
-  | otherwise = do
-    if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
-      then (ty var)
-      else "none"
-
-detectVariable :: [String] -> String -> [(String, String)]
-detectVariable [] fname varSet = varList
-detectVariable (line:nextCont) fname varSet
-  | (isVarDeclare line fname) = do
-    let (v, (var, reg)) = statement line fname
-        newList = addVariable (fromJust v) (variableType var) varSet
-    detectVariable nextCont fname newList
-  | otherwise = detectVariable nextCont fname varSet
 
 {-************** USE(variable) **************-}
 

@@ -24,7 +24,7 @@ isVarDeclare line fname = (not.isFunction) line && (not.isBlock) line && (not.nu
 propagation :: [String] -> String -> [String] -> [(String, String)] -> ([String], [(String, String)])
 propagation [] fname preCont vSet = (preCont, vSet)
 propagation (line:nextCont) fname preCont vSet
-  | (nextCont == [""]) = preCont
+  | (nextCont == [""]) = (preCont, vSet)
   -- Function line
   | (isFunction line) = propagation nextCont (getFunctionName line) (preCont ++ [line]) vSet
   -- LHS line

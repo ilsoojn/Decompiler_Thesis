@@ -415,6 +415,36 @@ statement line fname = do
     then (Nothing, parseStatement lhs fname)
     else (Just lhs, parseStatement rhs fname)
 
+{-************** Variables **************-}
+
+addVariable :: String -> String -> [(String, String)] -> [(String, String)]
+addVariable v t varList = varList ++ [(v, t)]
+
+removeVariable :: String -> [(String, String)] -> [(String, String)]
+removeVariable v varList = filter (/= (v, getType v varList)) varList
+
+getType :: String -> [(String, String)] -> String
+getType v varList = bool (fromJust t) "none" (isNothing t)
+  where t = (lookup v varList)
+
+variableType :: VAR -> String
+variableType var
+  | (isVaArg var) = (argty var)
+  | (isCatchPad var) || (isCatchSwitch var) || (isCleanUpPad var) = "token"
+  | otherwise = do
+    if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
+      then (ty var)
+      else "none"
+
+-- detectVariable :: [String] -> String -> [(String, String)] -> [(String, String)]
+-- detectVariable [] fname varSet = varSet
+-- detectVariable (line:nextCont) fname varSet
+--   | (isVarDeclare line fname) = do
+--     let (v, (var, reg)) = statement line fname
+--         newList = addVariable (fromJust v) (variableType var) varSet
+--     detectVariable nextCont fname newList
+--   | otherwise = detectVariable nextCont fname varSet
+
 {-************************************************************************
                               Def and Use
   *************************************************************************-}
