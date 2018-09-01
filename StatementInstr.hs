@@ -45,7 +45,7 @@ data VAR = Undef {value::String}
           | Atomicrmw {fname::String, volatile::Bool, operation::String, ty::String, ptr::String, value::String, syncscope::Maybe String, ordering::String} -- <<
           | GetElemPtr {fname::String, inbound::Bool, ty::String, ptr::String, element::[(Bool, String, String)]}
           -- Converison
-          | Conv {op::String, ty1::String, ty2::String, value::String}
+          | Conv {op::String, ty1::String, ty::String, value::String}
           -- Other
           | Cmpi {cond::String, sym::String, ty::String, values::[String]}
           | Cmpf {cond::String, flag::Maybe String, sym::String, ty::String, values::[String]}
@@ -60,6 +60,8 @@ data VAR = Undef {value::String}
           | Other deriving (Show)
 
 data STORE = STORE {str_atomic::Bool, str_volatile::Bool, str_ty::String, str_v::[(String, VAR)], str_at::[(String, VAR)]} deriving (Show)
+
+isStore (STORE _ _ _ _ _) = True
 
 isUndef (Undef _) = True
 isUndef _ = False
@@ -112,7 +114,7 @@ isCmpxchg _ = False
 isAtomicrmw (Atomicrmw _ _ _ _ _ _ _ _) = True
 isAtomicrmw _ = False
 isGetElemPtr (GetElemPtr _ _ _ _ _) = True
-isGetElemPtr_ = False
+isGetElemPtr _ = False
 isConv (Conv _ _ _ _) = True
 isConv _ = False
 isCmpi (Cmpi _ _ _ _) = True
@@ -191,9 +193,6 @@ instructions = instructionList [("terminator", ["ret", "br", "switch", "indirect
         ("conversion", ["trunc", "zext", "sext", "fptrunc", "fpext", "fptoui", "fptosi", "uitofp", "sitofp", "ptrtoint", "inttoptr", "bitcast", "addrspacecast"]),
         ("other", ["icmp", "fcmp", "phi", "select", "call", "va_arg", "landingpad", "catchpad", "cleanuppad"])]
 
-getInstructionType :: String -> String
-getInstructionType op = fromJust $ lookup op (map swap instructions)
-
 arithmetic :: [(String, String)]
 arithmetic = [("add", "+"), ("fadd", "+"),
               ("sub", "-"), ("fsub", "-"),
@@ -219,6 +218,12 @@ condition= [("eq","=="), ("ne","!="),
             ("ord", ""), ("uno", ""),
             ("true", ""), ("false", "")
             ]
+
+getInstructionType ::  String -> String
+getInstructionType op
+  | isNothing found_op = "none"
+  | otherwise = fromJust found_op
+  where found_op = lookup op (map swap instructions)
 
 toSym ::  String -> String
 toSym op
