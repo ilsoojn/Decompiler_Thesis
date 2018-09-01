@@ -205,7 +205,8 @@ conversionStatement :: String -> VAR
 conversionStatement line = Conv conv_op ty1 ty2 r
   where (conv_op, conv_s) = popFront line
         (tmp:ty2:etc) = map strip $ splitOn' "to" conv_s
-        (ty1, r) = bool (popFront tmp) (sBreak' " <" tmp) (isInfixOf "<" tmp)
+        -- (ty1, r) = bool (popFront tmp) (sBreak' " <" tmp) (isInfixOf "<" tmp)
+        (r, ty1) = popBack tmp
 
 retStatement :: String -> VAR
 retStatement line
@@ -338,6 +339,7 @@ parseStatement line fname
         (s, [token s, normal s])
 
       "unreachable" -> (Unreachable, [])
+
       -- memory
       "load" -> do
         let s = loadStatement line fname
@@ -358,6 +360,7 @@ parseStatement line fname
       "getelementptr" -> do
         let s = getelementptrStatement line fname
         (s, [ptr s])
+
       -- other
       "icmp" -> do
         let s = compareIntStatement line
@@ -398,7 +401,9 @@ parseStatement line fname
         if (not.null) (line =~ regex_semi :: [[String]])
           then do
             let (v1:v2:etc) = (tail.head) (line =~ regex_semi :: [[String]])
-            (Declare v1 v2, [v1, v2])
+                hs = '%':v1
+                ls = '%':v2
+            (Declare hs ls, [hs, ls])
           else (Other, [])
   where op = head $ words line
         opty = getInstructionType op
@@ -416,22 +421,22 @@ statement line fname = do
 
 -- value content fname line_number recursive_list
 -- -> (line_number, (used variable info))
-findUse :: String -> [String] -> String -> Integer -> [(Integer, (VAR, [String]))] -> [(Integer, (VAR, [String]))]
-findUse v [] fname line_num uselist = uselist
-findUse v (line:nextContent) fname line_num uselist
-  | (isFunction line) = findUse v nextContent (getFunctionName line) (line_num + 1) uselist
+findUse :: String -> [String] -> String -> [(VAR, [String])] -> [(VAR, [String])]
+findUse v [] fname uselist = uselist
+findUse v (line:nextContent) fname uselist
+  | (isFunction line) = bool (uselist) (findUse v nextContent (getFunctionName line) uselist) (null "")
   | (isInfixOf v line) = do
     let (lhs, rhs) = strSplit' " = " line
         useVar = bool (parseStatement rhs fname) (parseStatement lhs fname) (null rhs)
-    findUse v nextContent fname (line_num + 1) (uselist ++ [(line_num, useVar)])
+    findUse v nextContent fname  (uselist ++ [useVar])
   -- |
-  | otherwise = findUse v nextContent fname (line_num + 1) uselist
+  | otherwise = findUse v nextContent fname  uselist
 
 {--}
 -- line #, (VAR, [Strings])
-is_useConv :: [(Integer, (VAR, [String]))] -> Bool
-is_useConv [x] = isConv ((fst.snd) x)
-is_useConv (x:xs) = isConv ((fst.snd) x) && (is_useConv xs)--(map (fst.snd) x)
+is_useConv :: [(VAR, [String])] -> Bool
+is_useConv [x] = isConv (fst x)
+is_useConv (x:xs) = isConv (fst x) && (is_useConv xs)--(map (fst.snd) x)
 
 -- findDef :: String -> Integer -> (Integer, VAR) -- line_number and Operator Type
 -- findDef cLine line_num = (line_num, parseStatement cLine)
