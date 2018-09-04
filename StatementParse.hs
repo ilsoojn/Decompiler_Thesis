@@ -14,7 +14,10 @@ import Data.Typeable
 
 import Debug.Trace
 import Text.Regex.Posix
+
 import StatementInstr
+import IsGetSet
+import Lists
 import OtherFunction
 
 {-************************************************************************
@@ -60,13 +63,13 @@ allocaStatement line fname = do
       (Alloca fname inalloca t numE align addrS)
 
 fenceStatement line fname = Fence fname syncscope ordering
-  where syncscope = bool Nothing (Just $ get_RegexMatch regex_sync line) (isInfixOf "syncscope" line)
+  where syncscope = bool Nothing (Just $ get_regexLine line regex_sync) (isInfixOf "syncscope" line)
         ordering = last $ words line
 
 cmpxchgStatement line fname = do
   let fail_ordering = (last.words) line               -- cmpxchg ... <succ_ordering> <fail_ordering>
       succ_ordering = (last.init.words) line
-      syncscope = bool Nothing (Just $ get_RegexMatch regex_sync line) (isInfixOf "syncscope" line)
+      syncscope = bool Nothing (Just $ get_regexLine line regex_sync) (isInfixOf "syncscope" line)
       weak = isInfixOf "weak" line
       volatile = isInfixOf "volatile" line
       (pInfo: cmpInfo: newInfo: etc) = splitOn' "," line
@@ -77,7 +80,7 @@ cmpxchgStatement line fname = do
 
 atomicrmwStatement line fname = do
   let ordering = (last.words) line
-      syncscope = bool Nothing (Just $ get_RegexMatch regex_sync line) (isInfixOf "syncscope" line)
+      syncscope = bool Nothing (Just $ get_regexLine line regex_sync) (isInfixOf "syncscope" line)
       volatile = isInfixOf "volatile" line
       (operation: infoLine) = bool ((tail.words) line) ((tail.tail.words) line) volatile
       (pInfo, vInfo) = strSplit' "," (unwords infoLine)
@@ -177,14 +180,14 @@ getClauses line list = do
           cty = rmChar ",;*" ty
       getClauses cline (list ++ [Catch cty cv])
     "filter" -> do
-      let tmp = get_allRegexMatch regex_array cline
+      let tmp = get_regexLine_all cline regex_array
           (cty: cv: etc) = map ("["++) (map (++"]") tmp)
       getClauses cline (list ++ [Filter cty cv])
     _ -> list
 
 landingpadStatement :: String -> VAR
 landingpadStatement line = LandingPad resultty cleanup clause
-  where (resultty:tmpLine:etc) = get_allRegexMatch regex_landpad line
+  where (resultty:tmpLine:etc) = get_regexLine_all line regex_landpad
         cleanup = isInfixOf "cleanup" tmpLine
         new_tmpLine = bool tmpLine (rmStr "cleanup" tmpLine) cleanup
         clause = getClauses new_tmpLine []
@@ -192,13 +195,13 @@ landingpadStatement line = LandingPad resultty cleanup clause
 catchpadStatement :: String -> VAR
 catchpadStatement line = do
   let tmp = unwords $ tail $ tail $ words $ line
-      (catchswitch: arg: etc) = get_allRegexMatch regex_pad tmp
+      (catchswitch: arg: etc) = get_regexLine_all tmp regex_pad
   CatchPad catchswitch arg
 
 cleanuppadStatement :: String -> VAR
 cleanuppadStatement line = do
   let tmp = unwords $ tail $ tail $ words $ line
-      (parent: arg: etc) = get_allRegexMatch regex_pad tmp
+      (parent: arg: etc) = get_regexLine_all tmp regex_pad
   CleanUpPad parent arg
 
 conversionStatement :: String -> VAR
@@ -248,7 +251,7 @@ switchStatement line = do
       (defaultInfo, otherInfo) = sBreak' "[" info              -- <intty> <value>, label <defaultdest> || [...]
       (value, label) = strSplit' "," defaultInfo  -- <intty> <value> || label <defaultdest>
       (ty, v) = popFront value                                -- <intty> || <value>                                 -- <defaultdest>
-      dstInfo = splitOn' ty (get_RegexMatch "\\[(.*)\\]" otherInfo)
+      dstInfo = splitOn' ty (get_regexLine otherInfo "\\[(.*)\\]")
       table = switchInfo dstInfo []
   Switch ty v (getLabel label) table
 
@@ -261,7 +264,7 @@ indirectbrStatement line = do
   let (op, info) = popFront line
       (addressInfo, labelInfo) = strSplit' "," info         -- <ty>* <address> || [...]
       (ty, addr) = strSplit' "*" addressInfo
-      dstInfo = splitOn' "," (get_RegexMatch "\\[(.*)\\]" labelInfo)
+      dstInfo = splitOn' "," (get_regexLine labelInfo "\\[(.*)\\]")
       labels = list_of_Label dstInfo []
   IndirBranch ty addr labels
 
@@ -398,9 +401,9 @@ parseStatement line fname
         (s, [parent s])
 
       _ -> do
-        if (not.null) (line =~ regex_semi :: [[String]])
+        if (not.null) (line =~ regex_semi2 :: [[String]])
           then do
-            let (v1:v2:etc) = (tail.head) (line =~ regex_semi :: [[String]])
+            let (v1:v2:etc) = (tail.head) (line =~ regex_semi2 :: [[String]])
                 hs = '%':v1
                 ls = '%':v2
             (Declare hs ls, [hs, ls])
@@ -439,7 +442,7 @@ variableType var
 -- detectVariable :: [String] -> String -> [(String, String)] -> [(String, String)]
 -- detectVariable [] fname varSet = varSet
 -- detectVariable (line:nextCont) fname varSet
---   | (isVarDeclare line fname) = do
+--   | (isLHS line fname) = do
 --     let (v, (var, reg)) = statement line fname
 --         newList = addVariable (fromJust v) (variableType var) varSet
 --     detectVariable nextCont fname newList

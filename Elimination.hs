@@ -18,8 +18,9 @@ import Text.Regex.Posix
 import StatementParse
 import StatementInstr
 import OtherFunction
+import IsGetSet
 
-isVarDeclare line fname = (not.isFunction) line && (not.isBlock) line && (not.null) fname && (isInfixOf " = " line)
+isLHS line fname = (not.isFunction) line && (not.isBlock) line && (not.null) fname && (isInfixOf " = " line)
 
 propagation :: [String] -> String -> [String] -> [(String, String)] -> ([String], [(String, String)])
 propagation [] fname preCont vSet = (preCont, vSet)
@@ -28,7 +29,7 @@ propagation (line:nextCont) fname preCont vSet
   -- Function line
   | (isFunction line) = propagation nextCont (getFunctionName line) (preCont ++ [line]) vSet
   -- LHS line
-  | (isVarDeclare line fname) = do
+  | (isLHS line fname) = do
 
     let x = statement (strip line) fname
         v = fromJust (fst x)
@@ -54,10 +55,9 @@ propagation (line:nextCont) fname preCont vSet
       else if (isBitwise var)
         then do
           let constInt = map round (map read (map strip $ getConstantValues reg) :: [Double])
-              (is_bit0s, is_1s) = (hasZeros constInt, hasOnes constInt)
-              is_num0s = (0 == head constInt) || (0 == last constInt)
-          case (op var, is_bit0s, is_num0s) of --, is_1s) of
-            ("and", True, False) -> do -- > 0s
+              is_bit0s = isZeros constInt
+          case (op var, is_bit0s) of --, is_1s) of
+            ("and", True) -> do -- > 0s
 
               if ((op pre_var) == "zext" && (op next_var) == "or" && next_reg == [fromJust pre_v, v])
                 then do
@@ -72,6 +72,7 @@ propagation (line:nextCont) fname preCont vSet
             -- ("or", False, True) -> ["or 1s"]    -- > 1s
             _ -> propagation nextCont fname (preCont ++ [line]) vSet
 
+        -- idiom 2 :: (ADD/SUB %RSP, N)
         else if (isBinary var && isStackPtr line && isConv next_var)
           then do
             let (rsp, idx) = (head reg, read (last reg) :: Integer)
@@ -111,7 +112,7 @@ propagation (line:nextCont) fname preCont vSet
 --       else extensionTrim nextCont fname (n + 1) (preCont ++ [line])
 --   | otherwise = extensionTrim nextCont fname (n + 1) (preCont ++ [line])
 --   where (varx, x) = statement (strip line) fname
---         var_x = isVarDeclare line fname
+--         var_x = isLHS line fname
 --         dec_x = isDeclare (fst x)
 --         strx = isNothing varx
 
@@ -119,7 +120,7 @@ elimination :: [String] -> String -> [String] -> [String]
 elimination [] fname preCont = preCont
 elimination (line : nextCont) fname preCont
   | (isFunction line) = elimination nextCont (getFunctionName line) (preCont ++ [line])
-  | (isVarDeclare line fname) = do
+  | (isLHS line fname) = do
     let x = statement (strip line) fname
         v = fromJust (fst x)
         use = findUse v nextCont fname []
