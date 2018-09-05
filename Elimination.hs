@@ -19,6 +19,7 @@ import StatementParse
 import StatementInstr
 import OtherFunction
 import IsGetSet
+import Lists
 
 isLHS line fname = (not.isFunction) line && (not.isBlock) line && (not.null) fname && (isInfixOf " = " line)
 
@@ -54,8 +55,8 @@ propagation (line:nextCont) fname preCont vSet
       -- idiom 1: OR (ZEXT a) (AND x 0s)
       else if (isBitwise var)
         then do
-          let constInt = map round (map read (map strip $ getConstantValues reg) :: [Double])
-              is_bit0s = isZeros constInt
+          let constInt = map strToInt (map strip $ getConstantValues reg)
+              is_bit0s = hasZeros constInt
           case (op var, is_bit0s) of --, is_1s) of
             ("and", True) -> do -- > 0s
 
@@ -130,7 +131,7 @@ elimination (line : nextCont) fname preCont
       else if (isAequalB line)
         then do
           let u = '%': (getB line)
-              new_nextCont = rp v u nextCont
+              new_nextCont = map (replaceLine v u str_var) nextCont
           elimination new_nextCont fname preCont
         else elimination nextCont fname (preCont ++ [line])
   | otherwise = elimination nextCont fname (preCont ++ [line])

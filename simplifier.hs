@@ -21,6 +21,7 @@ import OtherFunction
 import StatementInstr
 import StatementParse
 import Elimination
+import IsGetSet
 import Lists
 
 {-************************************************************************

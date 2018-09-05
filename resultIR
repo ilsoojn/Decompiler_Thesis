@@ -1,4 +1,4 @@
-define void @fn_0 ( %regset* noalias nocapture ) {
+define void @fn_0(%regset* noalias nocapture) {
 entry_fn_400550:
 %RBP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 9
 %RBP_init = load i64, i64* %RBP_ptr
@@ -79,8 +79,8 @@ store i64 %RDI_init, i64* %RDI
 %EDI_init = trunc i64 %RDI_init to i32
 %EDI = alloca i32
 store i32 %EDI_init, i32* %EDI
-br label %bb_0
-exit_fn_400550: ; preds = %bb_12
+br label  %bb_0
+exit_fn_400550:                                   ; preds =  %bb_12
 %14 = load i32, i32* %CtlSysEFLAGS
 store i32 %14, i32* %CtlSysEFLAGS_ptr
 %15 = load i32, i32* %EFLAGS
@@ -117,60 +117,197 @@ store i64 %RBP_0, i64* %RSP_0-8, align 1
 %31 = xor <2 x i64> %28, %30
 %XMM0_1 = bitcast <2 x i64> %31 to i128
 %32 = bitcast <16 x float> %ZMM0_0 to i512
+%YMM0_0 = trunc i512 %32 to i256
+%33 = zext i128 %XMM0_1 to i256
+%34 = and i256 %YMM0_0, -340282366920938463463374607431768211456
+%YMM0_1 = or i256 %33, %34
 %35 = bitcast <16 x float> %ZMM0_0 to i512
+%36 = zext i128 %XMM0_1 to i512
+%37 = and i512 %35, -340282366920938463463374607431768211456
+%ZMM0_1 = or i512 %36, %37
 %38 = sitofp i64 4003244811 to double
 %39 = bitcast double %38 to i64
 %ZMM1_0 = load <16 x float>, <16 x float>* %ZMM1
 %40 = bitcast <16 x float> %ZMM1_0 to i512
+%XMM1_0 = trunc i512 %40 to i128
+%41 = zext i64 %39 to i128
+%42 = and i128 %XMM1_0, -18446744073709551616
+%XMM1_1 = or i128 %41, %42
 %43 = bitcast <16 x float> %ZMM1_0 to i512
+%YMM1_0 = trunc i512 %43 to i256
+%44 = zext i128 %XMM1_1 to i256
+%45 = and i256 %YMM1_0, -340282366920938463463374607431768211456
+%YMM1_1 = or i256 %44, %45
 %46 = bitcast <16 x float> %ZMM1_0 to i512
+%47 = zext i128 %XMM1_1 to i512
+%48 = and i512 %46, -340282366920938463463374607431768211456
+%ZMM1_1 = or i512 %47, %48
 %49 = sitofp i64 1336630430 to double
 %50 = bitcast double %49 to i64
 %ZMM2_0 = load <16 x float>, <16 x float>* %ZMM2
 %51 = bitcast <16 x float> %ZMM2_0 to i512
+%XMM2_0 = trunc i512 %51 to i128
+%52 = zext i64 %50 to i128
+%53 = and i128 %XMM2_0, -18446744073709551616
+%XMM2_1 = or i128 %52, %53
 %54 = bitcast <16 x float> %ZMM2_0 to i512
+%YMM2_0 = trunc i512 %54 to i256
+%55 = zext i128 %XMM2_1 to i256
+%56 = and i256 %YMM2_0, -340282366920938463463374607431768211456
+%YMM2_1 = or i256 %55, %56
 %57 = bitcast <16 x float> %ZMM2_0 to i512
+%58 = zext i128 %XMM2_1 to i512
+%59 = and i512 %57, -340282366920938463463374607431768211456
+%ZMM2_1 = or i512 %58, %59
 store i32 0, i32* %RSP_1-4, align 1
-%62 = trunc i128 %50 to i64
+%62 = trunc i128 %XMM2_1 to i64
 %63 = bitcast i64 %62 to double
 store double %63, double* %RSP_1-24, align 1
-%67 = bitcast i128 %39 to double
+%67 = bitcast i128 %XMM1_1 to double
 store double %67, double* %RSP_1-16, align 1
 %72 = load double, double* %RSP_1-16, align 1
-%81 = bitcast i128 %72 to double
+%74 = zext double %72 to i128
+%75 = and i128 %XMM1_1, -18446744073709551616
+%XMM1_2 = or i128 %74, %75
+%76 = zext i128 %XMM1_2 to i256
+%77 = and i256 %YMM1_1, -340282366920938463463374607431768211456
+%YMM1_2 = or i256 %76, %77
+%78 = zext i128 %XMM1_2 to i512
+%79 = and i512 %ZMM1_1, -340282366920938463463374607431768211456
+%ZMM1_2 = or i512 %78, %79
+%81 = bitcast i128 %XMM1_2 to double
 %84 = load double, double* %RSP_1-24, align 1
 %85 = fadd double %81, %84
-%94 = bitcast i128 %85 to double
+%87 = zext double %85 to i128
+%88 = and i128 %XMM1_2, -18446744073709551616
+%XMM1_3 = or i128 %87, %88
+%89 = zext i128 %XMM1_3 to i256
+%90 = and i256 %YMM1_2, -340282366920938463463374607431768211456
+%YMM1_3 = or i256 %89, %90
+%91 = zext i128 %XMM1_3 to i512
+%92 = and i512 %ZMM1_2, -340282366920938463463374607431768211456
+%ZMM1_3 = or i512 %91, %92
+%94 = bitcast i128 %XMM1_3 to double
 store double %94, double* %RSP_1-32, align 1
 %99 = load double, double* %RSP_1-16, align 1
-%108 = bitcast i128 %99 to double
+%101 = zext double %99 to i128
+%102 = and i128 %XMM1_3, -18446744073709551616
+%XMM1_4 = or i128 %101, %102
+%103 = zext i128 %XMM1_4 to i256
+%104 = and i256 %YMM1_3, -340282366920938463463374607431768211456
+%YMM1_4 = or i256 %103, %104
+%105 = zext i128 %XMM1_4 to i512
+%106 = and i512 %ZMM1_3, -340282366920938463463374607431768211456
+%ZMM1_4 = or i512 %105, %106
+%108 = bitcast i128 %XMM1_4 to double
 %111 = load double, double* %RSP_1-24, align 1
 %112 = fsub double %108, %111
-%121 = bitcast i128 %112 to double
+%114 = zext double %112 to i128
+%115 = and i128 %XMM1_4, -18446744073709551616
+%XMM1_5 = or i128 %114, %115
+%116 = zext i128 %XMM1_5 to i256
+%117 = and i256 %YMM1_4, -340282366920938463463374607431768211456
+%YMM1_5 = or i256 %116, %117
+%118 = zext i128 %XMM1_5 to i512
+%119 = and i512 %ZMM1_4, -340282366920938463463374607431768211456
+%ZMM1_5 = or i512 %118, %119
+%121 = bitcast i128 %XMM1_5 to double
 store double %121, double* %RSP_1-40, align 1
 %126 = load double, double* %RSP_1-16, align 1
-%135 = bitcast i128 %126 to double
+%128 = zext double %126 to i128
+%129 = and i128 %XMM1_5, -18446744073709551616
+%XMM1_6 = or i128 %128, %129
+%130 = zext i128 %XMM1_6 to i256
+%131 = and i256 %YMM1_5, -340282366920938463463374607431768211456
+%YMM1_6 = or i256 %130, %131
+%132 = zext i128 %XMM1_6 to i512
+%133 = and i512 %ZMM1_5, -340282366920938463463374607431768211456
+%ZMM1_6 = or i512 %132, %133
+%135 = bitcast i128 %XMM1_6 to double
 %138 = load double, double* %RSP_1-24, align 1
 %139 = fmul double %135, %138
-%148 = bitcast i128 %139 to double
+%141 = zext double %139 to i128
+%142 = and i128 %XMM1_6, -18446744073709551616
+%XMM1_7 = or i128 %141, %142
+%143 = zext i128 %XMM1_7 to i256
+%144 = and i256 %YMM1_6, -340282366920938463463374607431768211456
+%YMM1_7 = or i256 %143, %144
+%145 = zext i128 %XMM1_7 to i512
+%146 = and i512 %ZMM1_6, -340282366920938463463374607431768211456
+%ZMM1_7 = or i512 %145, %146
+%148 = bitcast i128 %XMM1_7 to double
 store double %148, double* %RSP_1-48, align 1
 %153 = load double, double* %RSP_1-16, align 1
-%162 = bitcast i128 %153 to double
+%155 = zext double %153 to i128
+%156 = and i128 %XMM1_7, -18446744073709551616
+%XMM1_8 = or i128 %155, %156
+%157 = zext i128 %XMM1_8 to i256
+%158 = and i256 %YMM1_7, -340282366920938463463374607431768211456
+%YMM1_8 = or i256 %157, %158
+%159 = zext i128 %XMM1_8 to i512
+%160 = and i512 %ZMM1_7, -340282366920938463463374607431768211456
+%ZMM1_8 = or i512 %159, %160
+%162 = bitcast i128 %XMM1_8 to double
 %165 = load double, double* %RSP_1-24, align 1
 %166 = fdiv double %162, %165
-%175 = bitcast i128 %166 to double
+%168 = zext double %166 to i128
+%169 = and i128 %XMM1_8, -18446744073709551616
+%XMM1_9 = or i128 %168, %169
+%170 = zext i128 %XMM1_9 to i256
+%171 = and i256 %YMM1_8, -340282366920938463463374607431768211456
+%YMM1_9 = or i256 %170, %171
+%172 = zext i128 %XMM1_9 to i512
+%173 = and i512 %ZMM1_8, -340282366920938463463374607431768211456
+%ZMM1_9 = or i512 %172, %173
+%175 = bitcast i128 %XMM1_9 to double
 store double %175, double* %RSP_1-56, align 1
 %180 = load double, double* %RSP_1-32, align 1
-%189 = bitcast i128 %180 to double
+%182 = zext double %180 to i128
+%183 = and i128 %XMM1_9, -18446744073709551616
+%XMM1_10 = or i128 %182, %183
+%184 = zext i128 %XMM1_10 to i256
+%185 = and i256 %YMM1_9, -340282366920938463463374607431768211456
+%YMM1_10 = or i256 %184, %185
+%186 = zext i128 %XMM1_10 to i512
+%187 = and i512 %ZMM1_9, -340282366920938463463374607431768211456
+%ZMM1_10 = or i512 %186, %187
+%189 = bitcast i128 %XMM1_10 to double
 %192 = load double, double* %RSP_1-40, align 1
 %193 = fmul double %189, %192
-%202 = bitcast i128 %193 to double
+%195 = zext double %193 to i128
+%196 = and i128 %XMM1_10, -18446744073709551616
+%XMM1_11 = or i128 %195, %196
+%197 = zext i128 %XMM1_11 to i256
+%198 = and i256 %YMM1_10, -340282366920938463463374607431768211456
+%YMM1_11 = or i256 %197, %198
+%199 = zext i128 %XMM1_11 to i512
+%200 = and i512 %ZMM1_10, -340282366920938463463374607431768211456
+%ZMM1_11 = or i512 %199, %200
+%202 = bitcast i128 %XMM1_11 to double
 %205 = load double, double* %RSP_1-48, align 1
 %206 = fdiv double %202, %205
-%215 = bitcast i128 %206 to double
+%208 = zext double %206 to i128
+%209 = and i128 %XMM1_11, -18446744073709551616
+%XMM1_12 = or i128 %208, %209
+%210 = zext i128 %XMM1_12 to i256
+%211 = and i256 %YMM1_11, -340282366920938463463374607431768211456
+%YMM1_12 = or i256 %210, %211
+%212 = zext i128 %XMM1_12 to i512
+%213 = and i512 %ZMM1_11, -340282366920938463463374607431768211456
+%ZMM1_12 = or i512 %212, %213
+%215 = bitcast i128 %XMM1_12 to double
 %218 = load double, double* %RSP_1-56, align 1
 %219 = fadd double %215, %218
-%228 = bitcast i128 %219 to double
+%221 = zext double %219 to i128
+%222 = and i128 %XMM1_12, -18446744073709551616
+%XMM1_13 = or i128 %221, %222
+%223 = zext i128 %XMM1_13 to i256
+%224 = and i256 %YMM1_12, -340282366920938463463374607431768211456
+%YMM1_13 = or i256 %223, %224
+%225 = zext i128 %XMM1_13 to i512
+%226 = and i512 %ZMM1_12, -340282366920938463463374607431768211456
+%ZMM1_13 = or i512 %225, %226
+%228 = bitcast i128 %XMM1_13 to double
 store double %228, double* %RSP_1-64, align 1
 %232 = bitcast i128 %XMM0_1 to double
 %235 = load double, double* %RSP_1-64, align 1
@@ -207,23 +344,23 @@ store i64 %RSP_1, i64* %RBP
 store i64 %RSP_2, i64* %RSP
 %253 = bitcast i128 %XMM0_1 to <4 x float>
 store <4 x float> %253, <4 x float>* %XMM0
-%254 = bitcast i128 %219 to <4 x float>
+%254 = bitcast i128 %XMM1_13 to <4 x float>
 store <4 x float> %254, <4 x float>* %XMM1
-%255 = bitcast i128 %50 to <4 x float>
+%255 = bitcast i128 %XMM2_1 to <4 x float>
 store <4 x float> %255, <4 x float>* %XMM2
-%256 = bitcast i256 %XMM0_1 to <8 x float>
+%256 = bitcast i256 %YMM0_1 to <8 x float>
 store <8 x float> %256, <8 x float>* %YMM0
-%257 = bitcast i256 %219 to <8 x float>
+%257 = bitcast i256 %YMM1_13 to <8 x float>
 store <8 x float> %257, <8 x float>* %YMM1
-%258 = bitcast i256 %50 to <8 x float>
+%258 = bitcast i256 %YMM2_1 to <8 x float>
 store <8 x float> %258, <8 x float>* %YMM2
-%259 = bitcast i512 %XMM0_1 to <16 x float>
+%259 = bitcast i512 %ZMM0_1 to <16 x float>
 store <16 x float> %259, <16 x float>* %ZMM0
-%260 = bitcast i512 %219 to <16 x float>
+%260 = bitcast i512 %ZMM1_13 to <16 x float>
 store <16 x float> %260, <16 x float>* %ZMM1
-%261 = bitcast i512 %50 to <16 x float>
+%261 = bitcast i512 %ZMM2_1 to <16 x float>
 store <16 x float> %261, <16 x float>* %ZMM2
-br i1 %CC_BE_0, label %bb_2 label %bb_1
+br i1 %CC_BE_0, label %bb_4005F7, label %bb_1
 ; <label>:bb_1
 %RBP_1 = load i64, i64* %RBP
 %262 = add i64 %RBP_1, -32
@@ -243,12 +380,32 @@ br label %bb_12
 %270 = bitcast <16 x float> %ZMM0_2 to <2 x i64>
 %272 = bitcast <16 x float> %ZMM0_2 to <2 x i64>
 %273 = xor <2 x i64> %270, %272
+%YMM0_2 = trunc <16 x float> %ZMM0_2 to i256
+%275 = zext <2 x i64> %273 to i256
+%276 = and i256 %YMM0_2, -340282366920938463463374607431768211456
+%YMM0_3 = or i256 %275, %276
+%277 = bitcast <16 x float> %ZMM0_2 to i512
+%278 = zext <2 x i64> %273 to i512
+%279 = and i512 %277, -340282366920938463463374607431768211456
+%ZMM0_3 = or i512 %278, %279
 %RBP_2 = load i64, i64* %RBP
 %280 = add i64 %RBP_2, -64
 %281 = inttoptr i64 %280 to double*
 %282 = load double, double* %281, align 1
 %ZMM1_14 = load <16 x float>, <16 x float>* %ZMM1
-%294 = bitcast i128 %282 to double
+%XMM1_14 = trunc <16 x float> %ZMM1_14 to i128
+%285 = zext double %282 to i128
+%286 = and i128 %XMM1_14, -18446744073709551616
+%XMM1_15 = or i128 %285, %286
+%YMM1_14 = trunc <16 x float> %ZMM1_14 to i256
+%288 = zext i128 %XMM1_15 to i256
+%289 = and i256 %YMM1_14, -340282366920938463463374607431768211456
+%YMM1_15 = or i256 %288, %289
+%290 = bitcast <16 x float> %ZMM1_14 to i512
+%291 = zext i128 %XMM1_15 to i512
+%292 = and i512 %290, -340282366920938463463374607431768211456
+%ZMM1_15 = or i512 %291, %292
+%294 = bitcast i128 %XMM1_15 to double
 %296 = bitcast <2 x i64> %273 to double
 %ZF_01 = fcmp ueq double %294, %296
 %PF_02 = fcmp uno double %294, %296
@@ -277,20 +434,31 @@ store i32 %EFLAGS_2, i32* %EFLAGS
 store i64 %RBP_2, i64* %RBP
 %314 = bitcast <2 x i64> %273 to <4 x float>
 store <4 x float> %314, <4 x float>* %XMM0
-%315 = bitcast i128 %282 to <4 x float>
+%315 = bitcast i128 %XMM1_15 to <4 x float>
 store <4 x float> %315, <4 x float>* %XMM1
-%316 = bitcast i256 %273 to <8 x float>
+%316 = bitcast i256 %YMM0_3 to <8 x float>
 store <8 x float> %316, <8 x float>* %YMM0
-%317 = bitcast i256 %282 to <8 x float>
+%317 = bitcast i256 %YMM1_15 to <8 x float>
 store <8 x float> %317, <8 x float>* %YMM1
-%318 = bitcast i512 %273 to <16 x float>
+%318 = bitcast i512 %ZMM0_3 to <16 x float>
 store <16 x float> %318, <16 x float>* %ZMM0
-%319 = bitcast i512 %282 to <16 x float>
+%319 = bitcast i512 %ZMM1_15 to <16 x float>
 store <16 x float> %319, <16 x float>* %ZMM1
-br i1 %CF_03, label %bb_5 label %bb_3
+br i1 %CF_03, label %bb_400630, label %bb_3
 ; <label>:bb_3
 %ZMM0_4 = load <16 x float>, <16 x float>* %ZMM0
-%XMM0_5 = 5
+%XMM0_4 = trunc <16 x float> %ZMM0_4 to i128
+%323 = zext i64 5 to i128
+%324 = and i128 %XMM0_4, -18446744073709551616
+%XMM0_5 = or i128 %323, %324
+%YMM0_4 = trunc <16 x float> %ZMM0_4 to i256
+%326 = zext i128 %XMM0_5 to i256
+%327 = and i256 %YMM0_4, -340282366920938463463374607431768211456
+%YMM0_5 = or i256 %326, %327
+%328 = bitcast <16 x float> %ZMM0_4 to i512
+%329 = zext i128 %XMM0_5 to i512
+%330 = and i512 %328, -340282366920938463463374607431768211456
+%ZMM0_5 = or i512 %329, %330
 %332 = bitcast i128 %XMM0_5 to double
 %RBP_5 = load i64, i64* %RBP
 %333 = add i64 %RBP_5, -64
@@ -326,11 +494,11 @@ store i64 5, i64* %RAX
 store i64 %RBP_5, i64* %RBP
 %353 = bitcast i128 %XMM0_5 to <4 x float>
 store <4 x float> %353, <4 x float>* %XMM0
-%354 = bitcast i256 %XMM0_5 to <8 x float>
+%354 = bitcast i256 %YMM0_5 to <8 x float>
 store <8 x float> %354, <8 x float>* %YMM0
-%355 = bitcast i512 %XMM0_5 to <16 x float>
+%355 = bitcast i512 %ZMM0_5 to <16 x float>
 store <16 x float> %355, <16 x float>* %ZMM0
-br i1 %CC_BE_010, label %bb_5 label %bb_4
+br i1 %CC_BE_010, label %bb_400630, label %bb_4
 ; <label>:bb_4
 %RBP_7 = load i64, i64* %RBP
 %356 = add i64 %RBP_7, -40
@@ -347,13 +515,36 @@ store i64 %RBP_7, i64* %RBP
 br label %bb_12
 ; <label>:bb_5
 %ZMM0_6 = load <16 x float>, <16 x float>* %ZMM0
-%XMM0_7 = 5
+%XMM0_6 = trunc <16 x float> %ZMM0_6 to i128
+%365 = zext i64 5 to i128
+%366 = and i128 %XMM0_6, -18446744073709551616
+%XMM0_7 = or i128 %365, %366
+%YMM0_6 = trunc <16 x float> %ZMM0_6 to i256
+%368 = zext i128 %XMM0_7 to i256
+%369 = and i256 %YMM0_6, -340282366920938463463374607431768211456
+%YMM0_7 = or i256 %368, %369
+%370 = bitcast <16 x float> %ZMM0_6 to i512
+%371 = zext i128 %XMM0_7 to i512
+%372 = and i512 %370, -340282366920938463463374607431768211456
+%ZMM0_7 = or i512 %371, %372
 %RBP_6 = load i64, i64* %RBP
 %373 = add i64 %RBP_6, -64
 %374 = inttoptr i64 %373 to double*
 %375 = load double, double* %374, align 1
 %ZMM1_16 = load <16 x float>, <16 x float>* %ZMM1
-%387 = bitcast i128 %375 to double
+%XMM1_16 = trunc <16 x float> %ZMM1_16 to i128
+%378 = zext double %375 to i128
+%379 = and i128 %XMM1_16, -18446744073709551616
+%XMM1_17 = or i128 %378, %379
+%YMM1_16 = trunc <16 x float> %ZMM1_16 to i256
+%381 = zext i128 %XMM1_17 to i256
+%382 = and i256 %YMM1_16, -340282366920938463463374607431768211456
+%YMM1_17 = or i256 %381, %382
+%383 = bitcast <16 x float> %ZMM1_16 to i512
+%384 = zext i128 %XMM1_17 to i512
+%385 = and i512 %383, -340282366920938463463374607431768211456
+%ZMM1_17 = or i512 %384, %385
+%387 = bitcast i128 %XMM1_17 to double
 %389 = bitcast i128 %XMM0_7 to double
 %ZF_011 = fcmp ueq double %387, %389
 %PF_012 = fcmp uno double %387, %389
@@ -385,23 +576,23 @@ store i64 5, i64* %RAX
 store i64 %RBP_6, i64* %RBP
 %407 = bitcast i128 %XMM0_7 to <4 x float>
 store <4 x float> %407, <4 x float>* %XMM0
-%408 = bitcast i128 %375 to <4 x float>
+%408 = bitcast i128 %XMM1_17 to <4 x float>
 store <4 x float> %408, <4 x float>* %XMM1
-%409 = bitcast i256 %XMM0_7 to <8 x float>
+%409 = bitcast i256 %YMM0_7 to <8 x float>
 store <8 x float> %409, <8 x float>* %YMM0
-%410 = bitcast i256 %375 to <8 x float>
+%410 = bitcast i256 %YMM1_17 to <8 x float>
 store <8 x float> %410, <8 x float>* %YMM1
-%411 = bitcast i512 %XMM0_7 to <16 x float>
+%411 = bitcast i512 %ZMM0_7 to <16 x float>
 store <16 x float> %411, <16 x float>* %ZMM0
-%412 = bitcast i512 %375 to <16 x float>
+%412 = bitcast i512 %ZMM1_17 to <16 x float>
 store <16 x float> %412, <16 x float>* %ZMM1
-br i1 %CC_NE_0, label %bb_8 label %bb_6
+br i1 %CC_NE_0, label %bb_400661, label %bb_6
 ; <label>:bb_6
 %EFLAGS_7 = load i32, i32* %EFLAGS
 %413 = lshr i32 %EFLAGS_7, 2
 %PF_014 = trunc i32 %413 to i1
 store i32 %EFLAGS_7, i32* %EFLAGS
-br i1 %PF_014, label %bb_8 label %bb_7
+br i1 %PF_014, label %bb_400661, label %bb_7
 ; <label>:bb_7
 %RBP_8 = load i64, i64* %RBP
 %414 = add i64 %RBP_8, -48
@@ -423,12 +614,32 @@ br label %bb_9
 %422 = bitcast <16 x float> %ZMM0_8 to <2 x i64>
 %424 = bitcast <16 x float> %ZMM0_8 to <2 x i64>
 %425 = xor <2 x i64> %422, %424
+%YMM0_8 = trunc <16 x float> %ZMM0_8 to i256
+%427 = zext <2 x i64> %425 to i256
+%428 = and i256 %YMM0_8, -340282366920938463463374607431768211456
+%YMM0_9 = or i256 %427, %428
+%429 = bitcast <16 x float> %ZMM0_8 to i512
+%430 = zext <2 x i64> %425 to i512
+%431 = and i512 %429, -340282366920938463463374607431768211456
+%ZMM0_9 = or i512 %430, %431
 %RBP_9 = load i64, i64* %RBP
 %432 = add i64 %RBP_9, -64
 %433 = inttoptr i64 %432 to double*
 %434 = load double, double* %433, align 1
 %ZMM1_18 = load <16 x float>, <16 x float>* %ZMM1
-%446 = bitcast i128 %434 to double
+%XMM1_18 = trunc <16 x float> %ZMM1_18 to i128
+%437 = zext double %434 to i128
+%438 = and i128 %XMM1_18, -18446744073709551616
+%XMM1_19 = or i128 %437, %438
+%YMM1_18 = trunc <16 x float> %ZMM1_18 to i256
+%440 = zext i128 %XMM1_19 to i256
+%441 = and i256 %YMM1_18, -340282366920938463463374607431768211456
+%YMM1_19 = or i256 %440, %441
+%442 = bitcast <16 x float> %ZMM1_18 to i512
+%443 = zext i128 %XMM1_19 to i512
+%444 = and i512 %442, -340282366920938463463374607431768211456
+%ZMM1_19 = or i512 %443, %444
+%446 = bitcast i128 %XMM1_19 to double
 %448 = bitcast <2 x i64> %425 to double
 %ZF_015 = fcmp ueq double %446, %448
 %PF_016 = fcmp uno double %446, %448
@@ -458,23 +669,35 @@ store i32 %EFLAGS_8, i32* %EFLAGS
 store i64 %RBP_9, i64* %RBP
 %466 = bitcast <2 x i64> %425 to <4 x float>
 store <4 x float> %466, <4 x float>* %XMM0
-%467 = bitcast i128 %434 to <4 x float>
+%467 = bitcast i128 %XMM1_19 to <4 x float>
 store <4 x float> %467, <4 x float>* %XMM1
-%468 = bitcast i256 %425 to <8 x float>
+%468 = bitcast i256 %YMM0_9 to <8 x float>
 store <8 x float> %468, <8 x float>* %YMM0
-%469 = bitcast i256 %434 to <8 x float>
+%469 = bitcast i256 %YMM1_19 to <8 x float>
 store <8 x float> %469, <8 x float>* %YMM1
-%470 = bitcast i512 %425 to <16 x float>
+%470 = bitcast i512 %ZMM0_9 to <16 x float>
 store <16 x float> %470, <16 x float>* %ZMM0
-%471 = bitcast i512 %434 to <16 x float>
+%471 = bitcast i512 %ZMM1_19 to <16 x float>
 store <16 x float> %471, <16 x float>* %ZMM1
-br i1 %CC_BE_018, label %bb_11 label %bb_10
+br i1 %CC_BE_018, label %bb_4006AB, label %bb_10
 ; <label>:bb_10
 %RBP_10 = load i64, i64* %RBP
 %472 = add i64 %RBP_10, -64
 %473 = inttoptr i64 %472 to double*
 %474 = load double, double* %473, align 1
 %ZMM0_10 = load <16 x float>, <16 x float>* %ZMM0
+%XMM0_10 = trunc <16 x float> %ZMM0_10 to i128
+%477 = zext double %474 to i128
+%478 = and i128 %XMM0_10, -18446744073709551616
+%XMM0_11 = or i128 %477, %478
+%YMM0_10 = trunc <16 x float> %ZMM0_10 to i256
+%480 = zext i128 %XMM0_11 to i256
+%481 = and i256 %YMM0_10, -340282366920938463463374607431768211456
+%YMM0_11 = or i256 %480, %481
+%482 = bitcast <16 x float> %ZMM0_10 to i512
+%483 = zext i128 %XMM0_11 to i512
+%484 = and i512 %482, -340282366920938463463374607431768211456
+%ZMM0_11 = or i512 %483, %484
 %RAX_12 = load i64, i64* %RAX
 %EAX_8 = trunc i64 %RAX_12 to i32
 %486 = and i32 %EAX_8, -256
@@ -491,11 +714,11 @@ store i64 %RAX_13, i64* %RAX
 store i64 %RBP_10, i64* %RBP
 store i64 4196192, i64* %RDI
 store i64 %RSP_8, i64* %RSP
-%489 = bitcast i128 %474 to <4 x float>
+%489 = bitcast i128 %XMM0_11 to <4 x float>
 store <4 x float> %489, <4 x float>* %XMM0
-%490 = bitcast i256 %474 to <8 x float>
+%490 = bitcast i256 %YMM0_11 to <8 x float>
 store <8 x float> %490, <8 x float>* %YMM0
-%491 = bitcast i512 %474 to <16 x float>
+%491 = bitcast i512 %ZMM0_11 to <16 x float>
 store <16 x float> %491, <16 x float>* %ZMM0
 %492 = load i32, i32* %CtlSysEFLAGS
 store i32 %492, i32* %CtlSysEFLAGS_ptr
@@ -515,7 +738,7 @@ store <16 x float> %499, <16 x float>* %ZMM0_ptr
 store <16 x float> %500, <16 x float>* %ZMM1_ptr
 %501 = load <16 x float>, <16 x float>* %ZMM2
 store <16 x float> %501, <16 x float>* %ZMM2_ptr
-call void @fn_400410 ( %regset* %0 )
+call void @fn_400410(%regset* %0)
 %502 = load i32, i32* %CtlSysEFLAGS_ptr
 store i32 %502, i32* %CtlSysEFLAGS
 %503 = load i32, i32* %EFLAGS_ptr
@@ -537,15 +760,48 @@ store <16 x float> %511, <16 x float>* %ZMM2
 %512 = inttoptr i64 4196184 to double*
 %513 = load double, double* %512, align 1
 %ZMM0_12 = load <16 x float>, <16 x float>* %ZMM0
+%XMM0_12 = trunc <16 x float> %ZMM0_12 to i128
+%516 = zext double %513 to i128
+%517 = and i128 %XMM0_12, -18446744073709551616
+%XMM0_13 = or i128 %516, %517
+%YMM0_12 = trunc <16 x float> %ZMM0_12 to i256
+%519 = zext i128 %XMM0_13 to i256
+%520 = and i256 %YMM0_12, -340282366920938463463374607431768211456
+%YMM0_13 = or i256 %519, %520
+%521 = bitcast <16 x float> %ZMM0_12 to i512
+%522 = zext i128 %XMM0_13 to i512
+%523 = and i512 %521, -340282366920938463463374607431768211456
+%ZMM0_13 = or i512 %522, %523
 %RBP_11 = load i64, i64* %RBP
 %524 = add i64 %RBP_11, -64
 %525 = inttoptr i64 %524 to double*
 %526 = load double, double* %525, align 1
 %ZMM1_20 = load <16 x float>, <16 x float>* %ZMM1
-%538 = bitcast i128 %526 to double
-%540 = bitcast i128 %513 to double
+%XMM1_20 = trunc <16 x float> %ZMM1_20 to i128
+%529 = zext double %526 to i128
+%530 = and i128 %XMM1_20, -18446744073709551616
+%XMM1_21 = or i128 %529, %530
+%YMM1_20 = trunc <16 x float> %ZMM1_20 to i256
+%532 = zext i128 %XMM1_21 to i256
+%533 = and i256 %YMM1_20, -340282366920938463463374607431768211456
+%YMM1_21 = or i256 %532, %533
+%534 = bitcast <16 x float> %ZMM1_20 to i512
+%535 = zext i128 %XMM1_21 to i512
+%536 = and i512 %534, -340282366920938463463374607431768211456
+%ZMM1_21 = or i512 %535, %536
+%538 = bitcast i128 %XMM1_21 to double
+%540 = bitcast i128 %XMM0_13 to double
 %541 = fsub double %538, %540
-%550 = bitcast i128 %541 to double
+%543 = zext double %541 to i128
+%544 = and i128 %XMM1_21, -18446744073709551616
+%XMM1_22 = or i128 %543, %544
+%545 = zext i128 %XMM1_22 to i256
+%546 = and i256 %YMM1_21, -340282366920938463463374607431768211456
+%YMM1_22 = or i256 %545, %546
+%547 = zext i128 %XMM1_22 to i512
+%548 = and i512 %ZMM1_21, -340282366920938463463374607431768211456
+%ZMM1_22 = or i512 %547, %548
+%550 = bitcast i128 %XMM1_22 to double
 %551 = add i64 %RBP_11, -64
 %552 = inttoptr i64 %551 to double*
 store double %550, double* %552, align 1
@@ -557,17 +813,17 @@ store i32 %EAX_10, i32* %554, align 1
 store i32 %EAX_10, i32* %EAX
 store i64 %RAX_14, i64* %RAX
 store i64 %RBP_11, i64* %RBP
-%555 = bitcast i128 %513 to <4 x float>
+%555 = bitcast i128 %XMM0_13 to <4 x float>
 store <4 x float> %555, <4 x float>* %XMM0
-%556 = bitcast i128 %541 to <4 x float>
+%556 = bitcast i128 %XMM1_22 to <4 x float>
 store <4 x float> %556, <4 x float>* %XMM1
-%557 = bitcast i256 %513 to <8 x float>
+%557 = bitcast i256 %YMM0_13 to <8 x float>
 store <8 x float> %557, <8 x float>* %YMM0
-%558 = bitcast i256 %541 to <8 x float>
+%558 = bitcast i256 %YMM1_22 to <8 x float>
 store <8 x float> %558, <8 x float>* %YMM1
-%559 = bitcast i512 %513 to <16 x float>
+%559 = bitcast i512 %ZMM0_13 to <16 x float>
 store <16 x float> %559, <16 x float>* %ZMM0
-%560 = bitcast i512 %541 to <16 x float>
+%560 = bitcast i512 %ZMM1_22 to <16 x float>
 store <16 x float> %560, <16 x float>* %ZMM1
 br label %bb_9
 ; <label>:bb_11
@@ -576,17 +832,29 @@ br label %bb_9
 %562 = inttoptr i64 %561 to double*
 %563 = load double, double* %562, align 1
 %ZMM0_14 = load <16 x float>, <16 x float>* %ZMM0
+%XMM0_14 = trunc <16 x float> %ZMM0_14 to i128
+%566 = zext double %563 to i128
+%567 = and i128 %XMM0_14, -18446744073709551616
+%XMM0_15 = or i128 %566, %567
+%YMM0_14 = trunc <16 x float> %ZMM0_14 to i256
+%569 = zext i128 %XMM0_15 to i256
+%570 = and i256 %YMM0_14, -340282366920938463463374607431768211456
+%YMM0_15 = or i256 %569, %570
+%571 = bitcast <16 x float> %ZMM0_14 to i512
+%572 = zext i128 %XMM0_15 to i512
+%573 = and i512 %571, -340282366920938463463374607431768211456
+%ZMM0_15 = or i512 %572, %573
 %RSP_9 = load i64, i64* %RSP
 store i64 4196021, i64* %RSP_9-8
 %ESP_6 = trunc i64 %RSP_10 to i32
 store i32 %ESP_6, i32* %ESP
 store i64 %RBP_12, i64* %RBP
 store i64 %RSP_10, i64* %RSP
-%575 = bitcast i128 %563 to <4 x float>
+%575 = bitcast i128 %XMM0_15 to <4 x float>
 store <4 x float> %575, <4 x float>* %XMM0
-%576 = bitcast i256 %563 to <8 x float>
+%576 = bitcast i256 %YMM0_15 to <8 x float>
 store <8 x float> %576, <8 x float>* %YMM0
-%577 = bitcast i512 %563 to <16 x float>
+%577 = bitcast i512 %ZMM0_15 to <16 x float>
 store <16 x float> %577, <16 x float>* %ZMM0
 %578 = load i32, i32* %CtlSysEFLAGS
 store i32 %578, i32* %CtlSysEFLAGS_ptr
@@ -606,7 +874,7 @@ store <16 x float> %585, <16 x float>* %ZMM0_ptr
 store <16 x float> %586, <16 x float>* %ZMM1_ptr
 %587 = load <16 x float>, <16 x float>* %ZMM2
 store <16 x float> %587, <16 x float>* %ZMM2_ptr
-call void @fn_400530 ( %regset* %0 )
+call void @fn_400530(%regset* %0)
 %588 = load i32, i32* %CtlSysEFLAGS_ptr
 store i32 %588, i32* %CtlSysEFLAGS
 %589 = load i32, i32* %EFLAGS_ptr
@@ -653,12 +921,12 @@ br label %bb_12
 %ESP_4 = trunc i64 %RSP_6 to i32
 %ZF_04 = icmp eq i64 %RSP_4, 0
 %SF_0 = icmp slt i64 %RSP_4, 0
-%611 = call { i64, i1 } @llvm.sadd.with.overflow.i64 ( i64 %RSP_3, i64 80 )
+%611 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %RSP_3, i64 80)
 %OF_0 = extractvalue { i64, i1 } %611, 1
-%612 = call { i64, i1 } @llvm.uadd.with.overflow.i64 ( i64 %RSP_3, i64 80 )
+%612 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %RSP_3, i64 80)
 %CF_05 = extractvalue { i64, i1 } %612, 1
 %613 = trunc i64 %RSP_4 to i8
-%614 = call i8 @llvm.ctpop.i8 ( i8 %613 )
+%614 = call i8 @llvm.ctpop.i8(i8 %613)
 %615 = trunc i8 %614 to i1
 %PF_06 = icmp eq i1 %615, false
 %CtlSysEFLAGS_2 = load i32, i32* %CtlSysEFLAGS
@@ -691,19 +959,19 @@ store i64 %RSP_6, i64* %RSP
 br label %exit_fn_400550
 }
 
-define void @fn_1 ( %regset* noalias nocapture ) {
+define void @fn_1(%regset* noalias nocapture) {
 entry_fn_400410:
-br label %bb_13
-exit_fn_400410: ; preds = %bb_13
+br label  %bb_13
+exit_fn_400410:                                   ; preds =  %bb_13
 ret void
 ; <label>:bb_13
-%5 = call i8* @llvm.dc.translate.at ( i8* %4 )
-%6 = bitcast i8* %5 to void ( %regset* ) *
-call void %6 ( %regset* %0 )
+%5 = call i8* @llvm.dc.translate.at(i8* %4)
+%6 = bitcast i8* %5 to void (%regset*)*
+call void %6(%regset* %0)
 br label %exit_fn_400410
 }
 
-define void @fn_2 ( %regset* noalias nocapture ) {
+define void @fn_2(%regset* noalias nocapture) {
 entry_fn_400530:
 %RBP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 9
 %RBP_init = load i64, i64* %RBP_ptr
@@ -743,8 +1011,8 @@ store <4 x float> %XMM0_init, <4 x float>* %XMM0
 %YMM0_init = bitcast <16 x float> %ZMM0_init to <8 x float>
 %YMM0 = alloca <8 x float>
 store <8 x float> %YMM0_init, <8 x float>* %YMM0
-br label %bb_14
-exit_fn_400530: ; preds = %bb_14
+br label  %bb_14
+exit_fn_400530:                                   ; preds =  %bb_14
 %9 = load i64, i64* %RBP
 store i64 %9, i64* %RBP_ptr
 %11 = load i64, i64* %RSP
@@ -763,9 +1031,25 @@ store i64 %RBP_0, i64* %RSP_0-8, align 1
 %18 = bitcast <16 x float> %ZMM1_0 to <2 x i64>
 %20 = bitcast <16 x float> %ZMM1_0 to <2 x i64>
 %21 = xor <2 x i64> %18, %20
+%YMM1_0 = trunc <16 x float> %ZMM1_0 to i256
+%23 = zext <2 x i64> %21 to i256
+%24 = and i256 %YMM1_0, -340282366920938463463374607431768211456
+%YMM1_1 = or i256 %23, %24
+%25 = bitcast <16 x float> %ZMM1_0 to i512
+%26 = zext <2 x i64> %21 to i512
+%27 = and i512 %25, -340282366920938463463374607431768211456
+%ZMM1_1 = or i512 %26, %27
 %ZMM0_0 = load <16 x float>, <16 x float>* %ZMM0
 %30 = bitcast <16 x float> %ZMM0_0 to double
 store double %30, double* %RSP_1-8, align 1
+%YMM0_0 = trunc <16 x float> %ZMM0_0 to i256
+%35 = zext <2 x i64> %21 to i256
+%36 = and i256 %YMM0_0, -340282366920938463463374607431768211456
+%YMM0_1 = or i256 %35, %36
+%37 = bitcast <16 x float> %ZMM0_0 to i512
+%38 = zext <2 x i64> %21 to i512
+%39 = and i512 %37, -340282366920938463463374607431768211456
+%ZMM0_1 = or i512 %38, %39
 %RSP_2 = add i64 %RSP_1, 8
 %RBP_1 = load i64, i64* %RSP_2-8, align 1
 %EBP_1 = trunc i64 %RBP_1 to i32
@@ -778,13 +1062,13 @@ store i64 %RSP_3, i64* %RSP
 store <4 x float> %43, <4 x float>* %XMM0
 %44 = bitcast <2 x i64> %21 to <4 x float>
 store <4 x float> %44, <4 x float>* %XMM1
-%45 = bitcast i256 %21 to <8 x float>
+%45 = bitcast i256 %YMM0_1 to <8 x float>
 store <8 x float> %45, <8 x float>* %YMM0
-%46 = bitcast i256 %21 to <8 x float>
+%46 = bitcast i256 %YMM1_1 to <8 x float>
 store <8 x float> %46, <8 x float>* %YMM1
-%47 = bitcast i512 %21 to <16 x float>
+%47 = bitcast i512 %ZMM0_1 to <16 x float>
 store <16 x float> %47, <16 x float>* %ZMM0
-%48 = bitcast i512 %21 to <16 x float>
+%48 = bitcast i512 %ZMM1_1 to <16 x float>
 store <16 x float> %48, <16 x float>* %ZMM1
 br label %exit_fn_400530
 }

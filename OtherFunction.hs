@@ -81,22 +81,22 @@ replaceLine :: String -> String -> String -> String -> String
 replaceLine old new tyStr line
   | (isInfixOf old line) = do
     let s = split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
-        r = tyStr ++ regex_after_padding
+        r = tyStr ++ get_regexLine line regex_fb
     unwords $ replaceWord old new s r
   | otherwise = line
-
-rpWord :: String -> String -> String -> String
-rpWord old new "" = ""
-rpWord old new line = do
-  let (x:xs) = words line
-      tmp = "%" ++ (getFrontBackNonPadding x)
-      --tmp = "%" ++ (filter isAlphaNum x)
-      word = bool x (replace old new x) (tmp == old)
-  strip (word ++ " " ++ (rpWord old new $ unwords xs))
-
-rp :: String -> String -> [String] -> [String]
-rp old new [] = []
-rp old new (line: content) = (rpWord old new line):(rp old new content)
+--
+-- rpWord :: String -> String -> String -> String
+-- rpWord old new "" = ""
+-- rpWord old new line = do
+--   let (x:xs) = words line
+--       tmp = "%" ++ (get_regexLine x regex_fb)
+--       --tmp = "%" ++ (filter isAlphaNum x)
+--       word = bool x (replace old new x) (tmp == old)
+--   strip (word ++ " " ++ (rpWord old new $ unwords xs))
+--
+-- rp :: String -> String -> [String] -> [String]
+-- rp old new [] = []
+-- rp old new (line: content) = (rpWord old new line):(rp old new content)
 
 {-************** USE(variable) **************-}
 
@@ -114,19 +114,29 @@ usePropagation :: String -> String -> [String] -> [String]
 usePropagation old new [] = []
 usePropagation old new (x:xs) = ((unwords $ usePropLine old new $ words x):(usePropagation old new xs))
 
+{- Type Conversion-}
+strToInt :: String -> Integer
+strToInt x = round (read x :: Double)
+
+strToFloat :: String -> Double
+strToFloat x = read x :: Double
+
 {-************************************************************************
                             All Ones Byte
   *************************************************************************-}
 
+-- pre: Double
 isInt :: (RealFrac a) => a -> Bool
 isInt x = x == fromInteger (round x)
 
-is0s, is1s :: (Num a, Integral a, Eq a, Floating a, RealFrac a, Bits a) => a -> Bool
-is0s x = isInt $ logBase 2 (logBase 2 (abs x))
-is1s x = ((.&.) x (x+1)) == 0
+-- pre: Integer
+is0s :: Integer -> Bool --, Bits a // (Num a, Integral a, Eq a, Floating a, RealFrac a) => a
+is0s x = isInt $ logBase 2 (logBase 2 (fromInteger $ abs x))
+-- is1s x = ((.&.) x (x+1)) == 0
 
-is0s_sz :: (Num a, Integral a, Eq a, Floating a, RealFrac a, Bits a) => a -> a -> Bool
+is0s_sz :: (Num a, Integral a, Eq a, Floating a, RealFrac a) => a -> a -> Bool
 is0s_sz sz x = sz == logBase 2 (logBase 2 (abs x))
 
-isZeros :: (Num a, Integral a, Eq a, Floating a, RealFrac a, Bits a) => [a] -> Bool
-isZeros x = null $ dropWhile (==True) (map is0s x)
+areZeros, hasZeros :: [Integer] -> Bool --(Num a, Integral a, Eq a, Floating a, RealFrac a) => [a]
+areZeros x = null $ dropWhile (==True) (map is0s x)
+hasZeros x = null $ takeWhile (==True) (map is0s x)
