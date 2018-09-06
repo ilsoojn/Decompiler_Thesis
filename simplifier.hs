@@ -76,7 +76,7 @@ fnSplit (line: nextC) fn cont var set
   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
   | (isLHS line fn) = do
-    let (x, (des, reg)) = statement line fn
+    let (x, (des, reg)) = statement line
         newList = addVariable (fromJust x) (variableType des) var
     fnSplit nextC fn (cont ++ [line]) newList set
   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
@@ -137,7 +137,7 @@ main = do
           hClose handleTmp
 
           system $ "rm " ++ decir ++ " " ++ disas
-          renameFile tmpFile "resultIR"
+          renameFile tmpFile "sampleOutput.ll"
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)
 

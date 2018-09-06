@@ -19,6 +19,7 @@ import Text.Regex.Posix
 import Lists
 import IsGetSet
 
+
 {- Architecture Instructions related -}
 
 getInstructionType ::  String -> String
@@ -61,12 +62,26 @@ popFront x = (strip $ (head.words) x, strip $ (unwords.tail.words) x)
 popBack :: String -> (String, String)
 popBack x = (strip $ (last.words) x, strip $ (unwords.init.words) x)
 
-{-************** Modifing Functions **************-}
+{-************** Split By Bracket (nested) **************-}
+splitBrackets [] str n list = list
+splitBrackets (v:vs) str n list
+  | (hasOpening v && hasEnding v && n > 0) = splitBrackets vs (str ++ " " ++ v) (n) list
+  | (hasOpening v && hasEnding v && n == 0) = splitBrackets vs str (n) (list ++ [v])
+  | (hasOpening v) = splitBrackets vs (str ++ " " ++ v) (n+1) list
+  | (hasEnding v && n > 1) = splitBrackets vs (str ++ " " ++ v) (n-1) list
+  | (hasEnding v && n == 1) = splitBrackets vs "" 0 (list ++ [str ++ " " ++ v])
+  | otherwise = splitBrackets vs "" 0 (list ++ [v])
 
+splitStartEndOneOf dlm_s dlm_e str = do
+  let list = concat $ map (split (startsWithOneOf dlm_s)) $ split (endsWithOneOf dlm_e) str
+      list' = filter (/= ",") $ filter (not.null) $ map strip list
+  map strip (splitBrackets list' "" 0 [])
+
+{-************** Modifing Functions **************-}
 strSplit' dlm str = (strip x, strip xs) where (x, xs) = strSplit dlm str
 sBreak' dlm str = (strip x, strip xs) where (x, xs) = sBreak dlm str
-splitOn' dlm str = map strip (splitOn dlm str)
-splitOneOf' dlm str = map strip (splitOneOf dlm str)
+splitOn' dlm str = filter (not.null) $ map strip (splitOn dlm str)
+splitOneOf' dlm str = filter (not.null) $ map strip (splitOneOf dlm str)
 
 replaceWord :: String -> String -> [String] -> String -> [String]
 replaceWord old new [] regex = []

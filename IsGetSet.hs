@@ -49,6 +49,10 @@ getFrontBackPadding line = (front,back)
 getFrontBackNonPadding :: String -> String
 getFrontBackNonPadding line = get_regexLine line regex_fb
 
+{-************ Bracket ************-}
+hasOpening x = (elem '[' x) || (elem '{' x) || (elem '<' x)
+hasEnding x = (elem ']' x) || (elem '}' x) || (elem '>' x)
+
 {-************** SSA **************-}
 
 getSSAssignValues :: [String] -> [String]
@@ -59,3 +63,6 @@ getConstantValues line = map strip (filter (not.isInfixOf "%") line)
 
 getLabel :: String -> String
 getLabel line = (strip.snd) (strSplit "label" line)
+
+getSyncscope :: String -> Maybe String
+getSyncscope line = bool Nothing (Just $ get_regexLine line regex_sync) (isInfixOf "syncscope" line)

@@ -99,7 +99,7 @@ regex_padding = "(.*)%([0-9]*)(.*)"
 
 regex_semi2 = "%(.*) : %(.*)"
 regex_array = ".*?[(.*)] [(.*)](.*)"
-regex_sync = "\\((\".*\")\\)"
+regex_sync = "\\((\".*\")\\)" -- syncscope
 regex_pad = "(.*)[(.*)]"
 regex_landpad = ".*?\\{(.*)\\}(.*)"
 regex_fb = ".*%([0-9a-zA-Z\\_\\-]*).*"

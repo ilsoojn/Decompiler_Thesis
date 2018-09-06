@@ -32,13 +32,13 @@ propagation (line:nextCont) fname preCont vSet
   -- LHS line
   | (isLHS line fname) = do
 
-    let x = statement (strip line) fname
+    let x = statement (strip line)
         v = fromJust (fst x)
         (var, reg) = snd x
-        use = findUse v nextCont fname []
+        use = findUse v nextCont []
 
-        (pre_v, (pre_var, pre_reg)) = statement (last preCont) fname
-        (next_v, (next_var, next_reg)) =  statement (head nextCont) fname
+        (pre_v, (pre_var, pre_reg)) = statement (last preCont)
+        (next_v, (next_var, next_reg)) =  statement (head nextCont)
 
     -- condition (def: cond, use: cond)
     if (isConv var && (not.null) use && is_useConv use)
@@ -122,9 +122,9 @@ elimination [] fname preCont = preCont
 elimination (line : nextCont) fname preCont
   | (isFunction line) = elimination nextCont (getFunctionName line) (preCont ++ [line])
   | (isLHS line fname) = do
-    let x = statement (strip line) fname
+    let x = statement (strip line)
         v = fromJust (fst x)
-        use = findUse v nextCont fname []
+        use = findUse v nextCont []
 
     if (null use)
       then elimination nextCont fname preCont

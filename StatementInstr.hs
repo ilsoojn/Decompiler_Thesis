@@ -33,17 +33,17 @@ data VAR = Undef {value::String}
           -- Bitwise & Binary
           | Binary {op::String, sym::String, ty::String, values::[String]}
           | Bit {op::String, sym::String, ty::String, values::[String]}
-          | RSP {fname::String, rsp::String, idx::String}
+          | RSP {rsp::String, idx::String}
           -- Aggregate
           | Array {op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : [n x ty] <- [n x [n x ty]]
           | Struct {op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : {ty} <- {ty, {ty}}
           -- Memory
-          | Alloca {fname::String, inalloca::Bool, ty::String, alloc_numE::Maybe String, alloc_align::Maybe String, alloc_addrspace::Maybe String}
-          | LOAD {fname::String, atomic::Bool, volatile::Bool, ty::String, ptr::String}
-          | Fence {fname::String, syncscope::Maybe String, ordering::String} -- <<
-          | Cmpxchg {fname::String, weak::Bool, volatile::Bool, ty::String, ptr::String, cmp::String, new::String, syncscope::Maybe String, succ_ordering::String, fail_ordering::String} -- <<
-          | Atomicrmw {fname::String, volatile::Bool, operation::String, ty::String, ptr::String, value::String, syncscope::Maybe String, ordering::String} -- <<
-          | GetElemPtr {fname::String, inbound::Bool, ty::String, ptr::String, element::[(Bool, String, String)]}
+          | Alloca {inalloca::Bool, ty::String, alloc_numE::Maybe String, alloc_align::Maybe String, alloc_addrspace::Maybe String}
+          | LOAD {atomic::Bool, volatile::Bool, ty::String, ptr::String, alignment::Maybe String, syncscope::Maybe String, order::Maybe String}
+          | Fence {syncscope::Maybe String, ordering::String} -- <<
+          | Cmpxchg {weak::Bool, volatile::Bool, ty::String, ptr::String, cmp::String, new::String, syncscope::Maybe String, succ_ordering::String, fail_ordering::String} -- <<
+          | Atomicrmw {volatile::Bool, operation::String, ty::String, ptr::String, value::String, syncscope::Maybe String, ordering::String} -- <<
+          | GetElemPtr {inbound::Bool, ty::String, ptr::String, element::[(Bool, (String, String))]}
           -- Converison
           | Conv {op::String, ty1::String, ty::String, value::String}
           -- Other
@@ -97,23 +97,23 @@ isBinary (Binary _ _ _ _) = True
 isBinary _ = False
 isBitwise (Bit _ _ _  _) = True
 isBitwise _ = False
-isRSP (RSP _ _ _) = True
+isRSP (RSP _ _) = True
 isRSP _ = False
 isArray (Array _ _ _ _ _ _) = True
 isArray _ = False
 isStruct (Struct _ _ _ _ _ _) = True
 isStruct _ = False
-isAlloca (Alloca _ _ _ _ _ _) = True
+isAlloca (Alloca _ _ _ _ _) = True
 isAlloca _ = False
-isLoad (LOAD _ _ _ _ _) = True
+isLoad (LOAD _ _ _ _ _ _ _) = True
 isLoad _ = False
-isFence (Fence _ _ _) = True
+isFence (Fence _ _) = True
 isFence _ = False
-isCmpxchg (Cmpxchg _ _ _ _ _ _ _ _ _ _) = True
+isCmpxchg (Cmpxchg _ _ _ _ _ _ _ _ _) = True
 isCmpxchg _ = False
-isAtomicrmw (Atomicrmw _ _ _ _ _ _ _ _) = True
+isAtomicrmw (Atomicrmw _ _ _ _ _ _ _) = True
 isAtomicrmw _ = False
-isGetElemPtr (GetElemPtr _ _ _ _ _) = True
+isGetElemPtr (GetElemPtr _ _ _ _) = True
 isGetElemPtr _ = False
 isConv (Conv _ _ _ _) = True
 isConv _ = False
