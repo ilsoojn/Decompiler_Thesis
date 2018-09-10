@@ -7,8 +7,9 @@ import OtherFunction
 import Debug.Trace
 
 {-************** Format and Regex **************-}
-data Function = Function {name::String, block::[(String, String)]}
-data ListCount = ListCount {list :: [String], count :: Int} deriving (Show, Read)
+data Function = Function {name::String, block::[(String, [String])]}
+data LeftVar = LeftVar{variable::String, vtype::String, instruction::String, state::String} deriving (Show, Read, Eq, Ord)
+isLeftVar (LeftVar _ _ _ _) = True
 
 data Clause = Catch {cty::String, cvalue::String} | Filter {cty::String, cvalue::String} | CleanUp deriving (Show)-- Catch <= single val, Filter <= Array
 data Chain = Chain {v::String, def::(Integer, VAR), use::[(Integer, VAR)]} deriving (Show)

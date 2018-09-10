@@ -23,7 +23,7 @@ import Lists
 
 isLHS line fname = (not.isFunction) line && (not.isBlock) line && (not.null) fname && (isInfixOf " = " line)
 
-propagation :: [String] -> String -> [String] -> [(String, String)] -> ([String], [(String, String)])
+propagation :: [String] -> String -> [String] -> [LeftVar] -> ([String], [LeftVar])
 propagation [] fname preCont vSet = (preCont, vSet)
 propagation (line:nextCont) fname preCont vSet
   | (nextCont == [""]) = (preCont, vSet)

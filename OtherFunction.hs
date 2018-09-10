@@ -130,6 +130,7 @@ usePropagation old new [] = []
 usePropagation old new (x:xs) = ((unwords $ usePropLine old new $ words x):(usePropagation old new xs))
 
 {- Type Conversion-}
+
 strToInt :: String -> Integer
 strToInt x = round (read x :: Double)
 
@@ -139,6 +140,13 @@ strToFloat x = read x :: Double
 {-************************************************************************
                             All Ones Byte
   *************************************************************************-}
+isNum :: String -> Bool
+isNum s = case reads s :: [(Double, String)] of
+  [(_, "")] -> True
+  _         -> False
+  
+isNum' :: String -> Bool
+isNum' s = (length $ filter (isHexDigit) s) == (length s)
 
 -- pre: Double
 isInt :: (RealFrac a) => a -> Bool

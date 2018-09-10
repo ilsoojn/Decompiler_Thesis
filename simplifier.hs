@@ -20,8 +20,9 @@ import Text.Regex.Posix
 import OtherFunction
 import StatementInstr
 import StatementParse
-import Elimination
+-- import Elimination
 import IsGetSet
+import Idioms
 import Lists
 
 {-************************************************************************
@@ -70,28 +71,45 @@ replace_addr (line: nextContent) fcount bcount preContent
       Split Up Contents by Function and Create a list of Varaibles
   ************************************************************************-}
 
-fnSplit :: [String] -> String -> [String] -> [(String, String)] -> [ ([String] , [(String, String)]) ] -> [ ([String] , [(String, String)]) ]
+-- fnSplit :: [String] -> String -> [String] -> [(String, String)] -> [ ([String] , [(String, String)]) ] -> [ ([String] , [(String, String)]) ]
+-- fnSplit [] fn cont var set = set
+-- fnSplit (line: nextC) fn cont var set
+--   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
+--   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
+--   | (isLHS line fn) = do
+--     let (x, (des, reg)) = statement line
+--         newList = addVariable (fromJust x) (variableType des) var
+--     fnSplit nextC fn (cont ++ [line]) newList set
+--   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
+
+{-************************************************************************
+                          Elimination & Propagation
+  *************************************************************************-}
+-- fnElimination :: [([String], [(String, String)])] -> [[String]]
+-- fnElimination [] = []
+-- -- fnElimination (f:fs) = (propagation f "" 0 []):(fnElimination fs)
+-- fnElimination (f:fs) = do
+--   let (conts, vars) = f
+--       cont_p = fst (propagation conts "" [] vars)
+--       --cont_t = (extensionTrim cont_p "" 0 [])
+--   (elimination cont_p "" []):(fnElimination fs)
+
+fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
 fnSplit [] fn cont var set = set
 fnSplit (line: nextC) fn cont var set
   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
   | (isLHS line fn) = do
     let (x, (des, reg)) = statement line
-        newList = addVariable (fromJust x) (variableType des) var
+        (v, state) = strSplit' "=" line
+        newList = addVariable (fromJust x) (variableType des) (head $ words state) state var
     fnSplit nextC fn (cont ++ [line]) newList set
   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 
-{-************************************************************************
-                          Elimination & Propagation
-  *************************************************************************-}
-fnElimination :: [([String], [(String, String)])] -> [[String]]
+fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
 fnElimination [] = []
 -- fnElimination (f:fs) = (propagation f "" 0 []):(fnElimination fs)
-fnElimination (f:fs) = do
-  let (conts, vars) = f
-      cont_p = fst (propagation conts "" [] vars)
-      --cont_t = (extensionTrim cont_p "" 0 [])
-  (elimination cont_p "" []):(fnElimination fs)
+fnElimination ((content, vList):fs) =  (simply content "" [] vList):(fnElimination fs)
 
 {-************************************************************************
             arguments: executable or binary/object fileE
@@ -126,7 +144,7 @@ main = do
               readyIR = filter (not.null) $ map strip (replace_addr srcIR 0 0 [])
               -- storeLists = findInstr (readyIR) "" [] []
               -- result = elimination (propagation readyIR "" 0 []) "" 0 []
-              result = fnElimination $ fnSplit readyIR "" [] [] []
+              result = map fst $ fnElimination $ fnSplit readyIR "" [] [] []
 
           hPutStr handleTmp $ unlines (map unlines result)
           -- BEGIN EDITION

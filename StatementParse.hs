@@ -46,7 +46,7 @@ loadStatement, allocaStatement:: String -> VAR
 loadStatement line
   | (hasOpening loadInfo) = do
     let (ty: ptrInfo)= splitStartEndOneOf "{[<" ">]}" loadInfo
-        ptr = unwords $ filter (isPrefixOf "%") $ splitOn' " " $ unwords ptrInfo
+        ptr = unwords $ filter (hasAny "%@") $ splitOn' " " $ unwords ptrInfo
     LOAD atomic volatile ty ptr align syncscope order
 
   | otherwise = do
@@ -110,32 +110,37 @@ atomicrmwStatement line = do
 
 getElemIndex :: [String] -> [(Bool, (String, String))] -> [(Bool, (String, String))]
 getElemIndex [] elements = elements
-getElemIndex (x:xs) e = do
-  let inrange = isInfixOf "inrange" x
-      tyIndex = bool x (snd $ popFront x) inrange
-      (idx, ty) = popBack tyIndex
-  getElemIndex xs (e ++ [(inrange, (ty, idx))])
+getElemIndex (ty:elist) e
+  | (hasOpening ty) = do
+    let idx = head elist
+        new_list = tail elist
+    getElemIndex new_list (e ++ [(inrange, (ty, idx))])
+
+  | otherwise = do
+    let current_eList = filter (not.null) $ splitOn' "," ty
+        (new_type, new_idx) = popFront (head current_eList)
+        new_list = bool (tail current_eList ++ elist) elist (null $ tail current_eList)
+    getElemIndex new_list (e ++ [ (inrange, (new_type, new_idx)) ])
+    where inrange = isInfixOf "inrange" ty
+  --     tyIndex = bool x (snd $ popFront x) inrange
+  --     (idx, ty) = popBack tyIndex
+  -- getElemIndex xs (e ++ [(inrange, (ty, idx))])
 
 -- <ty>, <ty>* <ptrval>{, [inrange] <ty> <idx>}*
 -- <ty>, <ty>* <ptrval>{, [inrange] <ty> <idx>}*
 -- <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 getelementptrStatement :: String -> VAR
-getelementptrStatement line
-  | hasOpening line = do
-    let (ty:ptr_idx) = splitStartEndOneOf "{[<" ">]}" clearInfo
-        ptr = unwords $ filter (isPrefixOf "%") $ words $ unwords ptr_idx
-        idxInfo = snd $ strSplit' ptr $ unwords ptr_idx
-        element = getElemIndex (splitOn "," idxInfo) []
-    GetElemPtr inbound ty ptr element
-  | otherwise = do
-    let (ty: pLine: eLine) = splitOn' "," (clearInfo)
-        ptr = unwords $ filter (isPrefixOf "%") $ words pLine
-        element = getElemIndex eLine []
-    GetElemPtr inbound ty ptr element
+getelementptrStatement line = do
+  let (op, info) = popFront line
+      inbound = isInfixOf "inbounds" info
+      clearInfo = unwords $ filter (/= "inbounds") $ splitOn " " info
 
-    where (op, info) = popFront line
-          inbound = isInfixOf "inbounds" info
-          clearInfo = unwords $ filter (/= "inbounds") $ splitOn " " info
+      (ty: pLine: eLine) = splitOn' "," clearInfo
+      ptr = head $ filter (hasAny "%@") $ words pLine
+      element = getElemIndex (splitStartEndOneOf "{<[" "]>}" $ join ", " eLine) []
+
+
+  GetElemPtr inbound ty ptr element
 
 -- v = op [operator type] <value type> <value 1>, <value 2>
 -- return (op symbole types v1 v2)
@@ -220,28 +225,51 @@ va_argStatement line = VaArg va_list arg_list arg_ty
   where (list, arg_ty) = strSplit' "," ((unwords.tail.words) line)
         (va_list, arg_list) = strSplit "*" list
 
-getClauses :: String -> [Clause] -> [Clause]
-getClauses [] list = list
-getClauses line list = do
-  let (ctype, cline) = popFront line
+-- getClauses :: String -> [Clause] -> [Clause]
+-- getClauses [] list = list
+-- getClauses line list = do
+--   let (ctype, cline) = popFront line
+--   case ctype of
+--     "catch" -> do
+--       let (ty, tmp) = popFront cline
+--           (cv, cline) = popFront tmp
+--           cty = rmChar ",;*" ty
+--       getClauses cline (list ++ [Catch cty cv])
+--     "filter" -> do
+--       let tmp = get_regexLine_all cline regex_array
+--           (cty: cv: _) = map ("["++) (map (++"]") tmp)
+--       getClauses cline (list ++ [Filter cty cv])
+--     _ -> list
+
+-- <clause> := catch <type> <value>
+-- <clause> := filter <array constant type> <array constant>
+getClauses :: [String] -> [Clause]
+getClauses [] = []
+getClauses (x:xs) = do
+  let (ctype, cline) = popFront x
   case ctype of
     "catch" -> do
-      let (ty, tmp) = popFront cline
-          (cv, cline) = popFront tmp
-          cty = rmChar ",;*" ty
-      getClauses cline (list ++ [Catch cty cv])
+      let [vtype, value] = bool (splitOn' " " cline) (splitStartEndOneOf "{[<" ">]}" cline) (hasOpening cline)
+      [Catch vtype value] ++ (getClauses xs)
     "filter" -> do
-      let tmp = get_regexLine_all cline regex_array
-          (cty: cv: _) = map ("["++) (map (++"]") tmp)
-      getClauses cline (list ++ [Filter cty cv])
-    _ -> list
+      let [vtype, value] = splitStartEndOneOf "{[<" ">]}" cline
+      [Filter vtype value] ++ (getClauses xs)
+    _ -> []
 
 landingpadStatement :: String -> VAR
-landingpadStatement line = LandingPad resultty cleanup clause
-  where (resultty:tmpLine:_) = get_regexLine_all line regex_landpad
-        cleanup = isInfixOf "cleanup" tmpLine
-        new_tmpLine = bool tmpLine (rmStr "cleanup" tmpLine) cleanup
-        clause = getClauses new_tmpLine []
+landingpadStatement line = do
+  let (op, info) = popFront line
+      cleanup = isInfixOf "cleanup" info
+      (resultty, clause_line) = popFront (unwords $ filter (/="cleanup") $ words info)
+
+      split_filter =  split (startsWith "filter") clause_line
+      split_catch = map (split (startsWith "catch")) split_filter
+      clause = getClauses (concat split_catch)
+  LandingPad resultty cleanup clause
+  --       (resultty:tmpLine:_) = get_regexLine_all line regex_landpad
+  --       cleanup = isInfixOf "cleanup" tmpLine
+  --       new_tmpLine = bool tmpLine (rmStr "cleanup" tmpLine) cleanup
+  --       clause = getClauses new_tmpLine []
 
 catchpadStatement :: String -> VAR
 catchpadStatement line = do
@@ -469,17 +497,70 @@ statement line = do
     then (Nothing, parseStatement lhs)
     else (Just lhs, parseStatement rhs)
 
+{- LeftSideVar List -}
+addVariable :: String -> String -> String -> String -> [LeftVar] -> [LeftVar]
+addVariable v t i s varList = varList ++ [(LeftVar v t i s)]
+
+removeVariable :: LeftVar -> [LeftVar] -> [LeftVar] -> [LeftVar]
+removeVariable vInfo [] px = px
+removeVariable vInfo (x:xs) px
+  | (variable vInfo == variable x) = (px ++ xs) -- found matching info
+  | otherwise = removeVariable vInfo xs (px ++ [x])
+
+lookupList :: String -> [LeftVar] -> Maybe LeftVar
+lookupList v [] = Nothing
+lookupList v (x:xs)
+  | (v == variable x) = Just x
+  | otherwise = lookupList v xs
+
+updateList :: LeftVar -> [LeftVar] -> [LeftVar] -> [LeftVar]
+updateList vInfo [] px = px
+updateList vInfo (x:xs) px
+  | (variable vInfo == variable x) = (px ++ [vInfo] ++ xs) -- found matching info
+  | otherwise = updateList vInfo xs (px ++ [x])
+
+setType, setInstr, setState :: String -> LeftVar -> LeftVar
+setType new_type x =  x { vtype=new_type }
+setInstr new_instr x = x { instruction=new_instr }
+setState new_state x = x { state=new_state }
+
+getType, getInstr, getState :: LeftVar -> String
+getType x = fromJust $ Just (vtype x)
+getInstr x = fromJust $ Just (instruction x)
+getState x = fromJust $ Just (state x)
+
+-- setType_List v t (x:xs) px
+--   | (v == variable x) = do
+--       x' = x { vtype=t }
+--
+--   | otherwise = setType v t xs (px ++ [x])
+--
+-- getType v [] = Nothing
+-- getType v (x:xs)
+--   | (v == variable x) = Just (vtype x)
+--   | otherwise = getType_v v xs
+--
+-- getInstr v [] = Nothing
+-- getInstr v (x:xs)
+--   | (v == variable x) = Just (instruction x)
+--   | otherwise = getInstr v xs
+--
+-- getState v [] = Nothing
+-- getState v (x:xs)
+--   | (v == variable x) = Just (state x)
+--   | otherwise = getState v xs
+
 {-************** Variables **************-}
-
-addVariable :: String -> String -> [(String, String)] -> [(String, String)]
-addVariable v t varList = varList ++ [(v, t)]
-
-removeVariable :: String -> [(String, String)] -> [(String, String)]
-removeVariable v varList = filter (/= (v, getType v varList)) varList
-
-getType :: String -> [(String, String)] -> String
-getType v varList = bool (fromJust t) "none" (isNothing t)
-  where t = (lookup v varList)
+--
+-- addVariable :: String -> String -> [(String, String)] -> [(String, String)]
+-- addVariable v t varList = varList ++ (v, t)
+--
+-- removeVariable :: String -> [(String, String)] -> [(String, String)]
+-- removeVariable v varList = filter (/= (v, getType v varList)) varList
+--
+-- getType :: String -> [(String, String)] -> String
+-- getType v varList = bool (fromJust t) "none" (isNothing t)
+--   where t = (lookup v varList)
 
 variableType :: VAR -> String
 variableType var
@@ -502,6 +583,9 @@ variableType var
 {-************************************************************************
                               Def and Use
   *************************************************************************-}
+
+findUseLine [] v uselist = uselist
+
 
 -- value content fname line_number recursive_list
 -- -> (line_number, (used variable info))

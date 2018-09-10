@@ -94,7 +94,7 @@ str_bb = "%bb_"
 str_var = "%"
 line_bb = "; <label>:bb_"
 
-regex_rsp = ".* = .* %RSP_(.*),\\ (.*)"
+regex_rsp = ".* = .* %R.*_(.*),\\ (.*)"
 regex_padding = "(.*)%([0-9]*)(.*)"
 
 regex_semi2 = "%(.*) : %(.*)"
