@@ -7,10 +7,12 @@ module Lists where
 reg_8, reg_16, reg_32, reg_64, reg_other, reg_ip :: [String]
 reg_8 = ["%AH","%AL","%BH","%BL","%CH","%CL","%DH","%DL","%SIL","%DIL","%SPL","%BPL"]
 reg_16 = ["%AX","%BX","%CX","%DX","%SI","%DI","%SP","%BP"]
-reg_32 = ["%EAX","%EBX","%ECX","%EDX","%ESI","%EDI","%ESP","%EBP","EFLAGS"]
-reg_64 = ["%RAX","%RBX","%RCX","%RDX","%RSI","%RDI","%RSP","%RBP","RFLAGS"]
-reg_other = ["XMM0","XMM1","XMM2","YMM0","YMM1","YMM2","ZMM0","ZMM1","ZMM2"]
-reg_ip = ["IP","EIP","RIP"]
+reg_32 = ["%EAX","%EBX","%ECX","%EDX","%ESI","%EDI","%ESP","%EBP","%EFLAGS"]
+reg_64 = ["%RAX","%RBX","%RCX","%RDX","%RSI","%RDI","%RSP","%RBP","%RFLAGS"]
+reg_other = ["%XMM0","%XMM1","%XMM2","%YMM0","%YMM1","%YMM2","%ZMM0","%ZMM1","%ZMM2"]
+reg_ip = ["%IP","%EIP","%RIP"]
+
+flags = ["CtlSysEFLAGS", "%EFLAGS"]
 
 {-************************************************************************
                             LLVM INSTRUCTIONS
@@ -75,13 +77,13 @@ condition= [("eq","=="), ("ne","!="),
 -- start_fn = "define void @fn_"
 -- start_bb = "bb_"
 
-regexLine_fn, regexEnd_fn, regexLine_bb, regex_semi1, regex_fn, regex_bb :: String
+regexLine_fn, regexEnd_fn, regexLine_bb, regex_fn, regex_bb :: String
 str_main, str_fn, str_bb, line_bb, strStart_fn, strStart_bb:: String
-regex_rsp, regex_padding, regex_semi2, regex_array, regex_sync, regex_pad, regex_landpad, regex_fbpadding, regex_fb, regex_ab :: String
+regex_rsp, regex_padding, regex_semicolon, regex_array, regex_sync, regex_pad, regex_landpad, regex_fbpadding, regex_fb, regex_ab :: String
 regexLine_fn = "^define void @fn_(.*)\\(.*\\{"
 regexEnd_fn = "^}"
 regexLine_bb = "^bb_(.*):.*"
-regex_semi1 = "(.*): [^%](.*)"
+regexLine_label = "^; <label>:bb_(.*)"
 regex_fn = ".*?@fn_(.*)\\(.*\\{"
 regex_bb = ".*?%bb_(.*)\\ .*"
 
@@ -97,7 +99,7 @@ line_bb = "; <label>:bb_"
 regex_rsp = ".* = .* %R.*_(.*),\\ (.*)"
 regex_padding = "(.*)%([0-9]*)(.*)"
 
-regex_semi2 = "%(.*) : %(.*)"
+regex_semicolon = "%(.*) : %(.*)"
 regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)" -- syncscope
 regex_pad = "(.*)[(.*)]"

@@ -1,1 +1,11 @@
 cabal install happy derive strings split MissingH
+
+invoke CatchSwitch
+binary / bitwise / conversion
+vector : extractelement insertelement
+aggregate : extractvalue insertvalue
+alloca
+load
+getelementptr
+icmp fcmp phi select call va_arg
+landingpad catchpad cleanuppad

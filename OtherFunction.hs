@@ -99,19 +99,6 @@ replaceLine old new tyStr line
         r = tyStr ++ get_regexLine line regex_fb
     unwords $ replaceWord old new s r
   | otherwise = line
---
--- rpWord :: String -> String -> String -> String
--- rpWord old new "" = ""
--- rpWord old new line = do
---   let (x:xs) = words line
---       tmp = "%" ++ (get_regexLine x regex_fb)
---       --tmp = "%" ++ (filter isAlphaNum x)
---       word = bool x (replace old new x) (tmp == old)
---   strip (word ++ " " ++ (rpWord old new $ unwords xs))
---
--- rp :: String -> String -> [String] -> [String]
--- rp old new [] = []
--- rp old new (line: content) = (rpWord old new line):(rp old new content)
 
 {-************** USE(variable) **************-}
 
@@ -144,7 +131,7 @@ isNum :: String -> Bool
 isNum s = case reads s :: [(Double, String)] of
   [(_, "")] -> True
   _         -> False
-  
+
 isNum' :: String -> Bool
 isNum' s = (length $ filter (isHexDigit) s) == (length s)
 
@@ -154,12 +141,37 @@ isInt x = x == fromInteger (round x)
 
 -- pre: Integer
 is0s :: Integer -> Bool --, Bits a // (Num a, Integral a, Eq a, Floating a, RealFrac a) => a
-is0s x = isInt $ logBase 2 (logBase 2 (fromInteger $ abs x))
+is0s x = isInt $ logBase 2 (fromInteger $ abs x)
 -- is1s x = ((.&.) x (x+1)) == 0
 
 is0s_sz :: (Num a, Integral a, Eq a, Floating a, RealFrac a) => a -> a -> Bool
-is0s_sz sz x = sz == logBase 2 (logBase 2 (abs x))
+is0s_sz sz x = sz == logBase 2 (abs x)
 
 areZeros, hasZeros :: [Integer] -> Bool --(Num a, Integral a, Eq a, Floating a, RealFrac a) => [a]
 areZeros x = null $ dropWhile (==True) (map is0s x)
 hasZeros x = null $ takeWhile (==True) (map is0s x)
+
+{-************************************************************************
+                        Boolean Matching Function
+  *************************************************************************-}
+
+isMatchVariable u v
+  | (u == v) = True
+  | otherwise = do
+    let a = filter isDigit u
+        b = filter isDigit v
+    bool False True (a == b)
+
+isMatchList u [] = False
+isMatchList u (v:vs)
+  | (u == v) = True
+  | (a == b) = True
+  | otherwise = isMatchList u vs
+    where a = filter isDigit u
+          b = filter isDigit v
+
+isUse v line
+  | (isInfixOf v line) = do
+    let tmpList = map (head.words) (tail $ split (startsWith v) line)
+    isMatchList v tmpList
+  | otherwise = False

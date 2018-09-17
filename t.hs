@@ -20,7 +20,7 @@ import Text.Regex.Posix
 import OtherFunction
 import StatementInstr
 import StatementParse
--- import Elimination
+import Elimination
 import Idioms
 import IsGetSet
 import Idioms
@@ -67,7 +67,6 @@ import Lists
 --       g = "define void @fn_40041(%regset...) {"
 --       h = "call void @fn_400410(%regset* %0)"
 --       i = "call void @fn_40041(%regset* %0)"
---
 --       x = "@fn_40041"
 --       y = "%bb_40041"
 --
@@ -100,7 +99,8 @@ import Lists
 --   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
 --   | (isLHS line fn) = do
 --     let (x, (des, reg)) = statement line
---         newList = addVariable (fromJust x) (variableType des) var
+--         newList = addVa%157 = %RBP_2-8
+
 --     fnSplit nextC fn (cont ++ [line]) newList set
 --   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 --
@@ -319,8 +319,33 @@ import Lists
 --   putStrLn ""
 --   mapM_ print $ splitStartEndOneOf "{[<" ">]}" v
 
-printList [] = []
-printList (x:xs) = (concat [variable x, " (", vtype x, ") <- (", instruction x, ") ", state x]) : printList xs
+remove_uses :: String -> [String] -> [String] -> [String]
+remove_uses str [] preLine = preLine
+remove_uses str (line:nextLine) preLine
+  | (isUse str line) = do
+    if (isLHS line "caller_remove_uses")
+      then do
+        let v = fst (strSplit " = " line)
+        remove_uses str (remove_uses v nextLine []) preLine
+    else remove_uses str nextLine preLine
+  | otherwise = remove_uses str nextLine (preLine ++ [line])
+
+remove_st :: String -> [String] -> [String] -> [String]
+remove_st str [] preLines = preLines
+remove_st str (line:nextLines) preLines
+  | (isInfixOf str line) = do
+    if (isLHS line "caller_remove_st")
+      then do
+        let v = fst (strSplit " = " line)
+        remove_st str (remove_uses v nextLines []) preLines
+      else
+        remove_st str nextLines preLines
+  | otherwise = remove_st str nextLines (preLines ++ [line])
+
+remove_r :: [String] -> [String] -> [String]
+remove_r [] content = content
+remove_r (r:rs) content = do
+  remove_r rs (remove_st r content [])
 
 fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
 fnSplit [] fn cont var set = set
@@ -334,48 +359,88 @@ fnSplit (line: nextC) fn cont var set
     fnSplit nextC fn (cont ++ [line]) newList set
   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 
-fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
-fnElimination [] = []
--- fnElimination (f:fs) = (propagation f "" 0 []):(fnElimination fs)
-fnElimination ((content, vList):fs) =  (simply content "" [] vList):(fnElimination fs)
-
 main = do
-  let as = "define void @fn_A(%regset* noalias nocapture) {"
-      a1 = " %110 = add i64 %RBP_1, -24"
-      a2 = "%111 = inttoptr i64 %110 to i32*"
+  let x = ["define void @fn_4004D0(%regset* noalias nocapture) {",
+            "%157 = %RBP_2-8",
+            "%EAX_3 = load i32, i32* %157, align 1",
+            "%159 = sitofp i32 %EAX_3 to double",
+            "%160 = bitcast double %159 to i64",
+            "%XMM1_1 = %XMM1_0 : %160",
+            "%170 = trunc i128 %XMM0_4 to i64",
+            "%171 = bitcast i64 %170 to double",
+            "%172 = trunc i128 %XMM1_1 to i64",
+            "%173 = bitcast i64 %172 to double",
+            "%174 = fdiv double %171, %173",
+            "%175 = bitcast double %174 to i64",
+            "%XMM0_5 = %XMM0_4 : %175",
+            "}"]   -- x
+      y = ["%160 = bitcast double %159 to i64",
+            "%XMM1_1 = %XMM1_0 : %160"]
 
-      a3 = "%37 = add i64 %RSP_1, -4"
-      a4 = "%38 = inttoptr i64 %37 to i32*"
-      a5 = "store i32 0, i32* %38, align 1"
-      ae = "}"
+  let (f, vlist) = head $ fnSplit (map strip x) "" [] [] []
+      (cont, list) = propagation f "" vlist []
 
-      aSet = [as, a1, a2, a3, a4, a5, ae]
-
-      bs = "define void @fn_B(%regset* noalias nocapture) {"
-      b1 = "%ZMM0_3 = load <16 x float>, <16 x float>* %ZMM0"
-      b2 = "%147 = bitcast <16 x float> %ZMM0_3 to i512"
-      b3 = "%XMM0_3 = trunc i512 %147 to i128"
-      b4 = "%148 = zext i64 %146 to i128"
-      b5 = "%149 = and i128 %XMM0_3, -18446744073709551616"
-      b6 = "%XMM0_4 = or i128 %148, %149"
-
-      b7 = "%150 = bitcast <16 x float> %ZMM0_3 to i512"
-      b8 = "%YMM0_3 = trunc i512 %150 to i256"
-      b9 = "%151 = zext i128 %XMM0_4 to i256"
-      b10 = "%152 = and i256 %YMM0_3, -340282366920938463463374607431768211456"
-      b11 = "%YMM0_4 = or i256 %151, %152"
-
-      b12 = "%153 = bitcast <16 x float> %ZMM0_3 to i512"
-      b13 = "%154 = zext i128 %XMM0_4 to i512"
-      b14 = "%155 = and i512 %153, -340282366920938463463374607431768211456"
-      b15 = "%ZMM0_4 = or i512 %154, %155"
-      b16 = "%RIP_19 = add i64 %RIP_18, 3"
-      b17 = "%EIP_16 = trunc i64 %RIP_19 to i32"
-      b18 = "%IP_16 = trunc i64 %RIP_19 to i16"
-      be = "}"
-
-      bSet = [bs, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, be]
-      cont = aSet ++ bSet
-
-      -- (tmp, vlist) = head $ fnSplit aSet "" [] [] []
-  mapM_ print (head $ map fst $ fnElimination $ fnSplit bSet "" [] [] [])
+  let (g, ulist) = head $ fnSplit (map strip x) "" [] [] []
+      (c, l) = propagateTypeVar y "double" "%159" "i32" "EAX_3" ulist []
+  mapM_ print cont
+  -- mapM_ print cont
+-- printList [] = []
+-- printList (x:xs) = (concat [variable x, " (", vtype x, ") <- (", instruction x, ") ", state x]) : printList xs
+--
+-- fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
+-- fnSplit [] fn cont var set = set
+-- fnSplit (line: nextC) fn cont var set
+--   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
+--   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
+--   | (isLHS line fn) = do
+--     let (x, (des, reg)) = statement line
+--         (v, state) = strSplit' "=" line
+--         newList = addVariable (fromJust x) (variableType des) (head $ words state) state var
+--     fnSplit nextC fn (cont ++ [line]) newList set
+--   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
+--
+-- fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
+-- fnElimination [] = []
+-- -- fnElimination (f:fs) = (propagation f "" 0 []):(fnElimination fs)
+-- fnElimination ((content, vList):fs) =  (simply content "" [] vList):(fnElimination fs)
+--
+-- main = do
+--   let as = "define void @fn_A(%regset* noalias nocapture) {"
+--       a1 = " %110 = add i64 %RBP_1, -24"
+--       a2 = "%111 = inttoptr i64 %110 to i32*"
+--
+--       a3 = "%37 = add i64 %RSP_1, -4"
+--       a4 = "%38 = inttoptr i64 %37 to i32*"
+--       a5 = "store i32 0, i32* %38, align 1"
+--       ae = "}"
+--
+--       aSet = [as, a1, a2, a3, a4, a5, ae]
+--
+--       bs = "define void @fn_B(%regset* noalias nocapture) {"
+--       b1 = "%ZMM0_3 = load <16 x float>, <16 x float>* %ZMM0"
+--       b2 = "%147 = bitcast <16 x float> %ZMM0_3 to i512"
+--       b3 = "%XMM0_3 = trunc i512 %147 to i128"
+--       b4 = "%148 = zext i64 %146 to i128"
+--       b5 = "%149 = and i128 %XMM0_3, -18446744073709551616"
+--       b6 = "%XMM0_4 = or i128 %148, %149"
+--
+--       b7 = "%150 = bitcast <16 x float> %ZMM0_3 to i512"
+--       b8 = "%YMM0_3 = trunc i512 %150 to i256"
+--       b9 = "%151 = zext i128 %XMM0_4 to i256"
+--       b10 = "%152 = and i256 %YMM0_3, -340282366920938463463374607431768211456"
+--       b11 = "%YMM0_4 = or i256 %151, %152"
+--
+--       b12 = "%153 = bitcast <16 x float> %ZMM0_3 to i512"
+--       b13 = "%154 = zext i128 %XMM0_4 to i512"
+--       b14 = "%155 = and i512 %153, -340282366920938463463374607431768211456"
+--       b15 = "%ZMM0_4 = or i512 %154, %155"
+--       b16 = "%RIP_19 = add i64 %RIP_18, 3"
+--       b17 = "%EIP_16 = trunc i64 %RIP_19 to i32"
+--       b18 = "%IP_16 = trunc i64 %RIP_19 to i16"
+--       be = "}"
+--
+--       bSet = [bs, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, be]
+--       cont = aSet ++ bSet
+--
+--       -- (tmp, vlist) = head $ fnSplit aSet "" [] [] []
+--   mapM_ print (head $ map fst $ fnElimination $ fnSplit bSet "" [] [] [])

@@ -20,7 +20,8 @@ import Text.Regex.Posix
 import OtherFunction
 import StatementInstr
 import StatementParse
--- import Elimination
+import Elimination
+import RegisterPointer
 import IsGetSet
 import Idioms
 import Lists
@@ -28,12 +29,35 @@ import Lists
 {-************************************************************************
                   Remove Unnecessary Line Before Process
   *************************************************************************-}
+remove_uses :: String -> [String] -> [String] -> [String]
+remove_uses str [] preLine = preLine
+remove_uses str (line:nextLine) preLine
+  | (isUse str line) = do
+    if (isLHS line "caller_remove_uses")
+      then do
+        let v = (strip.fst) (strSplit " = " line)
+        remove_uses str (remove_uses v nextLine []) preLine
+    else remove_uses str nextLine preLine
+  | otherwise = remove_uses str nextLine (preLine ++ [line])
+
 remove_st :: String -> [String] -> [String] -> [String]
 remove_st str [] preLines = preLines
-remove_st str (line:nextLine) preLines = do
-  if (isInfixOf str line)
-    then remove_st str nextLine preLines
-    else remove_st str nextLine (preLines ++ [line])
+remove_st str (line:nextLines) preLines
+  | (isInfixOf str line) = do
+    if (isLHS line "caller_remove_st")
+      then do
+        let v = (strip.fst) (strSplit " = " line)
+        remove_st str (remove_uses v nextLines []) preLines
+      else
+        remove_st str nextLines preLines
+  | otherwise = remove_st str nextLines (preLines ++ [line])
+
+-- remove_st :: String -> [String] -> [String] -> [String]
+-- remove_st str [] preLines = preLines
+-- remove_st str (line:nextLine) preLines = do
+--   if (isInfixOf str line)
+--     then remove_st str nextLine preLines
+--     else remove_st str nextLine (preLines ++ [line])
 
 remove_r :: [String] -> [String] -> [String]
 remove_r [] content = content
@@ -49,13 +73,13 @@ replace_addr :: [String] -> Int -> Int -> [String] -> [String]
 replace_addr [] fcount bcount preContent = preContent
 replace_addr (line: nextContent) fcount bcount preContent
 
-  | (startswith strStart_fn line) = do
-
-    let (fn, new_name) = (getFunctionName line, str_fn ++ (show fcount))
-        new_line = replace fn new_name line
-        new_preContent = map (replaceLine fn new_name str_fn) preContent
-        new_nextContent = map (replaceLine fn new_name str_fn) nextContent
-    replace_addr new_nextContent (fcount + 1) bcount (new_preContent ++ [new_line])
+  -- | (startswith strStart_fn line) = do
+  --
+  --   let (fn, new_name) = (getFunctionName line, str_fn ++ (show fcount))
+  --       new_line = replace fn new_name line
+  --       new_preContent = map (replaceLine fn new_name str_fn) preContent
+  --       new_nextContent = map (replaceLine fn new_name str_fn) nextContent
+  --   replace_addr new_nextContent (fcount + 1) bcount (new_preContent ++ [new_line])
 
   | (startswith strStart_bb line) = do
 
@@ -71,34 +95,55 @@ replace_addr (line: nextContent) fcount bcount preContent
       Split Up Contents by Function and Create a list of Varaibles
   ************************************************************************-}
 
--- fnSplit :: [String] -> String -> [String] -> [(String, String)] -> [ ([String] , [(String, String)]) ] -> [ ([String] , [(String, String)]) ]
--- fnSplit [] fn cont var set = set
--- fnSplit (line: nextC) fn cont var set
---   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
---   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
---   | (isLHS line fn) = do
---     let (x, (des, reg)) = statement line
---         newList = addVariable (fromJust x) (variableType des) var
---     fnSplit nextC fn (cont ++ [line]) newList set
---   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
+fnStartEndBlock (line: nextCont)
+  | (isBasicBlock line || isBlockLabel line) = (line:nextCont)
+  | otherwise = fnStartExregndBlock nextCont
 
-{-************************************************************************
-                          Elimination & Propagation
-  *************************************************************************-}
--- fnElimination :: [([String], [(String, String)])] -> [[String]]
--- fnElimination [] = []
--- -- fnElimination (f:fs) = (propagation f "" 0 []):(fnElimination fs)
--- fnElimination (f:fs) = do
---   let (conts, vars) = f
---       cont_p = fst (propagation conts "" [] vars)
---       --cont_t = (extensionTrim cont_p "" 0 [])
---   (elimination cont_p "" []):(fnElimination fs)
+splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
+splitFn [] fn c v p set = set
+splitFn (line: nextC) fn cList vList pList set
+  | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] set
+  | (isFunctionEnd line) = splitFn nextC fn [] [] $ set ++ [(cList ++ [line], vList, pList)]
+  -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
+  | (isLHS line fn) = do
+    let (x, (des, reg)) = statement line
+        (v, state) = strSplit' "=" line
+
+    case (isPrefixOf "%R" (fromJust x) || isPrefixOf "%E" (fromJust x) ) of
+      True -> do
+        let pointer = fromJust x
+        if (isBinary des)
+          then do
+            let instr = op des
+                rbase = head reg
+                idx = read (last reg) :: Integer
+                rdix = bool (0-idx) (idx) (instr == "add")
+                newList = pList ++ [( RP pointer rbase rdix )]
+            splitFn nextC (cList ++ [line]) vList newList set
+
+          else if (isLoad des)
+            then do
+              let rbase = head xreg
+                  newList = pList ++ [( RP pointer rbase 0 )]
+              splitFn nextC (cList ++ [line]) vList newList set
+
+          else splitFn nextC (cList ++ [line]) vList pList set
+
+      _ -> do
+        let variable = fromJust x
+            vtype = variableType des
+            instr = head $ words state
+            newList = addVariable (variable) (vtype) (instr) (state) vList
+        splitFn nextC fn (cList ++ [line]) newList pList set
+  | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
 
 fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
 fnSplit [] fn cont var set = set
 fnSplit (line: nextC) fn cont var set
   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
+  -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  fnSplit (fnStartEndBlock (line:nextC)) fn cont var set
+
   | (isLHS line fn) = do
     let (x, (des, reg)) = statement line
         (v, state) = strSplit' "=" line
@@ -106,11 +151,16 @@ fnSplit (line: nextC) fn cont var set
     fnSplit nextC fn (cont ++ [line]) newList set
   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 
+-- fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
+-- fnElimination [] = []
+-- fnElimination ((content, vList):fs) =  (detectIdiom content "" [] vList):(fnElimination fs)
+
 fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
 fnElimination [] = []
--- fnElimination (f:fs) = (propagation f "" 0 []):(fnElimination fs)
-fnElimination ((content, vList):fs) =  (simply content "" [] vList):(fnElimination fs)
-
+fnElimination ((content, vList):fs) =  do
+  let (content_i, vList_i) = (detectIdiom content "" [] vList)
+      (content_p, vList_p) = propagation content_i "" vList_i []
+  (elimination False content_p "" vList_p []):(fnElimination fs)
 {-************************************************************************
             arguments: executable or binary/object fileE
   *************************************************************************-}
@@ -133,20 +183,21 @@ main = do
       handleAsm <- openFile disas ReadMode
       contentIr <- hGetContents handleIr
       contentAsm <- hGetContents handleAsm
-
+variable
       if (length contentIr /= 0)
         then do
           -- TEMPORARY FILE
           (tmpFile, handleTmp) <- openTempFile "." "tmpIR"
 
-          let unnecessaryReg = reg_8 ++ reg_16 ++ reg_ip
+          let unnecessaryReg = reg_8 ++ reg_16 ++ flags ++ ["%IP"]
               srcIR = remove_r unnecessaryReg $ (init.lines.fst) (strSplit str_main  contentIr)
               readyIR = filter (not.null) $ map strip (replace_addr srcIR 0 0 [])
-              -- storeLists = findInstr (readyIR) "" [] []
-              -- result = elimination (propagation readyIR "" 0 []) "" 0 []
+
+              pointerList = createPtrTable (fnSplit readyIR "" [] [] [])
               result = map fst $ fnElimination $ fnSplit readyIR "" [] [] []
 
-          hPutStr handleTmp $ unlines (map unlines result)
+          -- hPutStr handleTmp $ unlines (map unlines result)
+          hPutStr handleTmp $ unlines pointerList
           -- BEGIN EDITION
 
           -- CLOSE FILES & TERMINATE

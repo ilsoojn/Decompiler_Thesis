@@ -17,12 +17,15 @@ import Text.Regex.Posix
 
 import Lists
 
+isLHS line fname = (not.isFunction) line && (not.isBasicBlock) line && (not.isBlockLabel) line && (not.null) fname && (isInfixOf " = " line)
+
 is_regexLine :: String -> String -> Bool
 is_regexLine line regex = (not.null) $ map (head.tail) (line =~ regex :: [[String]])
 
 isFunction line = is_regexLine line regexLine_fn
-isBasicBlock line = is_regexLine line regexLine_bb
-isBlock line = is_regexLine line regex_semi1
+isBasicBlock line = is_regexLine line regexLine_bb    -- bb_#: ...
+isBlockLabel line = is_regexLine line regexLine_label -- ; <label>:bb_#...
+isSemiColon line = is_regexLine line regex_semicolon  -- v = %a  : %b
 isStackPtr line  = is_regexLine line regex_rsp
 isFunctionEnd line = is_regexLine line regexEnd_fn
 
@@ -39,15 +42,21 @@ getBlockName line = str_bb ++ (get_regexLine line regexLine_bb)
 
 getRHS line = get_regexLine line regex_ab
 
+getFrontBackNonPadding :: String -> String
+getFrontBackNonPadding line = get_regexLine line regex_fb
+
+-- %v = %a : %b -> [a, b]
+getHighLowVariable :: String -> [String]
+getHighLowVariable line = get_regexLine_all line regex_semicolon
+
+-- paddings
+
 getPadding :: String -> String -> [String]
 getPadding line regex = (tail.head)(line =~ regex :: [[String]])
 
 getFrontBackPadding :: String -> (String, String)
 getFrontBackPadding line = (front,back)
   where [front,back] = (tail.head)(line =~ regex_fbpadding :: [[String]])
-
-getFrontBackNonPadding :: String -> String
-getFrontBackNonPadding line = get_regexLine line regex_fb
 
 {-************ Bracket ************-}
 hasOpening x = (elem '[' x) || (elem '{' x) || (elem '<' x)

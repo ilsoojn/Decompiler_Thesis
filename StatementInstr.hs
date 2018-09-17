@@ -7,7 +7,8 @@ import OtherFunction
 import Debug.Trace
 
 {-************** Format and Regex **************-}
-data Function = Function {name::String, block::[(String, [String])]}
+
+data RP = RP{rname::String, rbase::String, ridx::Integer} deriving (Ord, Eq, Show, Read)
 data LeftVar = LeftVar{variable::String, vtype::String, instruction::String, state::String} deriving (Show, Read, Eq, Ord)
 isLeftVar (LeftVar _ _ _ _) = True
 
@@ -17,7 +18,7 @@ data Chain = Chain {v::String, def::(Integer, VAR), use::[(Integer, VAR)]} deriv
 -- data LOAD = LOAD {ld_ty::String, rsp::String, index::Integer}
 data VAR = Undef {value::String}
           | Const {value::String}
-          | Declare {high::String, low::String}
+          | SemiColon {high::String, low::String}
           -- Terminator
           | RetVoid
           | Ret {ty::String, value::String} -- <<
@@ -34,7 +35,6 @@ data VAR = Undef {value::String}
           -- Bitwise & Binary
           | Binary {op::String, sym::String, ty::String, values::[String]}
           | Bit {op::String, sym::String, ty::String, values::[String]}
-          | RSP {rsp::String, idx::String}
           -- Aggregate
           | Array {op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : [n x ty] <- [n x [n x ty]]
           | Struct {op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : {ty} <- {ty, {ty}}
@@ -68,8 +68,8 @@ isUndef (Undef _) = True
 isUndef _ = False
 isConst (Const _) = True
 isConst _ = False
-isDeclare (Declare _ _) = True
-isDeclare _ = False
+isSemicolon (SemiColon _ _) = True
+isSemicolon _ = False
 isVoidRet (RetVoid) = True
 isVoidRet _ = False
 isRet (Ret _ _) = True
@@ -98,8 +98,6 @@ isBinary (Binary _ _ _ _) = True
 isBinary _ = False
 isBitwise (Bit _ _ _  _) = True
 isBitwise _ = False
-isRSP (RSP _ _) = True
-isRSP _ = False
 isArray (Array _ _ _ _ _ _) = True
 isArray _ = False
 isStruct (Struct _ _ _ _ _ _) = True

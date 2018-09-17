@@ -480,12 +480,12 @@ parseStatement line
         (s, [parent s])
 
       _ -> do
-        if (not.null) (line =~ regex_semi2 :: [[String]])
+        if (isSemiColon line)
           then do
-            let (v1:v2:_) = (tail.head) (line =~ regex_semi2 :: [[String]])
+            let (v1:v2:_) = getHighLowVariable line
                 hs = '%':v1
                 ls = '%':v2
-            (Declare hs ls, [hs, ls])
+            (SemiColon hs ls, [hs, ls])
           else (Other, [])
   where op = head $ words line
         opty = getInstructionType op
@@ -498,6 +498,7 @@ statement line = do
     else (Just lhs, parseStatement rhs)
 
 {- LeftSideVar List -}
+
 addVariable :: String -> String -> String -> String -> [LeftVar] -> [LeftVar]
 addVariable v t i s varList = varList ++ [(LeftVar v t i s)]
 
@@ -528,6 +529,40 @@ getType, getInstr, getState :: LeftVar -> String
 getType x = fromJust $ Just (vtype x)
 getInstr x = fromJust $ Just (instruction x)
 getState x = fromJust $ Just (state x)
+
+
+{- RP List -}
+
+addPointer :: String -> String -> String -> String -> [RP] -> [RP]
+addPointer ptr base idx ptrList = ptrList ++ [(RP ptr base idx)]
+
+removePointer :: RP -> [RP] -> [RP] -> [RP]
+removePointer pInfo [] px = px
+removePointer pInfo (x:xs) px
+  | (rname pInfo == rname x) = (px ++ xs) -- found matching info
+  | otherwise = removeVariable pInfo xs (px ++ [x])
+
+lookupList_p :: String -> [RP] -> Maybe RP
+lookupList_p p [] = Nothing
+lookupList_p p (x:xs)
+  | (p == rname x) = Just x
+  | otherwise = lookupList_p p xs
+
+updateList_p :: RP -> [RP] -> [RP] -> [RP]
+updateList_p pInfo [] px = px
+updateList_p pInfo (x:xs) px
+  | (rname pInfo == rname x) = (px ++ [pInfo] ++ xs) -- found matching info
+  | otherwise = updateList_p pInfo xs (px ++ [x])
+
+setName, setBase, setIndex :: String -> RP -> RP
+setName name x =  x { rname=name }
+setBase base x = x { rbase=base }
+setIndex idx x = x { ridx=idx }
+
+getName, getBase, getIndex :: LeftVar -> RP
+getName x = fromJust $ Just (rname x)
+getBase x = fromJust $ Just (rbase x)
+getIndex x = fromJust $ Just (ridx x)
 
 -- setType_List v t (x:xs) px
 --   | (v == variable x) = do
@@ -584,27 +619,22 @@ variableType var
                               Def and Use
   *************************************************************************-}
 
-findUseLine [] v uselist = uselist
-
+findDef :: String -> [LeftVar] -> String
+findDef v vList
+  | (not.isNothing) vInfo = getState (fromJust vInfo)
+  | otherwise = ""
+  where vInfo = lookupList v vList
 
 -- value content fname line_number recursive_list
 -- -> (line_number, (used variable info))
-findUse :: String -> [String] -> [(VAR, [String])] -> [(VAR, [String])]
-findUse v [] uselist = uselist
-findUse v (line:nextContent) uselist
-  | (isFunction line) = bool (uselist) (findUse v nextContent uselist) (null "")
-  | (isInfixOf v line) = do
-    let (lhs, rhs) = strSplit' " = " line
-        useVar = bool (parseStatement rhs) (parseStatement lhs) (null rhs)
-    findUse v nextContent (uselist ++ [useVar])
-  -- |
-  | otherwise = findUse v nextContent  uselist
+findUse :: String -> [String] -> [String]
+findUse v [] = []
+findUse v (line:nextCont)
+  | (isFunctionEnd line) = []
+  | (isUse v tmp) = line : filter (not.null) (findUse v nextCont)
+  | otherwise = "" : filter (not.null) (findUse v nextCont)
+    where tmp = last $ splitOn' " = " line
 
-{--}
--- line #, (VAR, [Strings])
-is_useConv :: [(VAR, [String])] -> Bool
-is_useConv [x] = isConv (fst x)
-is_useConv (x:xs) = isConv (fst x) && (is_useConv xs)--(map (fst.snd) x)
 
 -- findDef :: String -> Integer -> (Integer, VAR) -- line_number and Operator Type
 -- findDef cLine line_num = (line_num, parseStatement cLine)
