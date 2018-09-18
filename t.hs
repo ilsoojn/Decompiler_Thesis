@@ -347,6 +347,44 @@ remove_r [] content = content
 remove_r (r:rs) content = do
   remove_r rs (remove_st r content [])
 
+splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
+splitFn [] fn c v p set = set
+splitFn (line: nextC) fn cList vList pList set
+  | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] [] set
+  | (isFunctionEnd line) = splitFn nextC fn [] [] [] (set ++ [(cList ++ [line], vList, pList)])
+  -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
+  | (isLHS line fn) = do
+    let (x, (des, reg)) = statement line
+        (v, state) = strSplit' "=" line
+
+    case (isPrefixOf "%R" (fromJust x) || isPrefixOf "%E" (fromJust x) ) of
+      True -> do
+        let pointer = fromJust x
+        if (isBinary des)
+          then do
+            let instr = op des
+                rbase = head reg
+                idx = read (last reg) :: Integer
+                rdix = bool (0-idx) (idx) (instr == "add")
+                newList = pList ++ [( RP pointer rbase rdix "")]
+            splitFn nextC (cList ++ [line]) vList newList set
+
+          else if (isLoad des)
+            then do
+              let rbase = head xreg
+                  newList = pList ++ [( RP pointer rbase 0 "")]
+              splitFn nextC (cList ++ [line]) vList newList set
+
+          else splitFn nextC (cList ++ [line]) vList pList set
+
+      _ -> do
+        let variable = fromJust x
+            vtype = variableType des
+            instr = head $ words state
+            newList = addVariable (variable) (vtype) (instr) (state) vList
+        splitFn nextC fn (cList ++ [line]) newList pList set
+  | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
+
 fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
 fnSplit [] fn cont var set = set
 fnSplit (line: nextC) fn cont var set
@@ -377,12 +415,12 @@ main = do
       y = ["%160 = bitcast double %159 to i64",
             "%XMM1_1 = %XMM1_0 : %160"]
 
-  let (f, vlist) = head $ fnSplit (map strip x) "" [] [] []
+  let (f, (vlist, plist)) = head $ splitFn (map strip x) "" [] [] [] []
       (cont, list) = propagation f "" vlist []
 
   let (g, ulist) = head $ fnSplit (map strip x) "" [] [] []
       (c, l) = propagateTypeVar y "double" "%159" "i32" "EAX_3" ulist []
-  mapM_ print cont
+  mapM_ print (plist)
   -- mapM_ print cont
 -- printList [] = []
 -- printList (x:xs) = (concat [variable x, " (", vtype x, ") <- (", instruction x, ") ", state x]) : printList xs

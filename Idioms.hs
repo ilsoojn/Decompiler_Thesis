@@ -72,7 +72,7 @@ idiom2 pre curr next content vList
         useN = length (filter (not.null) $ findUse (fromJust nv) content)
 
         isUse_one = (useP == 1) && (useC == 1)
-        isIdiomInstr = (instruction p == "zext") && (instruction n == "or")
+        isIdiomInstr = (getInstr p == "zext") && (getInstr n == "or")
         isIdiom = (elem (fromJust pv) nreg) && (elem (fromJust cv) nreg)
 
     if (isUse_one && isIdiomInstr && isIdiom)

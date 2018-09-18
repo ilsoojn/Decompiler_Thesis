@@ -94,47 +94,56 @@ replace_addr (line: nextContent) fcount bcount preContent
 {-************************************************************************
       Split Up Contents by Function and Create a list of Varaibles
   ************************************************************************-}
+createPtrTable [] = []
+createPtrTable (p:ps) = do
+  let s = rname p ++ ": " ++ getBase p ++ " + " ++ show (getIndex p) ++ "(" ++ getRstate p ++ ")"
+  s:(createPtrTable ps)
 
 fnStartEndBlock (line: nextCont)
   | (isBasicBlock line || isBlockLabel line) = (line:nextCont)
-  | otherwise = fnStartExregndBlock nextCont
+  | otherwise = fnStartEndBlock nextCont
 
 splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
 splitFn [] fn c v p set = set
 splitFn (line: nextC) fn cList vList pList set
   | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] set
-  | (isFunctionEnd line) = splitFn nextC fn [] [] $ set ++ [(cList ++ [line], vList, pList)]
+  | (isFunctionEnd line) = splitFn nextC fn [] [] [] $ set ++ [(cList ++ [line], (vList, pList))]
   -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
   | (isLHS line fn) = do
     let (x, (des, reg)) = statement line
         (v, state) = strSplit' "=" line
 
-    case (isPrefixOf "%R" (fromJust x) || isPrefixOf "%E" (fromJust x) ) of
+    case (isPrefixOf "%R" (fromJust x) || isPrefixOf "%E" (fromJust x)) of
       True -> do
-        let pointer = fromJust x
-        if (isBinary des)
-          then do
-            let instr = op des
-                rbase = head reg
-                idx = read (last reg) :: Integer
-                rdix = bool (0-idx) (idx) (instr == "add")
-                newList = pList ++ [( RP pointer rbase rdix )]
-            splitFn nextC (cList ++ [line]) vList newList set
-
-          else if (isLoad des)
-            then do
-              let rbase = head xreg
-                  newList = pList ++ [( RP pointer rbase 0 )]
-              splitFn nextC (cList ++ [line]) vList newList set
-
-          else splitFn nextC (cList ++ [line]) vList pList set
+        let ptr = trace("ptr: " ++ line) fromJust x
+            rp = pointerInfo ptr state pList vList
+            newList = pList ++ [rp]
+        splitFn nextC fn (cList ++ [line]) vList newList set
+        -- let pointer = fromJust x
+        -- if (isBinary des)
+        --   then do
+        --     let instr = op des
+        --         rbase = head reg
+        --         idx = read (last reg) :: Integer
+        --         rdix = bool (0-idx) (idx) (instr == "add")
+        --         newList = pList ++ [( RP pointer rbase rdix )]
+        --     splitFn nextC (cList ++ [line]) vList newList set
+        --
+        --   else if (isLoad des)
+        --     then do
+        --       let rbase = head xreg
+        --           newList = pList ++ [( RP pointer rbase 0 )]
+        --       splitFn nextC (cList ++ [line]) vList newList set
+        --
+        --   else splitFn nextC (cList ++ [line]) vList pList set
 
       _ -> do
         let variable = fromJust x
             vtype = variableType des
             instr = head $ words state
-            newList = addVariable (variable) (vtype) (instr) (state) vList
+            newList = addVariable variable vtype instr state vList
         splitFn nextC fn (cList ++ [line]) newList pList set
+
   | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
 
 fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
@@ -183,7 +192,7 @@ main = do
       handleAsm <- openFile disas ReadMode
       contentIr <- hGetContents handleIr
       contentAsm <- hGetContents handleAsm
-variable
+
       if (length contentIr /= 0)
         then do
           -- TEMPORARY FILE
@@ -193,7 +202,7 @@ variable
               srcIR = remove_r unnecessaryReg $ (init.lines.fst) (strSplit str_main  contentIr)
               readyIR = filter (not.null) $ map strip (replace_addr srcIR 0 0 [])
 
-              pointerList = createPtrTable (fnSplit readyIR "" [] [] [])
+              pointerList = createPtrTable $ snd $ snd $ head (splitFn readyIR "" [] [] [] [])
               result = map fst $ fnElimination $ fnSplit readyIR "" [] [] []
 
           -- hPutStr handleTmp $ unlines (map unlines result)

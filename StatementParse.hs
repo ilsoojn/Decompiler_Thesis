@@ -526,21 +526,21 @@ setInstr new_instr x = x { instruction=new_instr }
 setState new_state x = x { state=new_state }
 
 getType, getInstr, getState :: LeftVar -> String
-getType x = fromJust $ Just (vtype x)
-getInstr x = fromJust $ Just (instruction x)
-getState x = fromJust $ Just (state x)
+getType x = vtype x
+getInstr x = instruction x
+getState x = state x
 
 
 {- RP List -}
 
-addPointer :: String -> String -> String -> String -> [RP] -> [RP]
-addPointer ptr base idx ptrList = ptrList ++ [(RP ptr base idx)]
+addPointer :: String -> String -> Integer -> String -> [RP] -> [RP]
+addPointer ptr base idx state ptrList = ptrList ++ [(RP ptr base idx state)]
 
 removePointer :: RP -> [RP] -> [RP] -> [RP]
 removePointer pInfo [] px = px
 removePointer pInfo (x:xs) px
   | (rname pInfo == rname x) = (px ++ xs) -- found matching info
-  | otherwise = removeVariable pInfo xs (px ++ [x])
+  | otherwise = removePointer pInfo xs (px ++ [x])
 
 lookupList_p :: String -> [RP] -> Maybe RP
 lookupList_p p [] = Nothing
@@ -554,15 +554,21 @@ updateList_p pInfo (x:xs) px
   | (rname pInfo == rname x) = (px ++ [pInfo] ++ xs) -- found matching info
   | otherwise = updateList_p pInfo xs (px ++ [x])
 
-setName, setBase, setIndex :: String -> RP -> RP
+setName, setBase, setRstate :: String -> RP -> RP
 setName name x =  x { rname=name }
 setBase base x = x { rbase=base }
+setRstate state x = x { rstate = state }
+
+setIndex :: Integer -> RP -> RP
 setIndex idx x = x { ridx=idx }
 
-getName, getBase, getIndex :: LeftVar -> RP
-getName x = fromJust $ Just (rname x)
-getBase x = fromJust $ Just (rbase x)
-getIndex x = fromJust $ Just (ridx x)
+getName, getBase, getRstate :: RP -> String
+getName x = rname x
+getBase x = rbase x
+getRstate x = rstate x
+
+getIndex :: RP -> Integer
+getIndex x = ridx x
 
 -- setType_List v t (x:xs) px
 --   | (v == variable x) = do

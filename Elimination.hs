@@ -59,7 +59,7 @@ propagation (line: nextCont) fname vList preCont
           let from_v = fromJust $ lookupList v vList
               fromT = vtype from_v
               to_v = lookupList (low xvar) vList
-              toT = bool (vtype $ fromJust to_v) "none" (isNothing to_v)
+              toT = bool (getType $ fromJust to_v) "none" (isNothing to_v)
 
               (new_nextCont, newList) = propagateTypeVar nextCont fromT (v) toT (low xvar) vList []
           propagation new_nextCont fname newList (preCont ++ [line])
