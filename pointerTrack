@@ -1,0 +1,1328 @@
+ptr: %RIP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 14
+%RIP_ptr
+ptr: %RIP_init = load i64, i64* %RIP_ptr
+%RIP_init
+	(%RIP_ptr, 0)
+ptr: %RIP = alloca i64
+%RIP
+ptr: %EIP_init = trunc i64 %RIP_init to i32
+%EIP_init
+	(%RIP_init, 0)
+	P: 0
+	(%RIP_ptr, 0)
+ptr: %EIP = alloca i32
+%EIP
+ptr: %RBP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 9
+%RBP_ptr
+ptr: %RBP_init = load i64, i64* %RBP_ptr
+%RBP_init
+	(%RBP_ptr, 0)
+ptr: %RBP = alloca i64
+%RBP
+ptr: %RSP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 16
+%RSP_ptr
+ptr: %RSP_init = load i64, i64* %RSP_ptr
+%RSP_init
+	(%RSP_ptr, 0)
+ptr: %RSP = alloca i64
+%RSP
+ptr: %ESP_init = trunc i64 %RSP_init to i32
+%ESP_init
+	(%RSP_init, 0)
+	P: 0
+	(%RSP_ptr, 0)
+ptr: %ESP = alloca i32
+%ESP
+ptr: %EBP_init = trunc i64 %RBP_init to i32
+%EBP_init
+	(%RBP_init, 0)
+	P: 0
+	(%RBP_ptr, 0)
+ptr: %EBP = alloca i32
+%EBP
+ptr: %RDI_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 12
+%RDI_ptr
+ptr: %RDI_init = load i64, i64* %RDI_ptr
+%RDI_init
+	(%RDI_ptr, 0)
+ptr: %RDI = alloca i64
+%RDI
+ptr: %EDI_init = trunc i64 %RDI_init to i32
+%EDI_init
+	(%RDI_init, 0)
+	P: 0
+	(%RDI_ptr, 0)
+ptr: %EDI = alloca i32
+%EDI
+ptr: %RSI_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 15
+%RSI_ptr
+ptr: %RSI_init = load i64, i64* %RSI_ptr
+%RSI_init
+	(%RSI_ptr, 0)
+ptr: %RSI = alloca i64
+%RSI
+ptr: %ESI_init = trunc i64 %RSI_init to i32
+%ESI_init
+	(%RSI_init, 0)
+	P: 0
+	(%RSI_ptr, 0)
+ptr: %ESI = alloca i32
+%ESI
+ptr: %RAX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 8
+%RAX_ptr
+ptr: %RAX_init = load i64, i64* %RAX_ptr
+%RAX_init
+	(%RAX_ptr, 0)
+ptr: %RAX = alloca i64
+%RAX
+ptr: %EAX_init = trunc i64 %RAX_init to i32
+%EAX_init
+	(%RAX_init, 0)
+	P: 0
+	(%RAX_ptr, 0)
+ptr: %EAX = alloca i32
+%EAX
+ptr: %RCX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 11
+%RCX_ptr
+ptr: %RCX_init = load i64, i64* %RCX_ptr
+%RCX_init
+	(%RCX_ptr, 0)
+ptr: %RCX = alloca i64
+%RCX
+ptr: %ECX_init = trunc i64 %RCX_init to i32
+%ECX_init
+	(%RCX_init, 0)
+	P: 0
+	(%RCX_ptr, 0)
+ptr: %ECX = alloca i32
+%ECX
+ptr: %RIP_1 = add i64 4195536, 1
+%RIP_1
+ptr: %EIP_0 = trunc i64 %RIP_1 to i32
+%EIP_0
+	(%RIP_1, 0)
+	P: 4195537
+	(, 4195537)
+ptr: %RBP_0 = load i64, i64* %RBP
+%RBP_0
+	(%RBP, 0)
+ptr: %RSP_0 = load i64, i64* %RSP
+%RSP_0
+	(%RSP, 0)
+ptr: %RSP_1 = sub i64 %RSP_0, 8
+%RSP_1
+instruction: sub
+	(%RSP_0, -8)
+	P: 0
+	(%RSP, -8)
+ptr: %ESP_0 = trunc i64 %RSP_1 to i32
+%ESP_0
+	(%RSP_1, 0)
+	P: -8
+	(%RSP, -8)
+ptr: %RIP_2 = add i64 %RIP_1, 3
+%RIP_2
+instruction: add
+	(%RIP_1, 3)
+	P: 4195537
+	(, 4195540)
+ptr: %EIP_1 = trunc i64 %RIP_2 to i32
+%EIP_1
+	(%RIP_2, 0)
+	P: 4195540
+	(, 4195540)
+ptr: %EBP_0 = trunc i64 %RSP_1 to i32
+%EBP_0
+	(%RSP_1, 0)
+	P: -8
+	(%RSP, -8)
+ptr: %RIP_3 = add i64 %RIP_2, 4
+%RIP_3
+instruction: add
+	(%RIP_2, 4)
+	P: 4195540
+	(, 4195544)
+ptr: %EIP_2 = trunc i64 %RIP_3 to i32
+%EIP_2
+	(%RIP_3, 0)
+	P: 4195544
+	(, 4195544)
+ptr: %RSP_2 = sub i64 %RSP_1, 48
+%RSP_2
+instruction: sub
+	(%RSP_1, -48)
+	P: -8
+	(%RSP, -56)
+ptr: %ESP_1 = trunc i64 %RSP_2 to i32
+%ESP_1
+	(%RSP_2, 0)
+	P: -56
+	(%RSP, -56)
+ptr: %RIP_4 = add i64 %RIP_3, 10
+%RIP_4
+instruction: add
+	(%RIP_3, 10)
+	P: 4195544
+	(, 4195554)
+ptr: %EIP_3 = trunc i64 %RIP_4 to i32
+%EIP_3
+	(%RIP_4, 0)
+	P: 4195554
+	(, 4195554)
+ptr: %RIP_5 = add i64 %RIP_4, 8
+%RIP_5
+instruction: add
+	(%RIP_4, 8)
+	P: 4195554
+	(, 4195562)
+ptr: %EIP_4 = trunc i64 %RIP_5 to i32
+%EIP_4
+	(%RIP_5, 0)
+	P: 4195562
+	(, 4195562)
+ptr: %RIP_6 = add i64 %RIP_5, 7
+%RIP_6
+instruction: add
+	(%RIP_5, 7)
+	P: 4195562
+	(, 4195569)
+ptr: %EIP_5 = trunc i64 %RIP_6 to i32
+%EIP_5
+	(%RIP_6, 0)
+	P: 4195569
+	(, 4195569)
+ptr: %RIP_7 = add i64 %RIP_6, 7
+%RIP_7
+instruction: add
+	(%RIP_6, 7)
+	P: 4195569
+	(, 4195576)
+ptr: %EIP_6 = trunc i64 %RIP_7 to i32
+%EIP_6
+	(%RIP_7, 0)
+	P: 4195576
+	(, 4195576)
+ptr: %RIP_8 = add i64 %RIP_7, 5
+%RIP_8
+instruction: add
+	(%RIP_7, 5)
+	P: 4195576
+	(, 4195581)
+ptr: %EIP_7 = trunc i64 %RIP_8 to i32
+%EIP_7
+	(%RIP_8, 0)
+	P: 4195581
+	(, 4195581)
+ptr: %RIP_9 = add i64 %RIP_8, 7
+%RIP_9
+instruction: add
+	(%RIP_8, 7)
+	P: 4195581
+	(, 4195588)
+ptr: %EIP_8 = trunc i64 %RIP_9 to i32
+%EIP_8
+	(%RIP_9, 0)
+	P: 4195588
+	(, 4195588)
+ptr: %RIP_10 = add i64 %RIP_9, 3
+%RIP_10
+instruction: add
+	(%RIP_9, 3)
+	P: 4195588
+	(, 4195591)
+ptr: %EIP_9 = trunc i64 %RIP_10 to i32
+%EIP_9
+	(%RIP_10, 0)
+	P: 4195591
+	(, 4195591)
+ptr: %ESI_0 = load i32, i32* %48, align 1
+%ESI_0
+	(%48, 0)
+	inttoptr i64 %47 to i32*
+	(%47, 0)
+	add i64 %RSP_1, -20
+	(%RSP_1, 0)
+	P: -8
+	(%RSP, -8)
+	(%RSP_1, 0)
+	P: -8
+	(%RSP, -8)
+ptr: %RSI_0 = load i64, i64* %RSI
+%RSI_0
+	(%RSI, 0)
+ptr: %RSI_1 = zext i32 %ESI_0 to i64
+%RSI_1
+	(%ESI_0, 0)
+	P: -16
+	(%RSP, -16)
+ptr: %RIP_11 = add i64 %RIP_10, 5
+%RIP_11
+instruction: add
+	(%RIP_10, 5)
+	P: 4195591
+	(, 4195596)
+ptr: %EIP_10 = trunc i64 %RIP_11 to i32
+%EIP_10
+	(%RIP_11, 0)
+	P: 4195596
+	(, 4195596)
+ptr: %RIP_12 = add i64 %RIP_11, 2
+%RIP_12
+instruction: add
+	(%RIP_11, 2)
+	P: 4195596
+	(, 4195598)
+ptr: %EIP_11 = trunc i64 %RIP_12 to i32
+%EIP_11
+	(%RIP_12, 0)
+	P: 4195598
+	(, 4195598)
+ptr: %RAX_0 = load i64, i64* %RAX
+%RAX_0
+	(%RAX, 0)
+ptr: %EAX_0 = trunc i64 %RAX_0 to i32
+%EAX_0
+	(%RAX_0, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %EAX_1 = or i32 1, %60
+%EAX_1
+ptr: %RAX_1 = or i64 1, %61
+%RAX_1
+ptr: %RIP_13 = add i64 %RIP_12, 5
+%RIP_13
+instruction: add
+	(%RIP_12, 5)
+	P: 4195598
+	(, 4195603)
+ptr: %EIP_12 = trunc i64 %RIP_13 to i32
+%EIP_12
+	(%RIP_13, 0)
+	P: 4195603
+	(, 4195603)
+ptr: %RSP_3 = sub i64 %RSP_2, 8
+%RSP_3
+instruction: sub
+	(%RSP_2, -8)
+	P: -56
+	(%RSP, -64)
+ptr: %ESP_2 = trunc i64 %RSP_3 to i32
+%ESP_2
+	(%RSP_3, 0)
+	P: -64
+	(%RSP, -64)
+ptr: %RIP_14 = load i64, i64* %RIP
+%RIP_14
+	(%RIP, 0)
+ptr: %RIP_15 = add i64 %RIP_14, 7
+%RIP_15
+instruction: add
+	(%RIP_14, 7)
+	P: 0
+	(%RIP, 7)
+ptr: %EIP_13 = trunc i64 %RIP_15 to i32
+%EIP_13
+	(%RIP_15, 0)
+	P: 7
+	(%RIP, 7)
+ptr: %RBP_1 = load i64, i64* %RBP
+%RBP_1
+	(%RBP, 0)
+ptr: %RIP_16 = add i64 %RIP_15, 3
+%RIP_16
+instruction: add
+	(%RIP_15, 3)
+	P: 7
+	(%RIP, 10)
+ptr: %EIP_14 = trunc i64 %RIP_16 to i32
+%EIP_14
+	(%RIP_16, 0)
+	P: 10
+	(%RIP, 10)
+ptr: %RAX_2 = load i64, i64* %RAX
+%RAX_2
+	(%RAX, 0)
+ptr: %EAX_2 = trunc i64 %RAX_2 to i32
+%EAX_2
+	(%RAX_2, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %RIP_85 = add i64 4195613, 3
+%RIP_85
+ptr: %EIP_73 = trunc i64 %RIP_85 to i32
+%EIP_73
+	(%RIP_85, 0)
+	P: 4195616
+	(, 4195616)
+ptr: %RBP_10 = load i64, i64* %RBP
+%RBP_10
+	(%RBP, 0)
+ptr: %EAX_18 = load i32, i32* %115, align 1
+%EAX_18
+	(%115, 0)
+	inttoptr i64 %114 to i32*
+	(%114, 0)
+	add i64 %RBP_10, -24
+	(%RBP_10, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_10, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RAX_22 = load i64, i64* %RAX
+%RAX_22
+	(%RAX, 0)
+ptr: %RAX_23 = zext i32 %EAX_18 to i64
+%RAX_23
+	(%EAX_18, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_86 = add i64 %RIP_85, 3
+%RIP_86
+instruction: add
+	(%RIP_85, 3)
+	P: 4195616
+	(, 4195619)
+ptr: %EIP_74 = trunc i64 %RIP_86 to i32
+%EIP_74
+	(%RIP_86, 0)
+	P: 4195619
+	(, 4195619)
+ptr: %RIP_87 = add i64 %RIP_86, 6
+%RIP_87
+instruction: add
+	(%RIP_86, 6)
+	P: 4195619
+	(, 4195625)
+ptr: %EIP_75 = trunc i64 %RIP_87 to i32
+%EIP_75
+	(%RIP_87, 0)
+	P: 4195625
+	(, 4195625)
+ptr: %RIP_18 = add i64 4195625, 5
+%RIP_18
+ptr: %EIP_15 = trunc i64 %RIP_18 to i32
+%EIP_15
+	(%RIP_18, 0)
+	P: 4195630
+	(, 4195630)
+ptr: %RBP_2 = load i64, i64* %RBP
+%RBP_2
+	(%RBP, 0)
+ptr: %RIP_19 = add i64 %RIP_18, 3
+%RIP_19
+instruction: add
+	(%RIP_18, 3)
+	P: 4195630
+	(, 4195633)
+ptr: %EIP_16 = trunc i64 %RIP_19 to i32
+%EIP_16
+	(%RIP_19, 0)
+	P: 4195633
+	(, 4195633)
+ptr: %EAX_3 = load i32, i32* %157, align 1
+%EAX_3
+	(%157, 0)
+	inttoptr i64 %156 to i32*
+	(%156, 0)
+	add i64 %RBP_2, -8
+	(%RBP_2, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_2, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RAX_3 = load i64, i64* %RAX
+%RAX_3
+	(%RAX, 0)
+ptr: %RAX_4 = zext i32 %EAX_3 to i64
+%RAX_4
+	(%EAX_3, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_20 = add i64 %RIP_19, 4
+%RIP_20
+instruction: add
+	(%RIP_19, 4)
+	P: 4195633
+	(, 4195637)
+ptr: %EIP_17 = trunc i64 %RIP_20 to i32
+%EIP_17
+	(%RIP_20, 0)
+	P: 4195637
+	(, 4195637)
+ptr: %RIP_21 = add i64 %RIP_20, 4
+%RIP_21
+instruction: add
+	(%RIP_20, 4)
+	P: 4195637
+	(, 4195641)
+ptr: %EIP_18 = trunc i64 %RIP_21 to i32
+%EIP_18
+	(%RIP_21, 0)
+	P: 4195641
+	(, 4195641)
+ptr: %RIP_22 = add i64 %RIP_21, 5
+%RIP_22
+instruction: add
+	(%RIP_21, 5)
+	P: 4195641
+	(, 4195646)
+ptr: %EIP_19 = trunc i64 %RIP_22 to i32
+%EIP_19
+	(%RIP_22, 0)
+	P: 4195646
+	(, 4195646)
+ptr: %RIP_23 = add i64 %RIP_22, 5
+%RIP_23
+instruction: add
+	(%RIP_22, 5)
+	P: 4195646
+	(, 4195651)
+ptr: %EIP_20 = trunc i64 %RIP_23 to i32
+%EIP_20
+	(%RIP_23, 0)
+	P: 4195651
+	(, 4195651)
+ptr: %RIP_24 = add i64 %RIP_23, 3
+%RIP_24
+instruction: add
+	(%RIP_23, 3)
+	P: 4195651
+	(, 4195654)
+ptr: %EIP_21 = trunc i64 %RIP_24 to i32
+%EIP_21
+	(%RIP_24, 0)
+	P: 4195654
+	(, 4195654)
+ptr: %EAX_4 = load i32, i32* %197, align 1
+%EAX_4
+	(%197, 0)
+	inttoptr i64 %196 to i32*
+	(%196, 0)
+	add i64 %RBP_2, -20
+	(%RBP_2, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_2, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RAX_5 = zext i32 %EAX_4 to i64
+%RAX_5
+	(%EAX_4, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_25 = add i64 %RIP_24, 4
+%RIP_25
+instruction: add
+	(%RIP_24, 4)
+	P: 4195654
+	(, 4195658)
+ptr: %EIP_22 = trunc i64 %RIP_25 to i32
+%EIP_22
+	(%RIP_25, 0)
+	P: 4195658
+	(, 4195658)
+ptr: %RIP_26 = add i64 %RIP_25, 4
+%RIP_26
+instruction: add
+	(%RIP_25, 4)
+	P: 4195658
+	(, 4195662)
+ptr: %EIP_23 = trunc i64 %RIP_26 to i32
+%EIP_23
+	(%RIP_26, 0)
+	P: 4195662
+	(, 4195662)
+ptr: %RIP_27 = add i64 %RIP_26, 6
+%RIP_27
+instruction: add
+	(%RIP_26, 6)
+	P: 4195662
+	(, 4195668)
+ptr: %EIP_24 = trunc i64 %RIP_27 to i32
+%EIP_24
+	(%RIP_27, 0)
+	P: 4195668
+	(, 4195668)
+ptr: %RIP_42 = add i64 4195668, 10
+%RIP_42
+ptr: %EIP_36 = trunc i64 %RIP_42 to i32
+%EIP_36
+	(%RIP_42, 0)
+	P: 4195678
+	(, 4195678)
+ptr: %RIP_43 = add i64 %RIP_42, 5
+%RIP_43
+instruction: add
+	(%RIP_42, 5)
+	P: 4195678
+	(, 4195683)
+ptr: %EIP_37 = trunc i64 %RIP_43 to i32
+%EIP_37
+	(%RIP_43, 0)
+	P: 4195683
+	(, 4195683)
+ptr: %RBP_5 = load i64, i64* %RBP
+%RBP_5
+	(%RBP, 0)
+ptr: %RIP_44 = add i64 %RIP_43, 5
+%RIP_44
+instruction: add
+	(%RIP_43, 5)
+	P: 4195683
+	(, 4195688)
+ptr: %EIP_38 = trunc i64 %RIP_44 to i32
+%EIP_38
+	(%RIP_44, 0)
+	P: 4195688
+	(, 4195688)
+ptr: %RIP_45 = add i64 %RIP_44, 5
+%RIP_45
+instruction: add
+	(%RIP_44, 5)
+	P: 4195688
+	(, 4195693)
+ptr: %EIP_39 = trunc i64 %RIP_45 to i32
+%EIP_39
+	(%RIP_45, 0)
+	P: 4195693
+	(, 4195693)
+ptr: %RIP_46 = add i64 %RIP_45, 5
+%RIP_46
+instruction: add
+	(%RIP_45, 5)
+	P: 4195693
+	(, 4195698)
+ptr: %EIP_40 = trunc i64 %RIP_46 to i32
+%EIP_40
+	(%RIP_46, 0)
+	P: 4195698
+	(, 4195698)
+ptr: %RIP_47 = add i64 %RIP_46, 3
+%RIP_47
+instruction: add
+	(%RIP_46, 3)
+	P: 4195698
+	(, 4195701)
+ptr: %EIP_41 = trunc i64 %RIP_47 to i32
+%EIP_41
+	(%RIP_47, 0)
+	P: 4195701
+	(, 4195701)
+ptr: %ESI_1 = load i32, i32* %275, align 1
+%ESI_1
+	(%275, 0)
+	inttoptr i64 %274 to i32*
+	(%274, 0)
+	add i64 %RBP_5, -20
+	(%RBP_5, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_5, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RSI_2 = load i64, i64* %RSI
+%RSI_2
+	(%RSI, 0)
+ptr: %RSI_3 = zext i32 %ESI_1 to i64
+%RSI_3
+	(%ESI_1, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_48 = add i64 %RIP_47, 5
+%RIP_48
+instruction: add
+	(%RIP_47, 5)
+	P: 4195701
+	(, 4195706)
+ptr: %EIP_42 = trunc i64 %RIP_48 to i32
+%EIP_42
+	(%RIP_48, 0)
+	P: 4195706
+	(, 4195706)
+ptr: %RIP_49 = add i64 %RIP_48, 2
+%RIP_49
+instruction: add
+	(%RIP_48, 2)
+	P: 4195706
+	(, 4195708)
+ptr: %EIP_43 = trunc i64 %RIP_49 to i32
+%EIP_43
+	(%RIP_49, 0)
+	P: 4195708
+	(, 4195708)
+ptr: %RAX_10 = load i64, i64* %RAX
+%RAX_10
+	(%RAX, 0)
+ptr: %EAX_8 = trunc i64 %RAX_10 to i32
+%EAX_8
+	(%RAX_10, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %EAX_9 = or i32 2, %290
+%EAX_9
+ptr: %RAX_11 = or i64 2, %291
+%RAX_11
+ptr: %RIP_50 = add i64 %RIP_49, 5
+%RIP_50
+instruction: add
+	(%RIP_49, 5)
+	P: 4195708
+	(, 4195713)
+ptr: %EIP_44 = trunc i64 %RIP_50 to i32
+%EIP_44
+	(%RIP_50, 0)
+	P: 4195713
+	(, 4195713)
+ptr: %RSP_10 = load i64, i64* %RSP
+%RSP_10
+	(%RSP, 0)
+ptr: %RSP_11 = sub i64 %RSP_10, 8
+%RSP_11
+instruction: sub
+	(%RSP_10, -8)
+	P: 0
+	(%RSP, -8)
+ptr: %ESP_7 = trunc i64 %RSP_11 to i32
+%ESP_7
+	(%RSP_11, 0)
+	P: -8
+	(%RSP, -8)
+ptr: %RIP_51 = load i64, i64* %RIP
+%RIP_51
+	(%RIP, 0)
+ptr: %RIP_52 = add i64 %RIP_51, 3
+%RIP_52
+instruction: add
+	(%RIP_51, 3)
+	P: 0
+	(%RIP, 3)
+ptr: %EIP_45 = trunc i64 %RIP_52 to i32
+%EIP_45
+	(%RIP_52, 0)
+	P: 3
+	(%RIP, 3)
+ptr: %RAX_12 = load i64, i64* %RAX
+%RAX_12
+	(%RAX, 0)
+ptr: %EAX_10 = trunc i64 %RAX_12 to i32
+%EAX_10
+	(%RAX_12, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %RBP_6 = load i64, i64* %RBP
+%RBP_6
+	(%RBP, 0)
+ptr: %RIP_53 = add i64 %RIP_52, 5
+%RIP_53
+instruction: add
+	(%RIP_52, 5)
+	P: 3
+	(%RIP, 8)
+ptr: %EIP_46 = trunc i64 %RIP_53 to i32
+%EIP_46
+	(%RIP_53, 0)
+	P: 8
+	(%RIP, 8)
+ptr: %RIP_56 = add i64 4195721, 10
+%RIP_56
+ptr: %EIP_48 = trunc i64 %RIP_56 to i32
+%EIP_48
+	(%RIP_56, 0)
+	P: 4195731
+	(, 4195731)
+ptr: %RIP_57 = add i64 %RIP_56, 5
+%RIP_57
+instruction: add
+	(%RIP_56, 5)
+	P: 4195731
+	(, 4195736)
+ptr: %EIP_49 = trunc i64 %RIP_57 to i32
+%EIP_49
+	(%RIP_57, 0)
+	P: 4195736
+	(, 4195736)
+ptr: %RBP_7 = load i64, i64* %RBP
+%RBP_7
+	(%RBP, 0)
+ptr: %RIP_58 = add i64 %RIP_57, 3
+%RIP_58
+instruction: add
+	(%RIP_57, 3)
+	P: 4195736
+	(, 4195739)
+ptr: %EIP_50 = trunc i64 %RIP_58 to i32
+%EIP_50
+	(%RIP_58, 0)
+	P: 4195739
+	(, 4195739)
+ptr: %EAX_11 = load i32, i32* %337, align 1
+%EAX_11
+	(%337, 0)
+	inttoptr i64 %336 to i32*
+	(%336, 0)
+	add i64 %RBP_7, -20
+	(%RBP_7, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_7, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RAX_13 = load i64, i64* %RAX
+%RAX_13
+	(%RAX, 0)
+ptr: %RAX_14 = zext i32 %EAX_11 to i64
+%RAX_14
+	(%EAX_11, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_59 = add i64 %RIP_58, 4
+%RIP_59
+instruction: add
+	(%RIP_58, 4)
+	P: 4195739
+	(, 4195743)
+ptr: %EIP_51 = trunc i64 %RIP_59 to i32
+%EIP_51
+	(%RIP_59, 0)
+	P: 4195743
+	(, 4195743)
+ptr: %RIP_60 = add i64 %RIP_59, 4
+%RIP_60
+instruction: add
+	(%RIP_59, 4)
+	P: 4195743
+	(, 4195747)
+ptr: %EIP_52 = trunc i64 %RIP_60 to i32
+%EIP_52
+	(%RIP_60, 0)
+	P: 4195747
+	(, 4195747)
+ptr: %RIP_61 = add i64 %RIP_60, 4
+%RIP_61
+instruction: add
+	(%RIP_60, 4)
+	P: 4195747
+	(, 4195751)
+ptr: %EIP_53 = trunc i64 %RIP_61 to i32
+%EIP_53
+	(%RIP_61, 0)
+	P: 4195751
+	(, 4195751)
+ptr: %EAX_12 = fptosi double %363 to i32
+%EAX_12
+	(%363, 0)
+	bitcast i64 %362 to double
+	(%362, 0)
+	trunc i128 %XMM1_7 to i64
+	(%XMM1_7, 0)
+ptr: %RAX_15 = zext i32 %EAX_12 to i64
+%RAX_15
+	(%EAX_12, 0)
+	P: 0
+	(%XMM1_7, 0)
+ptr: %RIP_62 = add i64 %RIP_61, 3
+%RIP_62
+instruction: add
+	(%RIP_61, 3)
+	P: 4195751
+	(, 4195754)
+ptr: %EIP_54 = trunc i64 %RIP_62 to i32
+%EIP_54
+	(%RIP_62, 0)
+	P: 4195754
+	(, 4195754)
+ptr: %RIP_63 = add i64 %RIP_62, 5
+%RIP_63
+instruction: add
+	(%RIP_62, 5)
+	P: 4195754
+	(, 4195759)
+ptr: %EIP_55 = trunc i64 %RIP_63 to i32
+%EIP_55
+	(%RIP_63, 0)
+	P: 4195759
+	(, 4195759)
+ptr: %EAX_13 = fptosi double %369 to i32
+%EAX_13
+	(%369, 0)
+	load double, double* %368, align 1
+	(%368, 0)
+	inttoptr i64 %367 to double*
+	(%367, 0)
+	add i64 %RBP_7, -32
+	(%RBP_7, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_7, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RAX_16 = zext i32 %EAX_13 to i64
+%RAX_16
+	(%EAX_13, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_64 = add i64 %RIP_63, 4
+%RIP_64
+instruction: add
+	(%RIP_63, 4)
+	P: 4195759
+	(, 4195763)
+ptr: %EIP_56 = trunc i64 %RIP_64 to i32
+%EIP_56
+	(%RIP_64, 0)
+	P: 4195763
+	(, 4195763)
+ptr: %RIP_65 = add i64 %RIP_64, 5
+%RIP_65
+instruction: add
+	(%RIP_64, 5)
+	P: 4195763
+	(, 4195768)
+ptr: %EIP_57 = trunc i64 %RIP_65 to i32
+%EIP_57
+	(%RIP_65, 0)
+	P: 4195768
+	(, 4195768)
+ptr: %RIP_66 = add i64 %RIP_65, 4
+%RIP_66
+instruction: add
+	(%RIP_65, 4)
+	P: 4195768
+	(, 4195772)
+ptr: %EIP_58 = trunc i64 %RIP_66 to i32
+%EIP_58
+	(%RIP_66, 0)
+	P: 4195772
+	(, 4195772)
+ptr: %RIP_67 = add i64 %RIP_66, 5
+%RIP_67
+instruction: add
+	(%RIP_66, 5)
+	P: 4195772
+	(, 4195777)
+ptr: %EIP_59 = trunc i64 %RIP_67 to i32
+%EIP_59
+	(%RIP_67, 0)
+	P: 4195777
+	(, 4195777)
+ptr: %RIP_68 = add i64 %RIP_67, 5
+%RIP_68
+instruction: add
+	(%RIP_67, 5)
+	P: 4195777
+	(, 4195782)
+ptr: %EIP_60 = trunc i64 %RIP_68 to i32
+%EIP_60
+	(%RIP_68, 0)
+	P: 4195782
+	(, 4195782)
+ptr: %RIP_69 = add i64 %RIP_68, 3
+%RIP_69
+instruction: add
+	(%RIP_68, 3)
+	P: 4195782
+	(, 4195785)
+ptr: %EIP_61 = trunc i64 %RIP_69 to i32
+%EIP_61
+	(%RIP_69, 0)
+	P: 4195785
+	(, 4195785)
+ptr: %ESI_2 = load i32, i32* %416, align 1
+%ESI_2
+	(%416, 0)
+	inttoptr i64 %415 to i32*
+	(%415, 0)
+	add i64 %RBP_7, -20
+	(%RBP_7, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_7, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RSI_4 = load i64, i64* %RSI
+%RSI_4
+	(%RSI, 0)
+ptr: %RSI_5 = zext i32 %ESI_2 to i64
+%RSI_5
+	(%ESI_2, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_70 = add i64 %RIP_69, 5
+%RIP_70
+instruction: add
+	(%RIP_69, 5)
+	P: 4195785
+	(, 4195790)
+ptr: %EIP_62 = trunc i64 %RIP_70 to i32
+%EIP_62
+	(%RIP_70, 0)
+	P: 4195790
+	(, 4195790)
+ptr: %RIP_71 = add i64 %RIP_70, 2
+%RIP_71
+instruction: add
+	(%RIP_70, 2)
+	P: 4195790
+	(, 4195792)
+ptr: %EIP_63 = trunc i64 %RIP_71 to i32
+%EIP_63
+	(%RIP_71, 0)
+	P: 4195792
+	(, 4195792)
+ptr: %EAX_14 = or i32 2, %428
+%EAX_14
+ptr: %RAX_17 = or i64 2, %429
+%RAX_17
+ptr: %RIP_72 = add i64 %RIP_71, 5
+%RIP_72
+instruction: add
+	(%RIP_71, 5)
+	P: 4195792
+	(, 4195797)
+ptr: %EIP_64 = trunc i64 %RIP_72 to i32
+%EIP_64
+	(%RIP_72, 0)
+	P: 4195797
+	(, 4195797)
+ptr: %RSP_12 = load i64, i64* %RSP
+%RSP_12
+	(%RSP, 0)
+ptr: %RSP_13 = sub i64 %RSP_12, 8
+%RSP_13
+instruction: sub
+	(%RSP_12, -8)
+	P: 0
+	(%RSP, -8)
+ptr: %ESP_8 = trunc i64 %RSP_13 to i32
+%ESP_8
+	(%RSP_13, 0)
+	P: -8
+	(%RSP, -8)
+ptr: %RIP_73 = load i64, i64* %RIP
+%RIP_73
+	(%RIP, 0)
+ptr: %RIP_74 = add i64 %RIP_73, 3
+%RIP_74
+instruction: add
+	(%RIP_73, 3)
+	P: 0
+	(%RIP, 3)
+ptr: %EIP_65 = trunc i64 %RIP_74 to i32
+%EIP_65
+	(%RIP_74, 0)
+	P: 3
+	(%RIP, 3)
+ptr: %RAX_18 = load i64, i64* %RAX
+%RAX_18
+	(%RAX, 0)
+ptr: %EAX_15 = trunc i64 %RAX_18 to i32
+%EAX_15
+	(%RAX_18, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %RBP_8 = load i64, i64* %RBP
+%RBP_8
+	(%RBP, 0)
+ptr: %RIP_76 = add i64 4195800, 5
+%RIP_76
+ptr: %EIP_66 = trunc i64 %RIP_76 to i32
+%EIP_66
+	(%RIP_76, 0)
+	P: 4195805
+	(, 4195805)
+ptr: %RIP_79 = add i64 4195805, 3
+%RIP_79
+ptr: %EIP_68 = trunc i64 %RIP_79 to i32
+%EIP_68
+	(%RIP_79, 0)
+	P: 4195808
+	(, 4195808)
+ptr: %RBP_9 = load i64, i64* %RBP
+%RBP_9
+	(%RBP, 0)
+ptr: %EAX_16 = load i32, i32* %462, align 1
+%EAX_16
+	(%462, 0)
+	inttoptr i64 %461 to i32*
+	(%461, 0)
+	add i64 %RBP_9, -24
+	(%RBP_9, 0)
+	P: 0
+	(%RBP, 0)
+	(%RBP_9, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RAX_19 = load i64, i64* %RAX
+%RAX_19
+	(%RAX, 0)
+ptr: %RAX_20 = zext i32 %EAX_16 to i64
+%RAX_20
+	(%EAX_16, 0)
+	P: 0
+	(%RBP, 0)
+ptr: %RIP_80 = add i64 %RIP_79, 3
+%RIP_80
+instruction: add
+	(%RIP_79, 3)
+	P: 4195808
+	(, 4195811)
+ptr: %EIP_69 = trunc i64 %RIP_80 to i32
+%EIP_69
+	(%RIP_80, 0)
+	P: 4195811
+	(, 4195811)
+ptr: %EAX_17 = add i32 %EAX_16, 1
+%EAX_17
+instruction: add
+	(%EAX_16, 1)
+	P: 0
+	(%RBP, 1)
+ptr: %RAX_21 = zext i32 %EAX_17 to i64
+%RAX_21
+	(%EAX_17, 0)
+	P: 1
+	(%RBP, 1)
+ptr: %RIP_81 = add i64 %RIP_80, 3
+%RIP_81
+instruction: add
+	(%RIP_80, 3)
+	P: 4195811
+	(, 4195814)
+ptr: %EIP_70 = trunc i64 %RIP_81 to i32
+%EIP_70
+	(%RIP_81, 0)
+	P: 4195814
+	(, 4195814)
+ptr: %RIP_82 = add i64 %RIP_81, 5
+%RIP_82
+instruction: add
+	(%RIP_81, 5)
+	P: 4195814
+	(, 4195819)
+ptr: %EIP_71 = trunc i64 %RIP_82 to i32
+%EIP_71
+	(%RIP_82, 0)
+	P: 4195819
+	(, 4195819)
+ptr: %RIP_30 = add i64 4195819, 10
+%RIP_30
+ptr: %EIP_26 = trunc i64 %RIP_30 to i32
+%EIP_26
+	(%RIP_30, 0)
+	P: 4195829
+	(, 4195829)
+ptr: %RIP_31 = add i64 %RIP_30, 2
+%RIP_31
+instruction: add
+	(%RIP_30, 2)
+	P: 4195829
+	(, 4195831)
+ptr: %EIP_27 = trunc i64 %RIP_31 to i32
+%EIP_27
+	(%RIP_31, 0)
+	P: 4195831
+	(, 4195831)
+ptr: %RAX_6 = load i64, i64* %RAX
+%RAX_6
+	(%RAX, 0)
+ptr: %EAX_5 = trunc i64 %RAX_6 to i32
+%EAX_5
+	(%RAX_6, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %EAX_6 = or i32 0, %490
+%EAX_6
+ptr: %RAX_7 = or i64 0, %491
+%RAX_7
+ptr: %RIP_32 = add i64 %RIP_31, 5
+%RIP_32
+instruction: add
+	(%RIP_31, 5)
+	P: 4195831
+	(, 4195836)
+ptr: %EIP_28 = trunc i64 %RIP_32 to i32
+%EIP_28
+	(%RIP_32, 0)
+	P: 4195836
+	(, 4195836)
+ptr: %RSP_4 = load i64, i64* %RSP
+%RSP_4
+	(%RSP, 0)
+ptr: %RSP_5 = sub i64 %RSP_4, 8
+%RSP_5
+instruction: sub
+	(%RSP_4, -8)
+	P: 0
+	(%RSP, -8)
+ptr: %ESP_3 = trunc i64 %RSP_5 to i32
+%ESP_3
+	(%RSP_5, 0)
+	P: -8
+	(%RSP, -8)
+ptr: %RIP_33 = load i64, i64* %RIP
+%RIP_33
+	(%RIP, 0)
+ptr: %RIP_34 = add i64 %RIP_33, 2
+%RIP_34
+instruction: add
+	(%RIP_33, 2)
+	P: 0
+	(%RIP, 2)
+ptr: %EIP_29 = trunc i64 %RIP_34 to i32
+%EIP_29
+	(%RIP_34, 0)
+	P: 2
+	(%RIP, 2)
+ptr: %RCX_0 = load i64, i64* %RCX
+%RCX_0
+	(%RCX, 0)
+ptr: %ECX_0 = trunc i64 %RCX_0 to i32
+%ECX_0
+	(%RCX_0, 0)
+	P: 0
+	(%RCX, 0)
+ptr: %ECX_1 = xor i32 %ECX_0, %ECX_0
+%ECX_1
+ptr: %RCX_1 = zext i32 %ECX_1 to i64
+%RCX_1
+	(%ECX_1, 0)
+	P: 0
+	(, 0)
+ptr: %RIP_35 = add i64 %RIP_34, 3
+%RIP_35
+instruction: add
+	(%RIP_34, 3)
+	P: 2
+	(%RIP, 5)
+ptr: %EIP_30 = trunc i64 %RIP_35 to i32
+%EIP_30
+	(%RIP_35, 0)
+	P: 5
+	(%RIP, 5)
+ptr: %RAX_8 = load i64, i64* %RAX
+%RAX_8
+	(%RAX, 0)
+ptr: %EAX_7 = trunc i64 %RAX_8 to i32
+%EAX_7
+	(%RAX_8, 0)
+	P: 0
+	(%RAX, 0)
+ptr: %RBP_3 = load i64, i64* %RBP
+%RBP_3
+	(%RBP, 0)
+ptr: %RIP_36 = add i64 %RIP_35, 2
+%RIP_36
+instruction: add
+	(%RIP_35, 2)
+	P: 5
+	(%RIP, 7)
+ptr: %EIP_31 = trunc i64 %RIP_36 to i32
+%EIP_31
+	(%RIP_36, 0)
+	P: 7
+	(%RIP, 7)
+ptr: %RAX_9 = zext i32 %ECX_1 to i64
+%RAX_9
+	(%ECX_1, 0)
+	P: 0
+	(, 0)
+ptr: %RIP_37 = add i64 %RIP_36, 4
+%RIP_37
+instruction: add
+	(%RIP_36, 4)
+	P: 7
+	(%RIP, 11)
+ptr: %EIP_32 = trunc i64 %RIP_37 to i32
+%EIP_32
+	(%RIP_37, 0)
+	P: 11
+	(%RIP, 11)
+ptr: %RSP_6 = load i64, i64* %RSP
+%RSP_6
+	(%RSP, 0)
+ptr: %RSP_7 = add i64 %RSP_6, 48
+%RSP_7
+instruction: add
+	(%RSP_6, 48)
+	P: 0
+	(%RSP, 48)
+ptr: %ESP_4 = trunc i64 %RSP_7 to i32
+%ESP_4
+	(%RSP_7, 0)
+	P: 48
+	(%RSP, 48)
+ptr: %RIP_38 = add i64 %RIP_37, 1
+%RIP_38
+instruction: add
+	(%RIP_37, 1)
+	P: 11
+	(%RIP, 12)
+ptr: %EIP_33 = trunc i64 %RIP_38 to i32
+%EIP_33
+	(%RIP_38, 0)
+	P: 12
+	(%RIP, 12)
+ptr: %RSP_8 = add i64 %RSP_7, 8
+%RSP_8
+instruction: add
+	(%RSP_7, 8)
+	P: 48
+	(%RSP, 56)
+ptr: %ESP_5 = trunc i64 %RSP_8 to i32
+%ESP_5
+	(%RSP_8, 0)
+	P: 56
+	(%RSP, 56)
+ptr: %RBP_4 = load i64, i64* %520, align 1
+%RBP_4
+	(%520, 0)
+	inttoptr i64 %519 to i64*
+	(%519, 0)
+	sub i64 %RSP_8, 8
+	(%RSP_8, 0)
+	P: 56
+	(%RSP, 56)
+	(%RSP_8, 0)
+	P: 56
+	(%RSP, 56)
+ptr: %EBP_1 = trunc i64 %RBP_4 to i32
+%EBP_1
+	(%RBP_4, 0)
+	P: 112
+	(%RSP, 112)
+ptr: %RIP_39 = add i64 %RIP_38, 1
+%RIP_39
+instruction: add
+	(%RIP_38, 1)
+	P: 12
+	(%RIP, 13)
+ptr: %EIP_34 = trunc i64 %RIP_39 to i32
+%EIP_34
+	(%RIP_39, 0)
+	P: 13
+	(%RIP, 13)
+ptr: %RSP_9 = add i64 %RSP_8, 8
+%RSP_9
+instruction: add
+	(%RSP_8, 8)
+	P: 56
+	(%RSP, 64)
+ptr: %RIP_40 = load i64, i64* %521
+%RIP_40
+	(%521, 0)
+	inttoptr i64 %RSP_8 to i64*
+	(%RSP_8, 0)
+	P: 56
+	(%RSP, 56)
+ptr: %ESP_6 = trunc i64 %RSP_9 to i32
+%ESP_6
+	(%RSP_9, 0)
+	P: 64
+	(%RSP, 64)
+ptr: %EIP_35 = trunc i64 %RIP_40 to i32
+%EIP_35
+	(%RIP_40, 0)
+	P: 56
+	(%RSP, 56)

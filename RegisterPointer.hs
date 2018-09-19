@@ -41,19 +41,21 @@ baseIndex base idx pList vList
 
         case itype of
           "binary" -> do
-            let r = filter (isPrefixOf str_var) reg
-            if (null r)
+            let rp = filter (isPrefixOf str_var) reg
+            let rn = filter (not . isPrefixOf str_var) reg
+            if (null rp)
               then do
-                let off1 = read (filter isDigit $ head r) :: Integer
-                    off2 = read (filter isDigit $ last r) :: Integer
+                let off1 = read (filter isDigit $ head rp) :: Integer
+                    off2 = read (filter isDigit $ last rp) :: Integer
 
                 (base, idx + off1 + off2)
 
-              else if (length r == 1)
-                then baseIndex (head r) (idx + strToInt (filter isDigit $ last r)) pList vList
+              else if (length rp == 1 && isNum (unwords rn))
+                then baseIndex (unwords rp) (idx + strToInt (unwords rn)) pList vList
+
                 else do
-                  let (rBase1, rIdx1) = baseIndex (head r) 0 pList vList
-                      (rBase2, rIdx2) = baseIndex (last r) 0 pList vList
+                  let (rBase1, rIdx1) = baseIndex (head rp) 0 pList vList
+                      (rBase2, rIdx2) = baseIndex (last rp) 0 pList vList
 
                   bool (rBase1, idx + rIdx1 + rIdx2) (rBase2, idx + rIdx1 + rIdx2) (isPrefixOf "%R" rBase2 || isPrefixOf "%E" rBase2)
 

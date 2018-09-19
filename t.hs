@@ -4,6 +4,7 @@ import System.IO
 import System.Process
 
 import Data.Bool
+import Data.Bits
 import Data.Char
 import Data.DeriveTH
 import Data.List
@@ -316,86 +317,86 @@ import Lists
 --   let v = "ok [ test x [ in x type ] ] and type { i8, [10 x [20 x i32]], i8 }"
 --       u = "[20 x i32], [20 x i32]* %t4, i32 idx_1, i32 idx_2"
 --   mapM_ print $ splitStartEndOneOf "{[<" ">]}" u
---   putStrLn ""
---   mapM_ print $ splitStartEndOneOf "{[<" ">]}" v
-
-remove_uses :: String -> [String] -> [String] -> [String]
-remove_uses str [] preLine = preLine
-remove_uses str (line:nextLine) preLine
-  | (isUse str line) = do
-    if (isLHS line "caller_remove_uses")
-      then do
-        let v = fst (strSplit " = " line)
-        remove_uses str (remove_uses v nextLine []) preLine
-    else remove_uses str nextLine preLine
-  | otherwise = remove_uses str nextLine (preLine ++ [line])
-
-remove_st :: String -> [String] -> [String] -> [String]
-remove_st str [] preLines = preLines
-remove_st str (line:nextLines) preLines
-  | (isInfixOf str line) = do
-    if (isLHS line "caller_remove_st")
-      then do
-        let v = fst (strSplit " = " line)
-        remove_st str (remove_uses v nextLines []) preLines
-      else
-        remove_st str nextLines preLines
-  | otherwise = remove_st str nextLines (preLines ++ [line])
-
-remove_r :: [String] -> [String] -> [String]
-remove_r [] content = content
-remove_r (r:rs) content = do
-  remove_r rs (remove_st r content [])
-
-splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
-splitFn [] fn c v p set = set
-splitFn (line: nextC) fn cList vList pList set
-  | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] [] set
-  | (isFunctionEnd line) = splitFn nextC fn [] [] [] (set ++ [(cList ++ [line], vList, pList)])
-  -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
-  | (isLHS line fn) = do
-    let (x, (des, reg)) = statement line
-        (v, state) = strSplit' "=" line
-
-    case (isPrefixOf "%R" (fromJust x) || isPrefixOf "%E" (fromJust x) ) of
-      True -> do
-        let pointer = fromJust x
-        if (isBinary des)
-          then do
-            let instr = op des
-                rbase = head reg
-                idx = read (last reg) :: Integer
-                rdix = bool (0-idx) (idx) (instr == "add")
-                newList = pList ++ [( RP pointer rbase rdix "")]
-            splitFn nextC (cList ++ [line]) vList newList set
-
-          else if (isLoad des)
-            then do
-              let rbase = head xreg
-                  newList = pList ++ [( RP pointer rbase 0 "")]
-              splitFn nextC (cList ++ [line]) vList newList set
-
-          else splitFn nextC (cList ++ [line]) vList pList set
-
-      _ -> do
-        let variable = fromJust x
-            vtype = variableType des
-            instr = head $ words state
-            newList = addVariable (variable) (vtype) (instr) (state) vList
-        splitFn nextC fn (cList ++ [line]) newList pList set
-  | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
-
-fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
-fnSplit [] fn cont var set = set
-fnSplit (line: nextC) fn cont var set
-  | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
-  | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
-  | (isLHS line fn) = do
-    let (x, (des, reg)) = statement line
-        (v, state) = strSplit' "=" line
-        newList = addVariable (fromJust x) (variableType des) (head $ words state) state var
-    fnSplit nextC fn (cont ++ [line]) newList set
-  | otherwise = fnSplit nextC fn (cont ++ [line]) var set
+-- --   putStrLn ""
+-- --   mapM_ print $ splitStartEndOneOf "{[<" ">]}" v
+--
+-- remove_uses :: String -> [String] -> [String] -> [String]
+-- remove_uses str [] preLine = preLine
+-- remove_uses str (line:nextLine) preLine
+--   | (isUse str line) = do
+--     if (isLHS line "caller_remove_uses")
+--       then do
+--         let v = fst (strSplit " = " line)
+--         remove_uses str (remove_uses v nextLine []) preLine
+--     else remove_uses str nextLine preLine
+--   | otherwise = remove_uses str nextLine (preLine ++ [line])
+--
+-- remove_st :: String -> [String] -> [String] -> [String]
+-- remove_st str [] preLines = preLines
+-- remove_st str (line:nextLines) preLines
+--   | (isInfixOf str line) = do
+--     if (isLHS line "caller_remove_st")
+--       then do
+--         let v = fst (strSplit " = " line)
+--         remove_st str (remove_uses v nextLines []) preLines
+--       else
+--         remove_st str nextLines preLines
+--   | otherwise = remove_st str nextLines (preLines ++ [line])
+--
+-- remove_r :: [String] -> [String] -> [String]
+-- remove_r [] content = content
+-- remove_r (r:rs) content = do
+--   remove_r rs (remove_st r content [])
+--
+-- splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
+-- splitFn [] fn c v p set = set
+-- splitFn (line: nextC) fn cList vList pList set
+--   | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] [] set
+--   | (isFunctionEnd line) = splitFn nextC fn [] [] [] (set ++ [(cList ++ [line], vList, pList)])
+--   -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
+--   | (isLHS line fn) = do
+--     let (x, (des, reg)) = statement line
+--         (v, state) = strSplit' "=" line
+--
+--     case (isPrefixOf "%R" (fromJust x) || isPrefixOf "%E" (fromJust x) ) of
+--       True -> do
+--         let pointer = fromJust x
+--         if (isBinary des)
+--           then do
+--             let instr = op des
+--                 rbase = head reg
+--                 idx = read (last reg) :: Integer
+--                 rdix = bool (0-idx) (idx) (instr == "add")
+--                 newList = pList ++ [( RP pointer rbase rdix "")]
+--             splitFn nextC (cList ++ [line]) vList newList set
+--
+--           else if (isLoad des)
+--             then do
+--               let rbase = head xreg
+--                   newList = pList ++ [( RP pointer rbase 0 "")]
+--               splitFn nextC (cList ++ [line]) vList newList set
+--
+--           else splitFn nextC (cList ++ [line]) vList pList set
+--
+--       _ -> do
+--         let variable = fromJust x
+--             vtype = variableType des
+--             instr = head $ words state
+--             newList = addVariable (variable) (vtype) (instr) (state) vList
+--         splitFn nextC fn (cList ++ [line]) newList pList set
+--   | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
+--
+-- fnSplit :: [String] -> String -> [String] -> [LeftVar] -> [([String] , [LeftVar])] -> [([String] , [LeftVar])]
+-- fnSplit [] fn cont var set = set
+-- fnSplit (line: nextC) fn cont var set
+--   | (isFunction line) = fnSplit nextC (getFunctionName line) [line] [] set
+--   | (isFunctionEnd line) = fnSplit nextC fn [] [] $ set ++ [(cont ++ [line], var)]
+--   | (isLHS line fn) = do
+--     let (x, (des, reg)) = statement line
+--         (v, state) = strSplit' "=" line
+--         newList = addVariable (fromJust x) (variableType des) (head $ words state) state var
+--     fnSplit nextC fn (cont ++ [line]) newList set
+--   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 
 main = do
   let x = ["define void @fn_4004D0(%regset* noalias nocapture) {",
@@ -415,12 +416,14 @@ main = do
       y = ["%160 = bitcast double %159 to i64",
             "%XMM1_1 = %XMM1_0 : %160"]
 
-  let (f, (vlist, plist)) = head $ splitFn (map strip x) "" [] [] [] []
-      (cont, list) = propagation f "" vlist []
+  -- let (f, (vlist, plist)) = head $ splitFn (map strip x) "" [] [] [] []
+  --     (cont, list) = propagation f "" vlist []
+  --
+  -- let (g, ulist) = head $ fnSplit (map strip x) "" [] [] []
+  --     (c, l) = propagateTypeVar y "double" "%159" "i32" "EAX_3" ulist []
 
-  let (g, ulist) = head $ fnSplit (map strip x) "" [] [] []
-      (c, l) = propagateTypeVar y "double" "%159" "i32" "EAX_3" ulist []
-  mapM_ print (plist)
+  let n = ["0", "$03", "-3", "3A", "103", "ABC", "3.241", "-3.111"]
+  mapM_ print (foldl (isNum) n)
   -- mapM_ print cont
 -- printList [] = []
 -- printList (x:xs) = (concat [variable x, " (", vtype x, ") <- (", instruction x, ") ", state x]) : printList xs

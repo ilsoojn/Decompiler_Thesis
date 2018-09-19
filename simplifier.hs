@@ -160,10 +160,6 @@ fnSplit (line: nextC) fn cont var set
     fnSplit nextC fn (cont ++ [line]) newList set
   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 
--- fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
--- fnElimination [] = []
--- fnElimination ((content, vList):fs) =  (detectIdiom content "" [] vList):(fnElimination fs)
-
 fnElimination :: [([String], [LeftVar])] -> [([String], [LeftVar])]
 fnElimination [] = []
 fnElimination ((content, vList):fs) =  do
@@ -215,7 +211,7 @@ main = do
           hClose handleTmp
 
           system $ "rm " ++ decir ++ " " ++ disas
-          renameFile tmpFile "sampleOutput.ll"
+          renameFile tmpFile "pointerOutput.ll"
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)
 

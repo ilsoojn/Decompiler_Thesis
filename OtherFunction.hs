@@ -130,6 +130,7 @@ strToFloat x = read x :: Double
 isNum :: String -> Bool
 isNum s = case reads s :: [(Double, String)] of
   [(_, "")] -> True
+  [(_, "-")] -> True
   _         -> False
 
 isNum' :: String -> Bool
