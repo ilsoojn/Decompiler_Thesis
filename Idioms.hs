@@ -67,12 +67,12 @@ idiom2 pre curr next content vList
         c = fromJust $ lookupList (fromJust cv) vList
         n = fromJust $ lookupList (fromJust nv) vList
 
-        useP = length (filter (not.null) $ findUse (fromJust pv) content)
-        useC = length (filter (not.null) $ findUse (fromJust cv) content)
-        useN = length (filter (not.null) $ findUse (fromJust nv) content)
+        useP = length (filter (not.null) $ findUse (fromJust pv) content [])
+        useC = length (filter (not.null) $ findUse (fromJust cv) content [])
+        useN = length (filter (not.null) $ findUse (fromJust nv) content [])
 
         isUse_one = (useP == 1) && (useC == 1)
-        isIdiomInstr = (getInstr p == "zext") && (getInstr n == "or")
+        isIdiomInstr = (getInstr p == "zext" || getInstr p == "trunc") && (getInstr n == "or") -- <can't get getInstr p becuase it is a
         isIdiom = (elem (fromJust pv) nreg) && (elem (fromJust cv) nreg)
 
     if (isUse_one && isIdiomInstr && isIdiom)
@@ -111,16 +111,16 @@ detectIdiom (line: next) fn pre vList
             ptr = head reg
             idx = read (last reg) :: Integer
 
-        if (instr == "add" || instr == "sub" && isStackPtr line)
+        if (instr == "add" || instr == "sub" && isUsePointer line)
           then do
-            let sym = bool (bool "+" "-" (idx < 0)) (bool "-" "+" (idx < 0)) (instr /= "add")
+            let sym = bool (bool " +" " -" (idx < 0)) (bool " -" " +" (idx < 0)) (instr /= "add")
                 new_state = concat [ptr, sym, show (abs idx)]
 
                 ([cline, nline], newList) = idiom1 (fromJust v) new_state (head next) vList
                 newNext = filter (not.null) $ nline:(tail next)
             detectIdiom newNext fn (pre ++ [cline]) newList
           else detectIdiom next fn (pre ++ [line]) vList
-      {-
+        {-
         Idiom 2:
           %v1 = zext i128 %a to i256      ( v1 <- 00000.....0 : a_128 )
           %v2 = and i256 %b, -340282366920938463463374607431768211456 ( v2 <- b_128 : 00000...0 )
@@ -133,7 +133,7 @@ detectIdiom (line: next) fn pre vList
 
           if ((instr == "and") && (isNum b || isNum' b) && (isInt $ strToFloat b) && (is0s $ strToInt b))
             then do
-              let ([pline, cline, nline], newList) = idiom2 (last pre) (line) (head next)  (last pre : line : next) vList
+              let ([pline, cline, nline], newList) = idiom2 (last pre) (line) (head next) (line : next) vList
                   newNext = filter (not.null) $ nline:(tail next)
                   newPre = filter (not.null) $ init pre ++ [pline, cline]
               detectIdiom newNext fn newPre newList

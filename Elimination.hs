@@ -41,32 +41,40 @@ propagateTypeVar (line : nextCont) ot ov nt nv vList preCont
 
   | otherwise = propagateTypeVar nextCont ot ov nt nv vList (preCont ++ [line])
 
-propagation :: [String] -> String -> [LeftVar] -> [String] -> ([String], [LeftVar])
-propagation [] fname vList preCont = (preCont, vList)
-propagation (line: nextCont) fname vList preCont
-  | (isFunction line) = propagation nextCont (getFunctionName line) vList (preCont ++ [line])
-  | (isBasicBlock line || isBlockLabel line) = propagation nextCont fname vList (preCont ++ [line])
-  | ((not.null) fname && (isInfixOf " = " line)) = do
+propagation :: [String] -> String -> [LeftVar] -> [RP] -> [String] -> ([String], ([LeftVar]))
+propagation [] fname vList pList preCont = (preCont, vList)
+propagation (line: nextCont) fname vList pList preCont
+  | (isFunction line) = propagation nextCont (getFunctionName line) vList pList (preCont ++ [line])
+  | (isFunctionEnd line) = (preCont, vList)
+  | (isBasicBlock line || isBlockLabel line) = propagation nextCont fname vList pList (preCont ++ [line])
+  | (isLHS line fname) = do
     let (x, (xvar, xop)) = statement (strip line)
         v = fromJust x
-    if (isConv xvar)
-      then do
-        let (new_nextCont, newList) = propagateTypeVar nextCont (ty xvar) (v) (ty1 xvar) (value xvar) vList []
-        propagation new_nextCont fname newList (preCont ++ [line])
 
-      else if (isSemicolon xvar)
-        then do
-          let from_v = fromJust $ lookupList v vList
-              fromT = vtype from_v
-              to_v = lookupList (low xvar) vList
-              toT = bool (getType $ fromJust to_v) "none" (isNothing to_v)
+    case (isRegPointer line) of
+      True -> do
+        let rp = fromJust $ lookupList_p v pList
+            newLine = concat[v, " = ", getRstate rp]
+        propagation nextCont fname vList pList (preCont ++ [newLine])
+      _ -> do
+        if (isConv xvar)
+          then do
+            let (new_nextCont, newList) = propagateTypeVar nextCont (ty xvar) (v) (ty1 xvar) (value xvar) vList []
+            propagation new_nextCont fname newList pList (preCont ++ [line])
 
-              (new_nextCont, newList) = propagateTypeVar nextCont fromT (v) toT (low xvar) vList []
-          propagation new_nextCont fname newList (preCont ++ [line])
+          else if (isSemicolon xvar)
+            then do
+              let from_v = fromJust $ lookupList v vList
+                  fromT = vtype from_v
+                  to_v = lookupList (low xvar) vList
+                  toT = bool (getType $ fromJust to_v) "none" (isNothing to_v)
 
-        else propagation nextCont fname vList (preCont ++ [line])
+                  (new_nextCont, newList) = propagateTypeVar nextCont fromT (v) toT (low xvar) vList []
+              propagation new_nextCont fname newList pList (preCont ++ [line])
 
-  | otherwise = propagation nextCont fname vList (preCont ++ [line])
+            else propagation nextCont fname vList pList (preCont ++ [line])
+
+  | otherwise = propagation nextCont fname vList pList (preCont ++ [line])
 
 hasDeadVar [] vList = False
 hasDeadVar (v:vs) vList
@@ -74,28 +82,32 @@ hasDeadVar (v:vs) vList
   | otherwise = False || (hasDeadVar vs vList)
   where vInfo = lookupList v vList
 
-elimination :: Bool -> [String] -> String -> [LeftVar] -> [String] -> ([String], [LeftVar])
-elimination False [] fname vList preCont = (preCont, vList)
-elimination True [] fname vList preCont = elimination False preCont "" vList []
-elimination change (line : nextCont) fname vList preCont
-  | (isFunction line) = elimination (change || False) nextCont (getFunctionName line) vList (preCont ++ [line])
-  | ((not.null) fname && (isInfixOf " = " line)) = do
-    let x = statement (strip line)
-        v = fromJust (fst x)
-        use = filter (not.null) (findUse v nextCont)
+elimination :: Bool -> [String] -> String -> [LeftVar] -> [RP] -> [String] -> ([String], [LeftVar])
+elimination False [] fname vList pList preCont = (preCont, vList)
+elimination True [] fname vList pList preCont = trace("\n\n---------------------\n\n") elimination False preCont "" vList pList []
+elimination change (line : nextCont) fname vList pList preCont
+  | (isFunction line) = elimination (change || False) nextCont (getFunctionName line) vList pList (preCont ++ [line])
+  | (isBlockLabel line || isBasicBlock line) = elimination (change || False) nextCont fname vList pList (preCont ++ [line])
+  | (isEntryExit line) = elimination (change || False) nextCont fname vList pList (preCont ++ [line])
+  | (isLHS line fname) = do
+    let (x, (var, ops)) = statement (strip line)
+        v = fromJust x
+        use = filter (not.null) (findUse v nextCont [])
+        op_variable = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
 
     if (null use)
       then do
         let vInfo = lookupList v vList
             info = fromJust vInfo
             newList = removeVariable info vList []
-        elimination (change || True) nextCont fname vList preCont
-      else elimination (change || False) nextCont fname vList (preCont ++ [line])
+        trace("E NO: " ++ line)elimination (change || True) nextCont fname newList pList preCont
+      else if (hasDeadVar op_variable vList)
+        then trace("E YES Dead: " ++ line)elimination (change || True) nextCont fname vList pList preCont
+        else trace("E YES Live: " ++ line)elimination (change || False) nextCont fname vList  pList(preCont ++ [line])
 
-  | ((not.isBasicBlock) line && (not.isBlockLabel) line) = do
+  | otherwise = do
     let (x, (var, ops)) = statement (strip line)
         op_var = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
     if (hasDeadVar op_var vList)
-      then elimination (change || True) nextCont fname vList preCont
-      else elimination (change || False) nextCont fname vList (preCont ++ [line])
-  | otherwise = elimination (change || False) nextCont fname vList (preCont ++ [line])
+      then trace("E Dead: " ++ line)elimination (change || True) nextCont fname vList pList preCont
+      else trace("E Live: " ++ line)elimination (change || False) nextCont fname vList  pList(preCont ++ [line])

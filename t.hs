@@ -21,6 +21,7 @@ import Text.Regex.Posix
 import OtherFunction
 import StatementInstr
 import StatementParse
+import RegisterPointer
 import Elimination
 import Idioms
 import IsGetSet
@@ -398,20 +399,63 @@ import Lists
 --     fnSplit nextC fn (cont ++ [line]) newList set
 --   | otherwise = fnSplit nextC fn (cont ++ [line]) var set
 
+splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
+splitFn [] fn c v p set = set
+splitFn (line: nextC) fn cList vList pList set
+  | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] set
+  | (isFunctionEnd line) = splitFn nextC fn [] [] [] $ set ++ [(cList ++ [line], (vList, pList))]
+  -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
+  | (isLHS line fn) = do
+    let (x, (des, reg)) = statement line
+        (v, state) = strSplit' "=" line
+
+        variable = fromJust x
+        vtype = variableType des
+        instr = head $ words state
+
+    case (isRegPointer $ fromJust x) of
+      True -> do
+        let rp = pointerInfo variable state pList vList
+            newList_ptr = pList ++ [rp]
+            newList_var = addVariable variable vtype instr state vList
+            newLine = concat[v, " = ", getRstate rp]
+        splitFn nextC fn (cList ++ [line]) newList_var newList_ptr set
+        -- splitFn nextC fn (cList ++ [newLine]) newList_var newList_ptr set
+
+      _ -> do
+        let newList = addVariable variable vtype instr state vList
+        splitFn nextC fn (cList ++ [line]) newList pList set
+
+  | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
+
+printLeftVar [] = []
+printLeftVar (v:vs) =
+  (show (length vs) ++ " > " ++ variable v ++ " ("++ getType v ++ ", " ++ getInstr v ++ ") " ++ getState v) : (printLeftVar vs)
+
+printRP [] = []
+printRP (p:ps) =
+  (show (length ps) ++ " > " ++ rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") " ++ getRstate p) : (printRP ps)
+
+
 main = do
   let x = ["define void @fn_4004D0(%regset* noalias nocapture) {",
-            "%157 = %RBP_2-8",
-            "%EAX_3 = load i32, i32* %157, align 1",
-            "%159 = sitofp i32 %EAX_3 to double",
-            "%160 = bitcast double %159 to i64",
-            "%XMM1_1 = %XMM1_0 : %160",
-            "%170 = trunc i128 %XMM0_4 to i64",
-            "%171 = bitcast i64 %170 to double",
-            "%172 = trunc i128 %XMM1_1 to i64",
-            "%173 = bitcast i64 %172 to double",
-            "%174 = fdiv double %171, %173",
-            "%175 = bitcast double %174 to i64",
-            "%XMM0_5 = %XMM0_4 : %175",
+            "%RAX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 8",
+            "%RAX_init = load i64, i64* %RAX_ptr",
+            "%RAX = alloca i64",
+            "store i64 %RAX_init, i64* %RAX",
+            "%EAX_init = trunc i64 %RAX_init to i32",
+            "%EAX = alloca i32",
+            "store i32 %EAX_init, i32* %EAX",
+            "%5 = lshr i64 %RAX_init, 8",
+            "%ZMM1_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 86",
+            "%ZMM1_init = load <16 x float>, <16 x float>* %ZMM1_ptr",
+            "%ZMM1 = alloca <16 x float>",
+            "store <16 x float> %ZMM1_init, <16 x float>* %ZMM1",
+            "%6 = bitcast <16 x float> %ZMM1_init to i512",
+            "%7 = trunc i512 %6 to i128",
+            "%XMM1_init = bitcast i128 %7 to <4 x float>",
+            "%XMM1 = alloca <4 x float>",
+            "store <4 x float> %XMM1_init, <4 x float>* %XMM1",
             "}"]   -- x
       y = ["%160 = bitcast double %159 to i64",
             "%XMM1_1 = %XMM1_0 : %160"]
@@ -422,8 +466,22 @@ main = do
   -- let (g, ulist) = head $ fnSplit (map strip x) "" [] [] []
   --     (c, l) = propagateTypeVar y "double" "%159" "i32" "EAX_3" ulist []
 
-  let n = ["0", "$03", "-3", "3A", "103", "ABC", "3.241", "-3.111"]
-  mapM_ print (foldl (isNum) n)
+      (sc, (sv, sp)) = head $ splitFn x "" [] [] [] []
+      (ic, iv) = detectIdiom sc "" [] sv
+      (pc, pv) = propagation ic "" iv sp []
+      (ec, ev) = elimination False pc "" pv sp []
+
+  mapM_ print (printRP sp)
+  putStrLn "----------------------"
+  mapM_ print (printLeftVar sv)
+  putStrLn "----------------------"
+  mapM_ print (printLeftVar iv)
+  putStrLn "----------------------"
+  mapM_ print (printLeftVar pv)
+  putStrLn "----------------------"
+  mapM_ print (printLeftVar ev)
+  putStrLn "----------------------"
+  mapM_ print ec
   -- mapM_ print cont
 -- printList [] = []
 -- printList (x:xs) = (concat [variable x, " (", vtype x, ") <- (", instruction x, ") ", state x]) : printList xs

@@ -26,10 +26,13 @@ isFunction line = is_regexLine line regexLine_fn
 isBasicBlock line = is_regexLine line regexLine_bb    -- bb_#: ...
 isBlockLabel line = is_regexLine line regexLine_label -- ; <label>:bb_#...
 isSemiColon line = is_regexLine line regex_semicolon  -- v = %a  : %b
-isStackPtr line  = is_regexLine line regex_rsp
+isUsePointer line  = is_regexLine line regex_rsp
 isFunctionEnd line = is_regexLine line regexEnd_fn
+isLHSRHS line = is_regexLine line regex_ab            -- L = R
 
-isLHSRHS line = is_regexLine line regex_ab
+isEntryExit line = (isPrefixOf "entry_fn" line) || (isPrefixOf "exit_fn" line)
+isRegPointer str = (isPrefixOf "%R" str || isPrefixOf "%E" str || isPrefixOf "%Z" str || isPrefixOf "%Y" str || isPrefixOf "%X" str)
+hasRegPointer line = (isInfixOf "%R" line || isInfixOf "%E" line)
 
 get_regexLine :: String -> String -> String
 get_regexLine line regex = strip $ unwords $ map (head.tail) (line =~ regex :: [[String]])

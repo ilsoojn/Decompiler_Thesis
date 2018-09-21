@@ -95,10 +95,34 @@ replaceWord old new (str:ss) regex
 replaceLine :: String -> String -> String -> String -> String
 replaceLine old new tyStr line
   | (isInfixOf old line) = do
-    let s = split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
+    let s = trace("\t"++ line)split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
         r = tyStr ++ get_regexLine line regex_fb
     unwords $ replaceWord old new s r
   | otherwise = line
+
+
+rpBlockName :: String -> String -> [String] -> [String]
+rpBlockName old new [] = []
+rpBlockName old new (x:xs)
+  | (isPrefixOf old x) = do
+    let tmp = "%bb_" ++ filter isHexCap x
+    if (old == tmp)
+      then do
+        let pad = last $ splitOn old x
+        (new ++ pad) : (rpBlockName old new xs)
+      else x : (rpBlockName old new xs)
+  | otherwise = x : (rpBlockName old new xs)
+
+
+
+replaceBlockName :: String -> String -> [String] -> [String]
+replaceBlockName old new [] = []
+replaceBlockName old new (line:xs)
+  | (isInfixOf old line) = do
+    let s = concat $ map words (split (startsWith old) line)
+        newline = unwords (rpBlockName old new s)
+    newline : (replaceBlockName old new xs)
+  | otherwise = line : (replaceBlockName old new xs)
 
 {-************** USE(variable) **************-}
 
@@ -127,6 +151,9 @@ strToFloat x = read x :: Double
 {-************************************************************************
                             All Ones Byte
   *************************************************************************-}
+isHexCap :: Char -> Bool
+isHexCap c = isDigit c || ((fromIntegral (ord c - ord 'A')::Word) <= 5)
+
 isNum :: String -> Bool
 isNum s = case reads s :: [(Double, String)] of
   [(_, "")] -> True
@@ -152,6 +179,10 @@ areZeros, hasZeros :: [Integer] -> Bool --(Num a, Integral a, Eq a, Floating a, 
 areZeros x = null $ dropWhile (==True) (map is0s x)
 hasZeros x = null $ takeWhile (==True) (map is0s x)
 
+complementSet :: [String] -> [String] -> [String]
+complementSet [] _ = []
+complementSet (x:xs) y = complementSet xs (filter (/= x) y)
+
 {-************************************************************************
                         Boolean Matching Function
   *************************************************************************-}
@@ -165,8 +196,7 @@ isMatchVariable u v
 
 isMatchList u [] = False
 isMatchList u (v:vs)
-  | (u == v) = True
-  | (a == b) = True
+  | (u == v || a == b) = True
   | otherwise = isMatchList u vs
     where a = filter isDigit u
           b = filter isDigit v

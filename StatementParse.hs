@@ -68,19 +68,21 @@ loadStatement line
 
 -- v = alloca [...] <type> [, <type> <num element>] [, align <alignment>] [, addrspace <addrspace>]
 allocaStatement line = do
-  let (infoLine, option) = strSplit "," line
-      t = fst $ popBack infoLine
+  let (op, state) = popFront line
+      (infoLine, option) = strSplit "," state
       inalloca = isInfixOf "inalloca" infoLine
+      type_a = unwords $ filter (not . isInfixOf "inalloca") (words infoLine)
+
   if (null option)
-    then (Alloca inalloca t Nothing Nothing Nothing)
+    then (Alloca inalloca type_a Nothing Nothing Nothing)
     else do
-      let num_element = words $ snd $ strSplit t option
+      let num_element = words $ snd $ strSplit type_a option
           alignment = words $ snd $ strSplit "align " option
           addr_space = words $ snd $ strSplit "addrspace " option
           numE = bool (Just $ head num_element) Nothing (null num_element)
           align = bool (Just $ head alignment) Nothing (null alignment)
           addrS = bool (Just $ head addr_space) Nothing (null addr_space)
-      (Alloca inalloca t numE align addrS)
+      (Alloca inalloca type_a numE align addrS)
 
 fenceStatement line = Fence syncscope ordering
   where syncscope = getSyncscope line
@@ -570,39 +572,6 @@ getRstate x = rstate x
 getIndex :: RP -> Integer
 getIndex x = ridx x
 
--- setType_List v t (x:xs) px
---   | (v == variable x) = do
---       x' = x { vtype=t }
---
---   | otherwise = setType v t xs (px ++ [x])
---
--- getType v [] = Nothing
--- getType v (x:xs)
---   | (v == variable x) = Just (vtype x)
---   | otherwise = getType_v v xs
---
--- getInstr v [] = Nothing
--- getInstr v (x:xs)
---   | (v == variable x) = Just (instruction x)
---   | otherwise = getInstr v xs
---
--- getState v [] = Nothing
--- getState v (x:xs)
---   | (v == variable x) = Just (state x)
---   | otherwise = getState v xs
-
-{-************** Variables **************-}
---
--- addVariable :: String -> String -> [(String, String)] -> [(String, String)]
--- addVariable v t varList = varList ++ (v, t)
---
--- removeVariable :: String -> [(String, String)] -> [(String, String)]
--- removeVariable v varList = filter (/= (v, getType v varList)) varList
---
--- getType :: String -> [(String, String)] -> String
--- getType v varList = bool (fromJust t) "none" (isNothing t)
---   where t = (lookup v varList)
-
 variableType :: VAR -> String
 variableType var
   | (isVaArg var) = (argty var)
@@ -633,12 +602,12 @@ findDef v vList
 
 -- value content fname line_number recursive_list
 -- -> (line_number, (used variable info))
-findUse :: String -> [String] -> [String]
-findUse v [] = []
-findUse v (line:nextCont)
-  | (isFunctionEnd line) = []
-  | (isUse v tmp) = line : filter (not.null) (findUse v nextCont)
-  | otherwise = "" : filter (not.null) (findUse v nextCont)
+findUse :: String -> [String] -> [String] -> [String]
+findUse v [] uselist = uselist
+findUse v (line:nextCont) uselist
+  | (isFunctionEnd line) = uselist
+  | (isUse v tmp) =  findUse v nextCont (uselist ++ [line])
+  | otherwise = findUse v nextCont uselist
     where tmp = last $ splitOn' " = " line
 
 
