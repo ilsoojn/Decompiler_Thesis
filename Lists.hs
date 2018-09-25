@@ -79,7 +79,7 @@ condition= [("eq","=="), ("ne","!="),
 
 regexLine_fn, regexEnd_fn, regexLine_bb, regex_fn, regex_bb :: String
 str_main, str_fn, str_bb, line_bb, strStart_fn, strStart_bb:: String
-regex_rsp, regex_padding, regex_semicolon, regex_array, regex_sync, regex_pad, regex_landpad, regex_fbpadding, regex_fb, regex_ab :: String
+regex_useRsp, regex_useEsp, regex_padding, regex_semicolon, regex_array, regex_sync, regex_pad, regex_landpad, regex_fbpadding, regex_fb, regex_ab :: String
 regexLine_fn = "^define void @fn_(.*)\\(.*\\{"
 regexEnd_fn = "^}"
 regexLine_bb = "^bb_(.*):.*"
@@ -96,7 +96,8 @@ str_bb = "%bb_"
 str_var = "%"
 line_bb = "; <label>:bb_"
 
-regex_rsp = ".* = .* %R.*_(.*),\\ (.*)"
+regex_useRsp = ".* = .*%R([0-9a-zA-Z\\_\\-\\+]*).*"
+regex_useEsp = ".* = .*%E([0-9a-zA-Z\\_\\-\\+]*).*"
 regex_padding = "(.*)%([0-9]*)(.*)"
 
 regex_semicolon = "%(.*) : %(.*)"
@@ -104,7 +105,7 @@ regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)" -- syncscope
 regex_pad = "(.*)[(.*)]"
 regex_landpad = ".*?\\{(.*)\\}(.*)"
-regex_fb = ".*%([0-9a-zA-Z\\_\\-]*).*"
+regex_fb = ".*%([0-9a-zA-Z\\_]*).*"
 regex_ab = ".* = %([0-9a-zA-Z\\_\\-\\+]*)"
 
 -- regex expression for FRONT & BACK padding

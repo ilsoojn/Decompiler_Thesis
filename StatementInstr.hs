@@ -8,7 +8,7 @@ import Debug.Trace
 
 {-************** Format and Regex **************-}
 
-data RP = RP{rname::String, rbase::String, ridx::Integer, rstate:: String} deriving (Ord, Eq, Show, Read)
+data RP = RP{rname::String, rbase::String, ridx::Integer, rstate:: String, permit::Bool} deriving (Ord, Eq, Show, Read)
 data LeftVar = LeftVar{variable::String, vtype::String, instruction::String, state::String} deriving (Show, Read, Eq, Ord)
 isLeftVar (LeftVar _ _ _ _) = True
 

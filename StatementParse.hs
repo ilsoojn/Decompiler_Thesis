@@ -499,6 +499,7 @@ statement line = do
     then (Nothing, parseStatement lhs)
     else (Just lhs, parseStatement rhs)
 
+
 {- LeftSideVar List -}
 
 addVariable :: String -> String -> String -> String -> [LeftVar] -> [LeftVar]
@@ -535,8 +536,6 @@ getState x = state x
 
 {- RP List -}
 
-addPointer :: String -> String -> Integer -> String -> [RP] -> [RP]
-addPointer ptr base idx state ptrList = ptrList ++ [(RP ptr base idx state)]
 
 removePointer :: RP -> [RP] -> [RP] -> [RP]
 removePointer pInfo [] px = px
@@ -564,6 +563,9 @@ setRstate state x = x { rstate = state }
 setIndex :: Integer -> RP -> RP
 setIndex idx x = x { ridx=idx }
 
+setPermit :: Bool -> RP -> RP
+setPermit bool x = x { permit=bool }
+
 getName, getBase, getRstate :: RP -> String
 getName x = rname x
 getBase x = rbase x
@@ -571,6 +573,9 @@ getRstate x = rstate x
 
 getIndex :: RP -> Integer
 getIndex x = ridx x
+
+getPermit :: RP -> Bool
+getPermit x = permit x
 
 variableType :: VAR -> String
 variableType var
@@ -593,6 +598,30 @@ variableType var
 {-************************************************************************
                               Def and Use
   *************************************************************************-}
+isMatchPointer u [] = False
+isMatchPointer u (v:vs)
+  | (u == v || u == p) = True
+  | otherwise = isMatchPointer u vs
+    where p = str_var ++ get_regexLine v regex_fb
+
+isUsePtr p line
+  | (isInfixOf p line) = do
+    let tmpList = (split (startsWith p) line)
+    isMatchPointer p tmpList
+  | otherwise = False
+
+isMatchList u [] = False
+isMatchList u (v:vs)
+  | (u == v || a == b) = True
+  | otherwise = isMatchList u vs
+    where a = filter isDigit u
+          b = filter isDigit v
+
+isUse v line
+  | (isInfixOf v line) = do
+    let tmpList = map (head.words) (tail $ split (startsWith v) line)
+    isMatchList v tmpList
+  | otherwise = False
 
 findDef :: String -> [LeftVar] -> String
 findDef v vList

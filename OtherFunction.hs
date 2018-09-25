@@ -101,29 +101,6 @@ replaceLine old new tyStr line
   | otherwise = line
 
 
-rpBlockName :: String -> String -> [String] -> [String]
-rpBlockName old new [] = []
-rpBlockName old new (x:xs)
-  | (isPrefixOf old x) = do
-    let tmp = "%bb_" ++ filter isHexCap x
-    if (old == tmp)
-      then do
-        let pad = last $ splitOn old x
-        (new ++ pad) : (rpBlockName old new xs)
-      else x : (rpBlockName old new xs)
-  | otherwise = x : (rpBlockName old new xs)
-
-
-
-replaceBlockName :: String -> String -> [String] -> [String]
-replaceBlockName old new [] = []
-replaceBlockName old new (line:xs)
-  | (isInfixOf old line) = do
-    let s = concat $ map words (split (startsWith old) line)
-        newline = unwords (rpBlockName old new s)
-    newline : (replaceBlockName old new xs)
-  | otherwise = line : (replaceBlockName old new xs)
-
 {-************** USE(variable) **************-}
 
 usePropLine :: String -> String -> [String] -> [String]
@@ -186,23 +163,3 @@ complementSet (x:xs) y = complementSet xs (filter (/= x) y)
 {-************************************************************************
                         Boolean Matching Function
   *************************************************************************-}
-
-isMatchVariable u v
-  | (u == v) = True
-  | otherwise = do
-    let a = filter isDigit u
-        b = filter isDigit v
-    bool False True (a == b)
-
-isMatchList u [] = False
-isMatchList u (v:vs)
-  | (u == v || a == b) = True
-  | otherwise = isMatchList u vs
-    where a = filter isDigit u
-          b = filter isDigit v
-
-isUse v line
-  | (isInfixOf v line) = do
-    let tmpList = map (head.words) (tail $ split (startsWith v) line)
-    isMatchList v tmpList
-  | otherwise = False

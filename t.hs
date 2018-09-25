@@ -457,31 +457,58 @@ main = do
             "%XMM1 = alloca <4 x float>",
             "store <4 x float> %XMM1_init, <4 x float>* %XMM1",
             "}"]   -- x
+      z = ["%RIP_44 = 3 +4196028",
+            "%EIP_40 = trunc i64 %RIP_44 to i32",
+            "%RBP_3 = load i64, i64* %RBP",
+            "%606 = %RBP_3 -4",
+            "%EAX_3 = load i32, i32* %606, align 1",
+            "%RAX_4 = load i64, i64* %RAX",
+            "%RAX_5 = zext i32 %EAX_3 to i64",
+            "%607 = lshr i32 %EAX_3, 8",
+            "%RIP_45 = %RIP_44 +4",
+            "%EIP_41 = trunc i64 %RIP_45 to i32",
+            "%RSP_3 = load i64, i64* %RSP",
+            "%RSP_4 = %RSP_3 +80",
+            "%ESP_2 = trunc i64 %RSP_4 to i32",
+            "%RIP_46 = %RIP_45 +1",
+            "%EIP_42 = trunc i64 %RIP_46 to i32",
+            "%RSP_5 = %RSP_4 +8",
+            "%ESP_3 = trunc i64 %RSP_5 to i32"
+            ]
       y = ["%160 = bitcast double %159 to i64",
             "%XMM1_1 = %XMM1_0 : %160"]
 
+
+      r1 = isUsePtr "%EAX_3" "%RAX_4 = load i64, i64* %RAX* %RAX" --(RP "EAX_3" "%RBP" -4 "%RBP -4")
+      r2 = isUsePtr "%EAX_3" "%RAX_5 = zext i32 %EAX_3 to i64"
+      r3 = isUsePtr "%EAX_3" "%607 = lshr i32 %EAX_3, 8"
+      r4 = isUsePtr "%EAX_3" "%RIP_45 = %EAX_33 +4"
+  putStrLn (bool "True" "False" (False == r1))
+  putStrLn (bool "True" "False" (False == r2))
+  putStrLn (bool "True" "False" (False == r3))
+  putStrLn (bool "True" "False" (False == r4))
   -- let (f, (vlist, plist)) = head $ splitFn (map strip x) "" [] [] [] []
   --     (cont, list) = propagation f "" vlist []
   --
   -- let (g, ulist) = head $ fnSplit (map strip x) "" [] [] []
   --     (c, l) = propagateTypeVar y "double" "%159" "i32" "EAX_3" ulist []
-
-      (sc, (sv, sp)) = head $ splitFn x "" [] [] [] []
-      (ic, iv) = detectIdiom sc "" [] sv
-      (pc, pv) = propagation ic "" iv sp []
-      (ec, ev) = elimination False pc "" pv sp []
-
-  mapM_ print (printRP sp)
-  putStrLn "----------------------"
-  mapM_ print (printLeftVar sv)
-  putStrLn "----------------------"
-  mapM_ print (printLeftVar iv)
-  putStrLn "----------------------"
-  mapM_ print (printLeftVar pv)
-  putStrLn "----------------------"
-  mapM_ print (printLeftVar ev)
-  putStrLn "----------------------"
-  mapM_ print ec
+      --
+      -- (sc, (sv, sp)) = head $ splitFn x "" [] [] [] []
+      -- (ic, iv) = detectIdiom sc "" [] sv
+      -- (pc, pv) = propagation ic "" iv sp []
+      -- (ec, ev) = elimination False pc "" pv sp []
+  --
+  -- mapM_ print (printRP sp)
+  -- putStrLn "----------------------"
+  -- mapM_ print (printLeftVar sv)
+  -- putStrLn "----------------------"
+  -- mapM_ print (printLeftVar iv)
+  -- putStrLn "----------------------"
+  -- mapM_ print (printLeftVar pv)
+  -- putStrLn "----------------------"
+  -- mapM_ print (printLeftVar ev)
+  -- putStrLn "----------------------"
+  -- mapM_ print ec
   -- mapM_ print cont
 -- printList [] = []
 -- printList (x:xs) = (concat [variable x, " (", vtype x, ") <- (", instruction x, ") ", state x]) : printList xs

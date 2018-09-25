@@ -133,9 +133,14 @@ fnElimination [] = []
 fnElimination ((content, (vList, pList)):fs) =  do
   let (content_i, vList_i) = (detectIdiom content "" [] vList)
       (content_p, vList_p) = propagation content_i "" vList_i pList []
-      (content_e, vList_e) = elimination False content_p "" vList_p pList []
-  (content_e, (vList_e, pList)):fnElimination fs
+      --(content_e, vList_e) = elimination False content_p "" vList_p pList []
+  (content_p, (vList_p, pList)):fnElimination fs
   -- (elimination False content_p "" vList_p pList []) : (fnElimination fs)
+
+printRP [] = []
+printRP (p:ps) =
+  (show (length ps) ++ " > " ++ rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") " ++ getRstate p) : (printRP ps)
+
 {-************************************************************************
             arguments: executable or binary/object fileE
   *************************************************************************-}
@@ -166,12 +171,14 @@ main = do
 
           let unnecessaryReg = reg_8 ++ reg_16 ++ flags ++ ["%IP"]
               sourceIR = remove_r unnecessaryReg $ (init.lines.fst) (strSplit str_main  contentIr)
-              nameIR = filter (not.null) $ map strip (replace_addr sourceIR 0 0 [])
+              nameIR = filter (not.null) $ map strip sourceIR -- (replace_addr sourceIR 0 0 [])
               functionIR = splitFn nameIR "" [] [] [] []
               contentIR = map fst functionIR
               -- pointerList = createPtrTable $ snd $ snd $ head (splitFn readyIR "" [] [] [] [])
               -- result = map fst $ fnElimination $ fnSplit readyIR "" [] [] []
-              result = map fst $ fnElimination functionIR
+              ((resultFn, (vlist, plist)):_)  = fnElimination functionIR
+              result = [resultFn]
+              --result = map fst $ fnElimination functionIR
 
           -- hPutStr handleTmp $ unlines sourceIR
           hPutStr handleTmp $ unlines (map unlines result)
@@ -184,12 +191,13 @@ main = do
           hClose handleTmp
 
           system $ "rm " ++ decir ++ " " ++ disas
-          renameFile tmpFile (prog_file ++ "Output.ll")
+          renameFile tmpFile (prog_file ++ "Output_prop.ll")
           -- renameFile tmpFile "sampleOutput.ll"
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)
 
-          print "ok"
+          -- print "ok"
+          mapM_ print (printRP plist)
         else do
 
           -- CLOSE FILES & TERMINATE

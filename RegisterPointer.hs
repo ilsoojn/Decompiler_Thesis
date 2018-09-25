@@ -23,10 +23,10 @@ import Lists
 
 baseIndex :: String -> Integer -> [RP] -> [LeftVar] -> (String, Integer)
 baseIndex base idx pList vList
-  | (elem base (reg_32 ++ reg_64 ++ reg_ip ++ reg_other)) = (base, idx)
+  | trace("\t"++base)(elem base (reg_32 ++ reg_64 ++ reg_ip ++ reg_other)) = (base, idx)
   | (isRegPointer base && not (isInfixOf "_ptr" base)) = do
     let p = lookupList_p base pList
-    if (isNothing p)
+    if (isNothing p || not (getPermit $ fromJust p))
       then (base, idx)
       else baseIndex (getBase $ fromJust p) (idx + (getIndex $ fromJust p)) pList vList
 
@@ -45,8 +45,8 @@ baseIndex base idx pList vList
             let rn = filter (not . isPrefixOf str_var) reg
             if (null rp)
               then do
-                let off1 = read (filter isDigit $ head rp) :: Integer
-                    off2 = read (filter isDigit $ last rp) :: Integer
+                let off1 = trace("1 > "  ++ base)read (filter isDigit $ head rp) :: Integer
+                    off2 = trace("2 > "  ++ base)read (filter isDigit $ last rp) :: Integer
 
                 (base, idx + off1 + off2)
 
@@ -69,57 +69,57 @@ baseIndex base idx pList vList
 
 pointerInfo :: String -> String -> [RP] -> [LeftVar] -> RP
 pointerInfo ptr state pList vList
-  | (isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state)
+  | trace(ptr ++ ":")(isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state False)
   | (isBinary var && isNum (head reg) && isNum (last reg)) = do
     let m = strToInt (head reg)
         n = strToInt (last reg)
         newState = show (m + n)
-    (RP ptr "" (m + n) newState)
+    (RP ptr "" (m + n) newState True)
 
   | (isBinary var && isNum (head reg)) = do
     let idx = strToInt (head reg)
         rdix = bool (0-idx) (idx) (op var == "add")
         (rbase, rindex) = baseIndex (last reg) rdix pList vList
-        sym = bool  " +" " " (rindex < 0)
+        sym = bool "+" "" (rindex < 0)
         newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
-    (RP ptr rbase rindex newState)
+    (RP ptr rbase rindex newState True)
 
   | (isBinary var && isNum (last reg)) = do
     let idx = strToInt (last reg)
         rdix = bool (0-idx) (idx) (op var == "add")
         (rbase, rindex) = baseIndex (head reg) rdix pList vList
-        sym = bool  " +" " " (rindex < 0)
+        sym = bool "+" "" (rindex < 0)
         newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
-    (RP ptr rbase rindex newState)
+    (RP ptr rbase rindex newState True)
 
   | (isBinary var) = do
     let (rbase1, rindex1) = baseIndex (head reg) 0 pList vList
         (rbase2, rindex2) = baseIndex (last reg) 0 pList vList
         rbase = bool rbase1 rbase2 (isRegPointer rbase2)
-        sym = bool  " +" " " ((rindex1 + rindex2) < 0)
+        sym = bool "+" "" ((rindex1 + rindex2) < 0)
         newState = bool (bool (rbase ++ sym ++  show (rindex1 + rindex2)) (show (rindex1 + rindex2)) (null rbase)) rbase ((rindex1 + rindex2) == 0)
-    (RP ptr rbase (rindex1 + rindex2) newState)
+    (RP ptr rbase (rindex1 + rindex2) newState True)
   --
   | (isConv var) = do
     let (rbase, rindex) = baseIndex (head reg) 0 pList vList
-        sym = bool  " +" " " (rindex < 0)
+        sym = bool "+" "" (rindex < 0)
         newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
         -- newState = newPtr --replaceLine (head reg) newPtr str_var state
-    (RP ptr rbase rindex newState)
+    (RP ptr rbase rindex newState True)
 
   | (isLoad var) = do
     let (rbase, rindex) = baseIndex (head reg) 0 pList vList
         sym = bool  " +" " " (rindex < 0)
         newState = bool (bool ("[ " ++ rbase ++ sym ++  show rindex ++ " ]") (show rindex) (null rbase)) rbase (rindex == 0)
-    (RP ptr rbase rindex newState)
+    (RP ptr rbase rindex newState True)
   --
   | (isBitwise var) = do
     let newState = join " " [op var, ty var, head reg ++ ",", last reg]
     if (head reg == last reg)
-      then (RP ptr "" 0 newState)
-      else (RP ptr ptr 0 newState)
+      then (RP ptr "" 0 newState False)
+      else (RP ptr ptr 0 newState False)
 
-  | (isAlloca var) = (RP ptr ptr 0 state)
+  | (isAlloca var) = (RP ptr ptr 0 state False)
 
-  | otherwise = (RP ptr ptr 0 state)
+  | otherwise = (RP ptr ptr 0 state False)
     where (px, (var, reg)) = statement state

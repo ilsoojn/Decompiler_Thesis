@@ -34,20 +34,20 @@ import StatementParse
         then %v2 = %ptr+-n (no nextline)
         else %v1 = %ptr+-n          (keep nextline)
 -}
-idiom1 :: String -> String -> String -> [LeftVar] -> ([String], [LeftVar])
+idiom1 :: String -> String -> String -> [LeftVar] -> ([String], String, [LeftVar])
 idiom1 v new_state nextline vList
-  | ((not.isNothing) nv && (op nvar) == "inttoptr") = do
+  | ((not.isNothing) nv && (isConv nvar) && (op nvar) == "inttoptr") = do
     let newLine = concat[(fromJust nv), " = ", new_state]
         n = fromJust $ lookupList (fromJust nv) vList
         n' = n{ instruction="", state=new_state }
         newList = updateList n (removeVariable c vList []) []
-    ([newLine, ""], newList)
+    ([newLine], "", newList)
 
   | otherwise = do
     let newLine = concat[v, " = ", new_state]
         c' = c{ instruction="", state=new_state }
         newList = updateList c vList []
-    ([newLine, nextline], newList)
+    ([newLine], nextline, newList)
 
     where (nv, (nvar, nreg)) = statement nextline
           c = fromJust $ lookupList v vList
@@ -59,7 +59,7 @@ idiom1 v new_state nextline vList
   OUTPUT
     %v = %b_bitsize : %a_bitsize
 -}
-idiom2 :: String -> String -> String -> [String] -> [LeftVar] -> ([String], [LeftVar])
+idiom2 :: String -> String -> String -> [String] -> [LeftVar] -> (String, [String], String, [LeftVar])
 idiom2 pre curr next content vList
   | ((not.isNothing) pv && (not.isNothing) nv) = do
 
@@ -81,11 +81,11 @@ idiom2 pre curr next content vList
             newVariable = n{ instruction="", state=newState }
             newLine = concat [variable n, " = " , newState]
             new_vList = updateList newVariable (removeVariable c (removeVariable p vList []) []) []
-        (["", newLine, ""], new_vList)
+        ("", [pre, curr, newLine], "", new_vList)
 
-      else ([pre, curr, next], vList)
+      else (pre, [curr], next, vList)
 
-  | otherwise = ([pre, curr, next], vList)
+  | otherwise = (pre, [curr], next, vList)
     where (pv, (pvar, preg)) = statement pre
           (cv, (cvar, creg)) = statement curr
           (nv, (nvar, nreg)) = statement next
@@ -106,20 +106,30 @@ detectIdiom (line: next) fn pre vList
                 %v2 = inttoptr int_type %register_ptr to ptr_type
     -}
     if (isBinary rhs)
-      then do
-        let instr = op rhs
-            ptr = head reg
-            idx = read (last reg) :: Integer
-
-        if (instr == "add" || instr == "sub" && isUsePointer line)
+      then if ((isNum $ last reg) || (isNum $ head reg))
           then do
-            let sym = bool (bool " +" " -" (idx < 0)) (bool " -" " +" (idx < 0)) (instr /= "add")
-                new_state = concat [ptr, sym, show (abs idx)]
+            let ptr = bool (last reg) (head reg) (isNum $ last reg)
+                idx = bool (read (head reg) :: Integer) (read (last reg) :: Integer) (isNum $ last reg)
 
-                ([cline, nline], newList) = idiom1 (fromJust v) new_state (head next) vList
-                newNext = filter (not.null) $ nline:(tail next)
-            detectIdiom newNext fn (pre ++ [cline]) newList
-          else detectIdiom next fn (pre ++ [line]) vList
+            if ((op rhs) == "add" || (op rhs) == "sub" && hasRegPointer (last $ splitOn " = " line))
+              then do
+                let sym = bool (bool "+" "-" (idx < 0)) (bool "-" "+" (idx < 0)) ((op rhs) /= "add")
+                    new_state = concat [ptr, sym, show (abs idx)]
+
+                    (cline, nline, newList) = idiom1 (fromJust v) new_state (head next) vList
+                    newNext = filter (not.null) $ nline:(tail next)
+                detectIdiom newNext fn (pre ++ cline) newList
+              else detectIdiom next fn (pre ++ [line]) vList
+
+          else if ((op rhs) == "add" || (op rhs) == "sub" && hasRegPointer (last $ splitOn " = " line))
+            then do
+                let sym = bool "+" "-" ((op rhs) /= "add")
+                    new_state = concat [head reg, sym, last reg]
+                    (cline, nline, newList) = idiom1 (fromJust v) new_state (head next) vList
+                    newNext = filter (not.null) $ nline:(tail next)
+                detectIdiom newNext fn (pre ++ cline) newList
+
+              else detectIdiom next fn (pre ++ [line]) vList
         {-
         Idiom 2:
           %v1 = zext i128 %a to i256      ( v1 <- 00000.....0 : a_128 )
@@ -133,9 +143,9 @@ detectIdiom (line: next) fn pre vList
 
           if ((instr == "and") && (isNum b || isNum' b) && (isInt $ strToFloat b) && (is0s $ strToInt b))
             then do
-              let ([pline, cline, nline], newList) = idiom2 (last pre) (line) (head next) (line : next) vList
+              let (pline, cline, nline, newList) = idiom2 (last pre) (line) (head next) (line : next) vList
                   newNext = filter (not.null) $ nline:(tail next)
-                  newPre = filter (not.null) $ init pre ++ [pline, cline]
+                  newPre = filter (not.null) $ init pre ++ [pline] ++ cline
               detectIdiom newNext fn newPre newList
 
             else detectIdiom next fn (pre ++ [line]) vList

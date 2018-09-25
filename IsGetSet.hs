@@ -26,7 +26,6 @@ isFunction line = is_regexLine line regexLine_fn
 isBasicBlock line = is_regexLine line regexLine_bb    -- bb_#: ...
 isBlockLabel line = is_regexLine line regexLine_label -- ; <label>:bb_#...
 isSemiColon line = is_regexLine line regex_semicolon  -- v = %a  : %b
-isUsePointer line  = is_regexLine line regex_rsp
 isFunctionEnd line = is_regexLine line regexEnd_fn
 isLHSRHS line = is_regexLine line regex_ab            -- L = R
 
