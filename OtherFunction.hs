@@ -95,7 +95,7 @@ replaceWord old new (str:ss) regex
 replaceLine :: String -> String -> String -> String -> String
 replaceLine old new tyStr line
   | (isInfixOf old line) = do
-    let s = trace("\t"++ line)split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
+    let s = split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
         r = tyStr ++ get_regexLine line regex_fb
     unwords $ replaceWord old new s r
   | otherwise = line

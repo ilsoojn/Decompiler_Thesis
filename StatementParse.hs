@@ -485,8 +485,8 @@ parseStatement line
         if (isSemiColon line)
           then do
             let (v1:v2:_) = getHighLowVariable line
-                hs = '%':v1
-                ls = '%':v2
+                hs = v1
+                ls = v2
             (SemiColon hs ls, [hs, ls])
           else (Other, [])
   where op = head $ words line

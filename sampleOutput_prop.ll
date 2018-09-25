@@ -33,12 +33,12 @@ store i32 %EDI_init, i32* %EDI
 %ZMM0 = alloca <16 x float>
 store <16 x float> %ZMM0_init, <16 x float>* %ZMM0
 %1 = %regset*
-%2 = trunc i512 %1 to i128
+%2 = %1
 %XMM0_init = %regset*
 %XMM0 = alloca <4 x float>
 store <4 x float> %XMM0_init, <4 x float>* %XMM0
 %3 = %regset*
-%4 = trunc i512 %3 to i256
+%4 = %3
 %YMM0_init = %regset*
 %YMM0 = alloca <8 x float>
 store <8 x float> %YMM0_init, <8 x float>* %YMM0
@@ -62,12 +62,12 @@ store i32 %EAX_init, i32* %EAX
 %ZMM1 = alloca <16 x float>
 store <16 x float> %ZMM1_init, <16 x float>* %ZMM1
 %6 = %regset*
-%7 = trunc i512 %6 to i128
+%7 = %6
 %XMM1_init = %regset*
 %XMM1 = alloca <4 x float>
 store <4 x float> %XMM1_init, <4 x float>* %XMM1
 %8 = %regset*
-%9 = trunc i512 %8 to i256
+%9 = %8
 %YMM1_init = %regset*
 %YMM1 = alloca <8 x float>
 store <8 x float> %YMM1_init, <8 x float>* %YMM1
@@ -122,22 +122,22 @@ store i64 %RBP_0, i64* %23, align 1
 %EIP_4 = 4195562
 %25 = 4195562+430
 %26 = load double, double* %25, align 1
-%27 = bitcast double %26 to i64
+%27 = %26
 %ZMM0_0 = %ZMM0
 %28 = %ZMM0
 %XMM0_0 = %ZMM0
-%29 = zext double %26 to i128
+%29 = %26
 %30 = and i128 %ZMM0, -18446744073709551616
-%XMM0_1 = or i128 %29, %30
+%XMM0_1 = %XMM0_0 : %27
 %31 = %ZMM0
 %YMM0_0 = %ZMM0
-%32 = zext i128 %XMM0_1 to i256
+%32 = %XMM0_0
 %33 = and i256 %ZMM0, -340282366920938463463374607431768211456
-%YMM0_1 = or i256 %32, %33
+%YMM0_1 = %YMM0_0 : %XMM0_1
 %34 = %ZMM0
-%35 = zext i128 %XMM0_1 to i512
+%35 = %XMM0_0
 %36 = and i512 %34, -340282366920938463463374607431768211456
-%ZMM0_1 = or i512 %35, %36
+%ZMM0_1 = %34 : %XMM0_1
 %RIP_6 = 4195569
 %EIP_5 = 4195569
 %38 = %RSP-8-4
@@ -148,10 +148,10 @@ store i32 0, i32* %38, align 1
 store i32 5, i32* %40, align 1
 %RIP_8 = 4195581
 %EIP_7 = 4195581
-%41 = trunc i128 %XMM0_1 to i64
-%42 = bitcast i128 %XMM0_1 to double
+%41 = %XMM0_0
+%42 = %27
 %44 = %RSP-8-16
-store i128 %XMM0_1, double* %44, align 1
+store double %27, double* %44, align 1
 %RIP_9 = 4195588
 %EIP_8 = 4195588
 %46 = %RSP-8-20
@@ -166,16 +166,16 @@ store i32 100, i32* %46, align 1
 %EIP_10 = 4195596
 %50 = %RSP-8-16
 %51 = load double, double* %50, align 1
-%52 = bitcast double %51 to i64
-%53 = zext double %51 to i128
-%54 = and i128 %XMM0_1, -18446744073709551616
-%XMM0_2 = or i128 %53, %54
-%55 = zext i128 %XMM0_2 to i256
-%56 = and i256 %YMM0_1, -340282366920938463463374607431768211456
-%YMM0_2 = or i256 %55, %56
-%57 = zext i128 %XMM0_2 to i512
-%58 = and i512 %ZMM0_1, -340282366920938463463374607431768211456
-%ZMM0_2 = or i512 %57, %58
+%52 = %51
+%53 = %51
+%54 = and i128 %XMM0_0 : %27, -18446744073709551616
+%XMM0_2 = %XMM0_1 : %52
+%55 = %XMM0_1
+%56 = and i256 %YMM0_0 : %XMM0_1, -340282366920938463463374607431768211456
+%YMM0_2 = %YMM0_1 : %XMM0_2
+%57 = %XMM0_1
+%58 = and i512 %34 : %XMM0_1, -340282366920938463463374607431768211456
+%ZMM0_2 = %ZMM0_1 : %XMM0_2
 %RIP_12 = 4195598
 %EIP_11 = 4195598
 %RAX_0 = %RAX
@@ -200,20 +200,20 @@ store i32 4196000, i32* %EDI
 %CF_0 = extractvalue { i64, i1 } %64, 1
 %65 = %RSP-56
 %66 = call i8 @llvm.ctpop.i8(i8 %65)
-%67 = trunc i8 %66 to i1
-%PF_0 = icmp eq i8 %66, false
-%68 = zext i1 %CF_0 to i32
-%69 = shl i1 %CF_0, 0
-%71 = zext i1 %PF_0 to i32
-%72 = shl i1 %PF_0, 2
-%74 = zext i1 false to i32
-%75 = shl i1 false, 4
-%77 = zext i1 %ZF_0 to i32
-%78 = shl i1 %ZF_0, 6
-%80 = zext i1 %SF_0 to i32
-%81 = shl i1 %SF_0, 7
-%83 = zext i1 %OF_0 to i32
-%84 = shl i1 %OF_0, 11
+%67 = %66
+%PF_0 = icmp eq i1 %66, false
+%68 = %CF_0
+%69 = shl i32 %CF_0, 0
+%71 = %PF_0
+%72 = shl i32 %PF_0, 2
+%74 = false
+%75 = shl i32 false, 4
+%77 = %ZF_0
+%78 = shl i32 %ZF_0, 6
+%80 = %SF_0
+%81 = shl i32 %SF_0, 7
+%83 = %OF_0
+%84 = shl i32 %OF_0, 11
 store i32 %EIP_12, i32* %EIP
 store i32 %ESI_0, i32* %ESI
 store i32 %ESP_2, i32* %ESP
@@ -223,12 +223,12 @@ store i64 4196000, i64* %RDI
 store i64 %RIP_13, i64* %RIP
 store i64 %RSI_1, i64* %RSI
 store i64 %RSP_3, i64* %RSP
-%85 = bitcast i128 %XMM0_2 to <4 x float>
-store i128 %XMM0_2, <4 x float>* %XMM0
-%86 = bitcast i256 %YMM0_2 to <8 x float>
-store i256 %YMM0_2, <8 x float>* %YMM0
-%87 = bitcast i512 %ZMM0_2 to <16 x float>
-store i512 %ZMM0_2, <16 x float>* %ZMM0
+%85 = %XMM0_1
+store <4 x float> %52, <4 x float>* %XMM0
+%86 = %YMM0_1
+store <8 x float> %XMM0_2, <8 x float>* %YMM0
+%87 = %ZMM0_1
+store <16 x float> %XMM0_2, <16 x float>* %ZMM0
 %90 = load i64, i64* %RAX
 store i64 %90, i64* %RAX_ptr
 %91 = load i64, i64* %RBP
@@ -314,22 +314,22 @@ bb_40051D:                                        ; preds = %bb_4005DD, %bb_4004
 %OF_017 = extractvalue { i32, i1 } %121, 1
 %122 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %EAX_18, i32 %119)
 %CF_018 = extractvalue { i32, i1 } %122, 1
-%123 = trunc i32 %120 to i8
-%124 = call i32 @llvm.ctpop.i8(i8 %120)
-%125 = trunc i8 %124 to i1
-%PF_019 = icmp eq i8 %124, false
-%126 = zext i1 %CF_018 to i32
-%127 = shl i1 %CF_018, 0
-%129 = zext i1 %PF_019 to i32
-%130 = shl i1 %PF_019, 2
-%132 = zext i1 false to i32
-%133 = shl i1 false, 4
-%135 = zext i1 %ZF_015 to i32
-%136 = shl i1 %ZF_015, 6
-%138 = zext i1 %SF_016 to i32
-%139 = shl i1 %SF_016, 7
-%141 = zext i1 %OF_017 to i32
-%142 = shl i1 %OF_017, 11
+%123 = %120
+%124 = call i8 @llvm.ctpop.i8(i8 %120)
+%125 = %124
+%PF_019 = icmp eq i1 %124, false
+%126 = %CF_018
+%127 = shl i32 %CF_018, 0
+%129 = %PF_019
+%130 = shl i32 %PF_019, 2
+%132 = false
+%133 = shl i32 false, 4
+%135 = %ZF_015
+%136 = shl i32 %ZF_015, 6
+%138 = %SF_016
+%139 = shl i32 %SF_016, 7
+%141 = %OF_017
+%142 = shl i32 %OF_017, 11
 %RIP_87 = 4195625
 %EIP_75 = 4195625
 store i32 %EAX_18, i32* %EAX
@@ -344,22 +344,22 @@ bb_400529:                                        ; preds = %bb_40051D
 %RBP_2 = %RBP
 %144 = %RBP-16
 %145 = load double, double* %144, align 1
-%146 = bitcast double %145 to i64
+%146 = %145
 %ZMM0_3 = %ZMM0
 %147 = %ZMM0
 %XMM0_3 = %ZMM0
-%148 = zext double %145 to i128
+%148 = %145
 %149 = and i128 %ZMM0, -18446744073709551616
-%XMM0_4 = or i128 %148, %149
+%XMM0_4 = %XMM0_3 : %146
 %150 = %ZMM0
 %YMM0_3 = %ZMM0
-%151 = zext i128 %XMM0_4 to i256
+%151 = %XMM0_3
 %152 = and i256 %ZMM0, -340282366920938463463374607431768211456
-%YMM0_4 = or i256 %151, %152
+%YMM0_4 = %YMM0_3 : %XMM0_4
 %153 = %ZMM0
-%154 = zext i128 %XMM0_4 to i512
+%154 = %XMM0_3
 %155 = and i512 %153, -340282366920938463463374607431768211456
-%ZMM0_4 = or i512 %154, %155
+%ZMM0_4 = %153 : %XMM0_4
 %RIP_19 = 4195633
 %EIP_16 = 4195633
 %157 = %RBP-8
@@ -370,59 +370,59 @@ bb_400529:                                        ; preds = %bb_40051D
 %RIP_20 = 4195637
 %EIP_17 = 4195637
 %159 = [ %RBP -8 ]
-%160 = bitcast double %159 to i64
+%160 = %159
 %ZMM1_0 = %ZMM1
 %161 = %ZMM1
 %XMM1_0 = %ZMM1
-%162 = zext double %159 to i128
+%162 = %159
 %163 = and i128 %ZMM1, -18446744073709551616
-%XMM1_1 = or i128 %162, %163
+%XMM1_1 = %XMM1_0 : %160
 %164 = %ZMM1
 %YMM1_0 = %ZMM1
-%165 = zext i128 %XMM1_1 to i256
+%165 = %XMM1_0
 %166 = and i256 %ZMM1, -340282366920938463463374607431768211456
-%YMM1_1 = or i256 %165, %166
+%YMM1_1 = %YMM1_0 : %XMM1_1
 %167 = %ZMM1
-%168 = zext i128 %XMM1_1 to i512
+%168 = %XMM1_0
 %169 = and i512 %167, -340282366920938463463374607431768211456
-%ZMM1_1 = or i512 %168, %169
+%ZMM1_1 = %167 : %XMM1_1
 %RIP_21 = 4195641
 %EIP_18 = 4195641
-%170 = trunc i128 %XMM0_4 to i64
-%171 = bitcast i128 %XMM0_4 to double
-%172 = trunc i128 %XMM1_1 to i64
-%173 = bitcast i128 %XMM1_1 to double
-%174 = fdiv i128 %XMM0_4, %XMM1_1
-%175 = bitcast double %174 to i64
-%176 = zext double %174 to i128
-%177 = and i128 %XMM0_4, -18446744073709551616
-%XMM0_5 = or i128 %176, %177
-%178 = zext i128 %XMM0_5 to i256
-%179 = and i256 %YMM0_4, -340282366920938463463374607431768211456
-%YMM0_5 = or i256 %178, %179
-%180 = zext i128 %XMM0_5 to i512
-%181 = and i512 %ZMM0_4, -340282366920938463463374607431768211456
-%ZMM0_5 = or i512 %180, %181
+%170 = %XMM0_3
+%171 = %146
+%172 = %XMM1_0
+%173 = %160
+%174 = fdiv double %146, %160
+%175 = %174
+%176 = %174
+%177 = and i128 %XMM0_3 : %146, -18446744073709551616
+%XMM0_5 = %XMM0_4 : %175
+%178 = %XMM0_4
+%179 = and i256 %YMM0_3 : %XMM0_4, -340282366920938463463374607431768211456
+%YMM0_5 = %YMM0_4 : %XMM0_5
+%180 = %XMM0_4
+%181 = and i512 %153 : %XMM0_4, -340282366920938463463374607431768211456
+%ZMM0_5 = %ZMM0_4 : %XMM0_5
 %RIP_22 = 4195646
 %EIP_19 = 4195646
-%182 = trunc i128 %XMM0_5 to i64
-%183 = bitcast i128 %XMM0_5 to double
+%182 = %XMM0_4
+%183 = %175
 %185 = %RBP-32
-store i128 %XMM0_5, double* %185, align 1
+store double %175, double* %185, align 1
 %RIP_23 = 4195651
 %EIP_20 = 4195651
 %187 = %RBP-32
 %188 = load double, double* %187, align 1
-%189 = bitcast double %188 to i64
-%190 = zext double %188 to i128
-%191 = and i128 %XMM0_5, -18446744073709551616
-%XMM0_6 = or i128 %190, %191
-%192 = zext i128 %XMM0_6 to i256
-%193 = and i256 %YMM0_5, -340282366920938463463374607431768211456
-%YMM0_6 = or i256 %192, %193
-%194 = zext i128 %XMM0_6 to i512
-%195 = and i512 %ZMM0_5, -340282366920938463463374607431768211456
-%ZMM0_6 = or i512 %194, %195
+%189 = %188
+%190 = %188
+%191 = and i128 %XMM0_4 : %175, -18446744073709551616
+%XMM0_6 = %XMM0_5 : %189
+%192 = %XMM0_5
+%193 = and i256 %YMM0_4 : %XMM0_5, -340282366920938463463374607431768211456
+%YMM0_6 = %YMM0_5 : %XMM0_6
+%194 = %XMM0_5
+%195 = and i512 %ZMM0_4 : %XMM0_5, -340282366920938463463374607431768211456
+%ZMM0_6 = %ZMM0_5 : %XMM0_6
 %RIP_24 = 4195654
 %EIP_21 = 4195654
 %197 = %RBP-20
@@ -432,37 +432,37 @@ store i128 %XMM0_5, double* %185, align 1
 %RIP_25 = 4195658
 %EIP_22 = 4195658
 %199 = [ %RBP -20 ]
-%200 = bitcast double %199 to i64
-%201 = zext double %199 to i128
-%202 = and i128 %XMM1_1, -18446744073709551616
-%XMM1_2 = or i128 %201, %202
-%203 = zext i128 %XMM1_2 to i256
-%204 = and i256 %YMM1_1, -340282366920938463463374607431768211456
-%YMM1_2 = or i256 %203, %204
-%205 = zext i128 %XMM1_2 to i512
-%206 = and i512 %ZMM1_1, -340282366920938463463374607431768211456
-%ZMM1_2 = or i512 %205, %206
+%200 = %199
+%201 = %199
+%202 = and i128 %XMM1_0 : %160, -18446744073709551616
+%XMM1_2 = %XMM1_1 : %200
+%203 = %XMM1_1
+%204 = and i256 %YMM1_0 : %XMM1_1, -340282366920938463463374607431768211456
+%YMM1_2 = %YMM1_1 : %XMM1_2
+%205 = %XMM1_1
+%206 = and i512 %167 : %XMM1_1, -340282366920938463463374607431768211456
+%ZMM1_2 = %ZMM1_1 : %XMM1_2
 %RIP_26 = 4195662
 %EIP_23 = 4195662
-%207 = trunc i128 %XMM1_2 to i64
-%208 = bitcast i128 %XMM1_2 to double
-%209 = trunc i128 %XMM0_6 to i64
-%210 = bitcast i128 %XMM0_6 to double
+%207 = %XMM1_1
+%208 = %200
+%209 = %XMM0_5
+%210 = %189
 %ZF_01 = fcmp ueq double %208, %210
-%PF_02 = fcmp uno i128 %XMM1_2, %XMM0_6
-%CF_03 = fcmp ult i128 %XMM1_2, %XMM0_6
-%211 = zext i1 %CF_03 to i32
-%212 = shl i1 %CF_03, 0
-%214 = zext i1 %PF_02 to i32
-%215 = shl i1 %PF_02, 2
-%217 = zext i1 false to i32
-%218 = shl i1 false, 4
-%220 = zext i1 %ZF_01 to i32
-%221 = shl i1 %ZF_01, 6
-%223 = zext i1 false to i32
-%224 = shl i1 false, 7
-%226 = zext i1 false to i32
-%227 = shl i1 false, 11
+%PF_02 = fcmp uno double %200, %189
+%CF_03 = fcmp ult double %200, %189
+%211 = %CF_03
+%212 = shl i32 %CF_03, 0
+%214 = %PF_02
+%215 = shl i32 %PF_02, 2
+%217 = false
+%218 = shl i32 false, 4
+%220 = %ZF_01
+%221 = shl i32 %ZF_01, 6
+%223 = false
+%224 = shl i32 false, 7
+%226 = false
+%227 = shl i32 false, 11
 %RIP_27 = 4195668
 %EIP_24 = 4195668
 %CC_BE_0 = or i1 %CF_03, %ZF_01
@@ -471,18 +471,18 @@ store i32 4195721, i32* %EIP
 store i64 %RAX_5, i64* %RAX
 store i64 %RBP_2, i64* %RBP
 store i64 4195721, i64* %RIP
-%228 = bitcast i128 %XMM0_6 to <4 x float>
-store i128 %XMM0_6, <4 x float>* %XMM0
-%229 = bitcast i128 %XMM1_2 to <4 x float>
-store i128 %XMM1_2, <4 x float>* %XMM1
-%230 = bitcast i256 %YMM0_6 to <8 x float>
-store i256 %YMM0_6, <8 x float>* %YMM0
-%231 = bitcast i256 %YMM1_2 to <8 x float>
-store i256 %YMM1_2, <8 x float>* %YMM1
-%232 = bitcast i512 %ZMM0_6 to <16 x float>
-store i512 %ZMM0_6, <16 x float>* %ZMM0
-%233 = bitcast i512 %ZMM1_2 to <16 x float>
-store i512 %ZMM1_2, <16 x float>* %ZMM1
+%228 = %XMM0_5
+store <4 x float> %189, <4 x float>* %XMM0
+%229 = %XMM1_1
+store <4 x float> %200, <4 x float>* %XMM1
+%230 = %YMM0_5
+store <8 x float> %XMM0_6, <8 x float>* %YMM0
+%231 = %YMM1_1
+store <8 x float> %XMM1_2, <8 x float>* %YMM1
+%232 = %ZMM0_5
+store <16 x float> %XMM0_6, <16 x float>* %ZMM0
+%233 = %ZMM1_1
+store <16 x float> %XMM1_2, <16 x float>* %ZMM1
 br i1 %CC_BE_0, label %bb_400589, label %bb_400554
 bb_400554:                                        ; preds = %bb_400529
 %RIP_42 = 4195678
@@ -492,59 +492,59 @@ bb_400554:                                        ; preds = %bb_400529
 %RBP_5 = %RBP
 %235 = %RBP-32
 %236 = load double, double* %235, align 1
-%237 = bitcast double %236 to i64
+%237 = %236
 %ZMM0_7 = %ZMM0
 %238 = %ZMM0
 %XMM0_7 = %ZMM0
-%239 = zext double %236 to i128
+%239 = %236
 %240 = and i128 %ZMM0, -18446744073709551616
-%XMM0_8 = or i128 %239, %240
+%XMM0_8 = %XMM0_7 : %237
 %241 = %ZMM0
 %YMM0_7 = %ZMM0
-%242 = zext i128 %XMM0_8 to i256
+%242 = %XMM0_7
 %243 = and i256 %ZMM0, -340282366920938463463374607431768211456
-%YMM0_8 = or i256 %242, %243
+%YMM0_8 = %YMM0_7 : %XMM0_8
 %244 = %ZMM0
-%245 = zext i128 %XMM0_8 to i512
+%245 = %XMM0_7
 %246 = and i512 %244, -340282366920938463463374607431768211456
-%ZMM0_8 = or i512 %245, %246
+%ZMM0_8 = %244 : %XMM0_8
 %RIP_44 = 4195688
 %EIP_38 = 4195688
-%247 = trunc i128 %XMM0_8 to i64
-%248 = bitcast i128 %XMM0_8 to double
+%247 = %XMM0_7
+%248 = %237
 %250 = %RBP-16
 %251 = load double, double* %250, align 1
-%252 = fadd i128 %XMM0_8, %251
-%253 = bitcast double %252 to i64
-%254 = zext double %252 to i128
-%255 = and i128 %XMM0_8, -18446744073709551616
-%XMM0_9 = or i128 %254, %255
-%256 = zext i128 %XMM0_9 to i256
-%257 = and i256 %YMM0_8, -340282366920938463463374607431768211456
-%YMM0_9 = or i256 %256, %257
-%258 = zext i128 %XMM0_9 to i512
-%259 = and i512 %ZMM0_8, -340282366920938463463374607431768211456
-%ZMM0_9 = or i512 %258, %259
+%252 = fadd double %237, %251
+%253 = %252
+%254 = %252
+%255 = and i128 %XMM0_7 : %237, -18446744073709551616
+%XMM0_9 = %XMM0_8 : %253
+%256 = %XMM0_8
+%257 = and i256 %YMM0_7 : %XMM0_8, -340282366920938463463374607431768211456
+%YMM0_9 = %YMM0_8 : %XMM0_9
+%258 = %XMM0_8
+%259 = and i512 %244 : %XMM0_8, -340282366920938463463374607431768211456
+%ZMM0_9 = %ZMM0_8 : %XMM0_9
 %RIP_45 = 4195693
 %EIP_39 = 4195693
-%260 = trunc i128 %XMM0_9 to i64
-%261 = bitcast i128 %XMM0_9 to double
+%260 = %XMM0_8
+%261 = %253
 %263 = %RBP-16
-store i128 %XMM0_9, double* %263, align 1
+store double %253, double* %263, align 1
 %RIP_46 = 4195698
 %EIP_40 = 4195698
 %265 = %RBP-32
 %266 = load double, double* %265, align 1
-%267 = bitcast double %266 to i64
-%268 = zext double %266 to i128
-%269 = and i128 %XMM0_9, -18446744073709551616
-%XMM0_10 = or i128 %268, %269
-%270 = zext i128 %XMM0_10 to i256
-%271 = and i256 %YMM0_9, -340282366920938463463374607431768211456
-%YMM0_10 = or i256 %270, %271
-%272 = zext i128 %XMM0_10 to i512
-%273 = and i512 %ZMM0_9, -340282366920938463463374607431768211456
-%ZMM0_10 = or i512 %272, %273
+%267 = %266
+%268 = %266
+%269 = and i128 %XMM0_8 : %253, -18446744073709551616
+%XMM0_10 = %XMM0_9 : %267
+%270 = %XMM0_9
+%271 = and i256 %YMM0_8 : %XMM0_9, -340282366920938463463374607431768211456
+%YMM0_10 = %YMM0_9 : %XMM0_10
+%272 = %XMM0_9
+%273 = and i512 %ZMM0_8 : %XMM0_9, -340282366920938463463374607431768211456
+%ZMM0_10 = %ZMM0_9 : %XMM0_10
 %RIP_47 = 4195701
 %EIP_41 = 4195701
 %275 = %RBP-20
@@ -555,22 +555,22 @@ store i128 %XMM0_9, double* %263, align 1
 %EIP_42 = 4195706
 %277 = %RBP-16
 %278 = load double, double* %277, align 1
-%279 = bitcast double %278 to i64
+%279 = %278
 %ZMM1_3 = %ZMM1
 %280 = %ZMM1
 %XMM1_3 = %ZMM1
-%281 = zext double %278 to i128
+%281 = %278
 %282 = and i128 %ZMM1, -18446744073709551616
-%XMM1_4 = or i128 %281, %282
+%XMM1_4 = %XMM1_3 : %279
 %283 = %ZMM1
 %YMM1_3 = %ZMM1
-%284 = zext i128 %XMM1_4 to i256
+%284 = %XMM1_3
 %285 = and i256 %ZMM1, -340282366920938463463374607431768211456
-%YMM1_4 = or i256 %284, %285
+%YMM1_4 = %YMM1_3 : %XMM1_4
 %286 = %ZMM1
-%287 = zext i128 %XMM1_4 to i512
+%287 = %XMM1_3
 %288 = and i512 %286, -340282366920938463463374607431768211456
-%ZMM1_4 = or i512 %287, %288
+%ZMM1_4 = %286 : %XMM1_4
 %RIP_49 = 4195708
 %EIP_43 = 4195708
 %RAX_10 = %RAX
@@ -596,18 +596,18 @@ store i64 4196027, i64* %RDI
 store i64 %RIP_50, i64* %RIP
 store i64 %RSI_3, i64* %RSI
 store i64 %RSP_11, i64* %RSP
-%293 = bitcast i128 %XMM0_10 to <4 x float>
-store i128 %XMM0_10, <4 x float>* %XMM0
-%294 = bitcast i128 %XMM1_4 to <4 x float>
-store i128 %XMM1_4, <4 x float>* %XMM1
-%295 = bitcast i256 %YMM0_10 to <8 x float>
-store i256 %YMM0_10, <8 x float>* %YMM0
-%296 = bitcast i256 %YMM1_4 to <8 x float>
-store i256 %YMM1_4, <8 x float>* %YMM1
-%297 = bitcast i512 %ZMM0_10 to <16 x float>
-store i512 %ZMM0_10, <16 x float>* %ZMM0
-%298 = bitcast i512 %ZMM1_4 to <16 x float>
-store i512 %ZMM1_4, <16 x float>* %ZMM1
+%293 = %XMM0_9
+store <4 x float> %267, <4 x float>* %XMM0
+%294 = %XMM1_3
+store <4 x float> %279, <4 x float>* %XMM1
+%295 = %YMM0_9
+store <8 x float> %XMM0_10, <8 x float>* %YMM0
+%296 = %YMM1_3
+store <8 x float> %XMM1_4, <8 x float>* %YMM1
+%297 = %ZMM0_9
+store <16 x float> %XMM0_10, <16 x float>* %ZMM0
+%298 = %286
+store <16 x float> %XMM1_4, <16 x float>* %ZMM1
 %301 = load i64, i64* %RAX
 store i64 %301, i64* %RAX_ptr
 %302 = load i64, i64* %RBP
@@ -669,22 +669,22 @@ bb_400589:                                        ; preds = %bb_400529
 %RBP_7 = %RBP
 %324 = %RBP-32
 %325 = load double, double* %324, align 1
-%326 = bitcast double %325 to i64
+%326 = %325
 %ZMM0_11 = %ZMM0
 %327 = %ZMM0
 %XMM0_11 = %ZMM0
-%328 = zext double %325 to i128
+%328 = %325
 %329 = and i128 %ZMM0, -18446744073709551616
-%XMM0_12 = or i128 %328, %329
+%XMM0_12 = %XMM0_11 : %326
 %330 = %ZMM0
 %YMM0_11 = %ZMM0
-%331 = zext i128 %XMM0_12 to i256
+%331 = %XMM0_11
 %332 = and i256 %ZMM0, -340282366920938463463374607431768211456
-%YMM0_12 = or i256 %331, %332
+%YMM0_12 = %YMM0_11 : %XMM0_12
 %333 = %ZMM0
-%334 = zext i128 %XMM0_12 to i512
+%334 = %XMM0_11
 %335 = and i512 %333, -340282366920938463463374607431768211456
-%ZMM0_12 = or i512 %334, %335
+%ZMM0_12 = %333 : %XMM0_12
 %RIP_58 = 4195739
 %EIP_50 = 4195739
 %337 = %RBP-20
@@ -695,43 +695,43 @@ bb_400589:                                        ; preds = %bb_400529
 %RIP_59 = 4195743
 %EIP_51 = 4195743
 %339 = [ %RBP -20 ]
-%340 = bitcast double %339 to i64
+%340 = %339
 %ZMM1_5 = %ZMM1
 %341 = %ZMM1
 %XMM1_5 = %ZMM1
-%342 = zext double %339 to i128
+%342 = %339
 %343 = and i128 %ZMM1, -18446744073709551616
-%XMM1_6 = or i128 %342, %343
+%XMM1_6 = %XMM1_5 : %340
 %344 = %ZMM1
 %YMM1_5 = %ZMM1
-%345 = zext i128 %XMM1_6 to i256
+%345 = %XMM1_5
 %346 = and i256 %ZMM1, -340282366920938463463374607431768211456
-%YMM1_6 = or i256 %345, %346
+%YMM1_6 = %YMM1_5 : %XMM1_6
 %347 = %ZMM1
-%348 = zext i128 %XMM1_6 to i512
+%348 = %XMM1_5
 %349 = and i512 %347, -340282366920938463463374607431768211456
-%ZMM1_6 = or i512 %348, %349
+%ZMM1_6 = %347 : %XMM1_6
 %RIP_60 = 4195747
 %EIP_52 = 4195747
-%350 = trunc i128 %XMM1_6 to i64
-%351 = bitcast i128 %XMM1_6 to double
-%352 = trunc i128 %XMM0_12 to i64
-%353 = bitcast i128 %XMM0_12 to double
-%354 = fadd i128 %XMM1_6, %XMM0_12
-%355 = bitcast double %354 to i64
-%356 = zext double %354 to i128
-%357 = and i128 %XMM1_6, -18446744073709551616
-%XMM1_7 = or i128 %356, %357
-%358 = zext i128 %XMM1_7 to i256
-%359 = and i256 %YMM1_6, -340282366920938463463374607431768211456
-%YMM1_7 = or i256 %358, %359
-%360 = zext i128 %XMM1_7 to i512
-%361 = and i512 %ZMM1_6, -340282366920938463463374607431768211456
-%ZMM1_7 = or i512 %360, %361
+%350 = %XMM1_5
+%351 = %340
+%352 = %XMM0_11
+%353 = %326
+%354 = fadd double %340, %326
+%355 = %354
+%356 = %354
+%357 = and i128 %XMM1_5 : %340, -18446744073709551616
+%XMM1_7 = %XMM1_6 : %355
+%358 = %XMM1_6
+%359 = and i256 %YMM1_5 : %XMM1_6, -340282366920938463463374607431768211456
+%YMM1_7 = %YMM1_6 : %XMM1_7
+%360 = %XMM1_6
+%361 = and i512 %347 : %XMM1_6, -340282366920938463463374607431768211456
+%ZMM1_7 = %ZMM1_6 : %XMM1_7
 %RIP_61 = 4195751
 %EIP_53 = 4195751
-%362 = trunc i128 %XMM1_7 to i64
-%363 = bitcast i128 %XMM1_7 to double
+%362 = %XMM1_6
+%363 = %355
 %EAX_12 = %XMM1_7
 %RAX_15 = %XMM1_7
 %364 = lshr i32 %XMM1_7, 8
@@ -749,67 +749,67 @@ store i32 %EAX_12, i32* %366, align 1
 %RIP_64 = 4195763
 %EIP_56 = 4195763
 %371 = %RBP-32
-%372 = bitcast double %371 to i64
-%373 = zext double %371 to i128
-%374 = and i128 %XMM0_12, -18446744073709551616
-%XMM0_13 = or i128 %373, %374
-%375 = zext i128 %XMM0_13 to i256
-%376 = and i256 %YMM0_12, -340282366920938463463374607431768211456
-%YMM0_13 = or i256 %375, %376
-%377 = zext i128 %XMM0_13 to i512
-%378 = and i512 %ZMM0_12, -340282366920938463463374607431768211456
-%ZMM0_13 = or i512 %377, %378
+%372 = %371
+%373 = %371
+%374 = and i128 %XMM0_11 : %326, -18446744073709551616
+%XMM0_13 = %XMM0_12 : %372
+%375 = %XMM0_12
+%376 = and i256 %YMM0_11 : %XMM0_12, -340282366920938463463374607431768211456
+%YMM0_13 = %YMM0_12 : %XMM0_13
+%377 = %XMM0_12
+%378 = and i512 %333 : %XMM0_12, -340282366920938463463374607431768211456
+%ZMM0_13 = %ZMM0_12 : %XMM0_13
 %RIP_65 = 4195768
 %EIP_57 = 4195768
 %380 = %RBP-16
 %381 = load double, double* %380, align 1
-%382 = bitcast double %381 to i64
-%383 = zext double %381 to i128
-%384 = and i128 %XMM1_7, -18446744073709551616
-%XMM1_8 = or i128 %383, %384
-%385 = zext i128 %XMM1_8 to i256
-%386 = and i256 %YMM1_7, -340282366920938463463374607431768211456
-%YMM1_8 = or i256 %385, %386
-%387 = zext i128 %XMM1_8 to i512
-%388 = and i512 %ZMM1_7, -340282366920938463463374607431768211456
-%ZMM1_8 = or i512 %387, %388
+%382 = %381
+%383 = %381
+%384 = and i128 %XMM1_6 : %355, -18446744073709551616
+%XMM1_8 = %XMM1_7 : %382
+%385 = %XMM1_7
+%386 = and i256 %YMM1_6 : %XMM1_7, -340282366920938463463374607431768211456
+%YMM1_8 = %YMM1_7 : %XMM1_8
+%387 = %XMM1_7
+%388 = and i512 %ZMM1_6 : %XMM1_7, -340282366920938463463374607431768211456
+%ZMM1_8 = %ZMM1_7 : %XMM1_8
 %RIP_66 = 4195772
 %EIP_58 = 4195772
-%389 = trunc i128 %XMM1_8 to i64
-%390 = bitcast i128 %XMM1_8 to double
-%391 = trunc i128 %XMM0_13 to i64
-%392 = bitcast i128 %XMM0_13 to double
-%393 = fsub i128 %XMM1_8, %XMM0_13
-%394 = bitcast double %393 to i64
-%395 = zext double %393 to i128
-%396 = and i128 %XMM1_8, -18446744073709551616
-%XMM1_9 = or i128 %395, %396
-%397 = zext i128 %XMM1_9 to i256
-%398 = and i256 %YMM1_8, -340282366920938463463374607431768211456
-%YMM1_9 = or i256 %397, %398
-%399 = zext i128 %XMM1_9 to i512
-%400 = and i512 %ZMM1_8, -340282366920938463463374607431768211456
-%ZMM1_9 = or i512 %399, %400
+%389 = %XMM1_7
+%390 = %382
+%391 = %XMM0_12
+%392 = %372
+%393 = fsub double %382, %372
+%394 = %393
+%395 = %393
+%396 = and i128 %XMM1_7 : %382, -18446744073709551616
+%XMM1_9 = %XMM1_8 : %394
+%397 = %XMM1_8
+%398 = and i256 %YMM1_7 : %XMM1_8, -340282366920938463463374607431768211456
+%YMM1_9 = %YMM1_8 : %XMM1_9
+%399 = %XMM1_8
+%400 = and i512 %ZMM1_7 : %XMM1_8, -340282366920938463463374607431768211456
+%ZMM1_9 = %ZMM1_8 : %XMM1_9
 %RIP_67 = 4195777
 %EIP_59 = 4195777
-%401 = trunc i128 %XMM1_9 to i64
-%402 = bitcast i128 %XMM1_9 to double
+%401 = %XMM1_8
+%402 = %394
 %404 = %RBP-16
-store i128 %XMM1_9, double* %404, align 1
+store double %394, double* %404, align 1
 %RIP_68 = 4195782
 %EIP_60 = 4195782
 %406 = %RBP-32
 %407 = load double, double* %406, align 1
-%408 = bitcast double %407 to i64
-%409 = zext double %407 to i128
-%410 = and i128 %XMM0_13, -18446744073709551616
-%XMM0_14 = or i128 %409, %410
-%411 = zext i128 %XMM0_14 to i256
-%412 = and i256 %YMM0_13, -340282366920938463463374607431768211456
-%YMM0_14 = or i256 %411, %412
-%413 = zext i128 %XMM0_14 to i512
-%414 = and i512 %ZMM0_13, -340282366920938463463374607431768211456
-%ZMM0_14 = or i512 %413, %414
+%408 = %407
+%409 = %407
+%410 = and i128 %XMM0_12 : %372, -18446744073709551616
+%XMM0_14 = %XMM0_13 : %408
+%411 = %XMM0_13
+%412 = and i256 %YMM0_12 : %XMM0_13, -340282366920938463463374607431768211456
+%YMM0_14 = %YMM0_13 : %XMM0_14
+%413 = %XMM0_13
+%414 = and i512 %ZMM0_12 : %XMM0_13, -340282366920938463463374607431768211456
+%ZMM0_14 = %ZMM0_13 : %XMM0_14
 %RIP_69 = 4195785
 %EIP_61 = 4195785
 %416 = %RBP-20
@@ -820,16 +820,16 @@ store i128 %XMM1_9, double* %404, align 1
 %EIP_62 = 4195790
 %418 = %RBP-16
 %419 = load double, double* %418, align 1
-%420 = bitcast double %419 to i64
-%421 = zext double %419 to i128
-%422 = and i128 %XMM1_9, -18446744073709551616
-%XMM1_10 = or i128 %421, %422
-%423 = zext i128 %XMM1_10 to i256
-%424 = and i256 %YMM1_9, -340282366920938463463374607431768211456
-%YMM1_10 = or i256 %423, %424
-%425 = zext i128 %XMM1_10 to i512
-%426 = and i512 %ZMM1_9, -340282366920938463463374607431768211456
-%ZMM1_10 = or i512 %425, %426
+%420 = %419
+%421 = %419
+%422 = and i128 %XMM1_8 : %394, -18446744073709551616
+%XMM1_10 = %XMM1_9 : %420
+%423 = %XMM1_9
+%424 = and i256 %YMM1_8 : %XMM1_9, -340282366920938463463374607431768211456
+%YMM1_10 = %YMM1_9 : %XMM1_10
+%425 = %XMM1_9
+%426 = and i512 %ZMM1_8 : %XMM1_9, -340282366920938463463374607431768211456
+%ZMM1_10 = %ZMM1_9 : %XMM1_10
 %RIP_71 = 4195792
 %EIP_63 = 4195792
 %428 = and i32 %RBP-32, -256
@@ -853,18 +853,18 @@ store i64 4196027, i64* %RDI
 store i64 %RIP_72, i64* %RIP
 store i64 %RSI_5, i64* %RSI
 store i64 %RSP_13, i64* %RSP
-%431 = bitcast i128 %XMM0_14 to <4 x float>
-store i128 %XMM0_14, <4 x float>* %XMM0
-%432 = bitcast i128 %XMM1_10 to <4 x float>
-store i128 %XMM1_10, <4 x float>* %XMM1
-%433 = bitcast i256 %YMM0_14 to <8 x float>
-store i256 %YMM0_14, <8 x float>* %YMM0
-%434 = bitcast i256 %YMM1_10 to <8 x float>
-store i256 %YMM1_10, <8 x float>* %YMM1
-%435 = bitcast i512 %ZMM0_14 to <16 x float>
-store i512 %ZMM0_14, <16 x float>* %ZMM0
-%436 = bitcast i512 %ZMM1_10 to <16 x float>
-store i512 %ZMM1_10, <16 x float>* %ZMM1
+%431 = %XMM0_13
+store <4 x float> %408, <4 x float>* %XMM0
+%432 = %XMM1_9
+store <4 x float> %420, <4 x float>* %XMM1
+%433 = %YMM0_13
+store <8 x float> %XMM0_14, <8 x float>* %YMM0
+%434 = %YMM1_9
+store <8 x float> %XMM1_10, <8 x float>* %YMM1
+%435 = %ZMM0_13
+store <16 x float> %XMM0_14, <16 x float>* %ZMM0
+%436 = %ZMM1_9
+store <16 x float> %XMM1_10, <16 x float>* %ZMM1
 %439 = load i64, i64* %RAX
 store i64 %439, i64* %RAX_ptr
 %440 = load i64, i64* %RBP
@@ -950,20 +950,20 @@ store i32 %EAX_17, i32* %466, align 1
 %CF_012 = extractvalue { i32, i1 } %468, 1
 %469 = %RBP-23
 %470 = call i8 @llvm.ctpop.i8(i8 %469)
-%471 = trunc i8 %470 to i1
-%PF_013 = icmp eq i8 %470, false
-%472 = zext i1 %CF_012 to i32
-%473 = shl i1 %CF_012, 0
-%475 = zext i1 %PF_013 to i32
-%476 = shl i1 %PF_013, 2
-%478 = zext i1 false to i32
-%479 = shl i1 false, 4
-%481 = zext i1 %ZF_09 to i32
-%482 = shl i1 %ZF_09, 6
-%484 = zext i1 %SF_010 to i32
-%485 = shl i1 %SF_010, 7
-%487 = zext i1 %OF_011 to i32
-%488 = shl i1 %OF_011, 11
+%471 = %470
+%PF_013 = icmp eq i1 %470, false
+%472 = %CF_012
+%473 = shl i32 %CF_012, 0
+%475 = %PF_013
+%476 = shl i32 %PF_013, 2
+%478 = false
+%479 = shl i32 false, 4
+%481 = %ZF_09
+%482 = shl i32 %ZF_09, 6
+%484 = %SF_010
+%485 = shl i32 %SF_010, 7
+%487 = %OF_011
+%488 = shl i32 %OF_011, 11
 store i32 %EAX_17, i32* %EAX
 store i32 4195613, i32* %EIP
 store i64 %RAX_21, i64* %RAX
@@ -1077,20 +1077,20 @@ store i32 %EAX_7, i32* %517, align 1
 %CF_07 = extractvalue { i64, i1 } %523, 1
 %524 = %RSP+48
 %525 = call i8 @llvm.ctpop.i8(i8 %524)
-%526 = trunc i8 %525 to i1
-%PF_08 = icmp eq i8 %525, false
-%527 = zext i1 %CF_07 to i32
-%528 = shl i1 %CF_07, 0
-%530 = zext i1 %PF_08 to i32
-%531 = shl i1 %PF_08, 2
-%533 = zext i1 false to i32
-%534 = shl i1 false, 4
-%536 = zext i1 %ZF_04 to i32
-%537 = shl i1 %ZF_04, 6
-%539 = zext i1 %SF_05 to i32
-%540 = shl i1 %SF_05, 7
-%542 = zext i1 %OF_06 to i32
-%543 = shl i1 %OF_06, 11
+%526 = %525
+%PF_08 = icmp eq i1 %525, false
+%527 = %CF_07
+%528 = shl i32 %CF_07, 0
+%530 = %PF_08
+%531 = shl i32 %PF_08, 2
+%533 = false
+%534 = shl i32 false, 4
+%536 = %ZF_04
+%537 = shl i32 %ZF_04, 6
+%539 = %SF_05
+%540 = shl i32 %SF_05, 7
+%542 = %OF_06
+%543 = shl i32 %OF_06, 11
 store i32 %ECX_1, i32* %EAX
 store i32 %EBP_1, i32* %EBP
 store i32 %ECX_1, i32* %ECX

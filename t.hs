@@ -22,7 +22,7 @@ import OtherFunction
 import StatementInstr
 import StatementParse
 import RegisterPointer
-import Elimination
+import Propagation
 import Idioms
 import IsGetSet
 import Idioms

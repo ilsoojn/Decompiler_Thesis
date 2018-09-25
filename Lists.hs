@@ -100,7 +100,7 @@ regex_useRsp = ".* = .*%R([0-9a-zA-Z\\_\\-\\+]*).*"
 regex_useEsp = ".* = .*%E([0-9a-zA-Z\\_\\-\\+]*).*"
 regex_padding = "(.*)%([0-9]*)(.*)"
 
-regex_semicolon = "%(.*) : %(.*)"
+regex_semicolon = "([0-9A-Z\\%\\_\\+\\-]*) : ([0-9A-Z\\%\\_\\+\\-]*)"
 regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)" -- syncscope
 regex_pad = "(.*)[(.*)]"

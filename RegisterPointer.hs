@@ -23,7 +23,7 @@ import Lists
 
 baseIndex :: String -> Integer -> [RP] -> [LeftVar] -> (String, Integer)
 baseIndex base idx pList vList
-  | trace("\t"++base)(elem base (reg_32 ++ reg_64 ++ reg_ip ++ reg_other)) = (base, idx)
+  | (elem base (reg_32 ++ reg_64 ++ reg_ip ++ reg_other)) = (base, idx)
   | (isRegPointer base && not (isInfixOf "_ptr" base)) = do
     let p = lookupList_p base pList
     if (isNothing p || not (getPermit $ fromJust p))
@@ -45,8 +45,8 @@ baseIndex base idx pList vList
             let rn = filter (not . isPrefixOf str_var) reg
             if (null rp)
               then do
-                let off1 = trace("1 > "  ++ base)read (filter isDigit $ head rp) :: Integer
-                    off2 = trace("2 > "  ++ base)read (filter isDigit $ last rp) :: Integer
+                let off1 = read (filter isDigit $ head rp) :: Integer
+                    off2 = read (filter isDigit $ last rp) :: Integer
 
                 (base, idx + off1 + off2)
 
@@ -69,7 +69,7 @@ baseIndex base idx pList vList
 
 pointerInfo :: String -> String -> [RP] -> [LeftVar] -> RP
 pointerInfo ptr state pList vList
-  | trace(ptr ++ ":")(isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state False)
+  | (isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state False)
   | (isBinary var && isNum (head reg) && isNum (last reg)) = do
     let m = strToInt (head reg)
         n = strToInt (last reg)

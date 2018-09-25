@@ -20,7 +20,7 @@ import Text.Regex.Posix
 import OtherFunction
 import StatementInstr
 import StatementParse
-import Elimination
+import Propagation
 import RegisterPointer
 import IsGetSet
 import Idioms
@@ -81,8 +81,8 @@ replace_addr (line: nextContent) fcount bcount preContent
 
     let (bn, new_name) = (getBlockName line, str_bb ++ (show bcount))
         new_line = line_bb ++ (show bcount)
-        new_preContent = trace(bn ++ " -> " ++ new_name) map (replaceLine bn new_name str_bb) preContent
-        new_nextContent = trace(bn ++ " -> " ++ new_name)map (replaceLine bn new_name str_bb) nextContent
+        new_preContent =  map (replaceLine bn new_name str_bb) preContent
+        new_nextContent = map (replaceLine bn new_name str_bb) nextContent
     replace_addr new_nextContent fcount (bcount + 1) (new_preContent ++ [new_line])
 
   | otherwise = replace_addr nextContent fcount bcount (preContent ++ [line])
@@ -132,9 +132,9 @@ fnElimination :: [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]
 fnElimination [] = []
 fnElimination ((content, (vList, pList)):fs) =  do
   let (content_i, vList_i) = (detectIdiom content "" [] vList)
-      (content_p, vList_p) = propagation content_i "" vList_i pList []
+      (content_p, (vList_p, pList_p)) = propagation content_i "" vList_i pList []
       --(content_e, vList_e) = elimination False content_p "" vList_p pList []
-  (content_p, (vList_p, pList)):fnElimination fs
+  (content_p, (vList_p, pList_p)):fnElimination fs
   -- (elimination False content_p "" vList_p pList []) : (fnElimination fs)
 
 printRP [] = []
@@ -196,8 +196,8 @@ main = do
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)
 
-          -- print "ok"
-          mapM_ print (printRP plist)
+          print "ok"
+          -- mapM_ print (printRP plist)
         else do
 
           -- CLOSE FILES & TERMINATE

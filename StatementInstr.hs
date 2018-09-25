@@ -33,30 +33,30 @@ data VAR = Undef {value::String}
           | CleanUpRet {value::String, unwind::String} -- <<
           | Unreachable -- <<
           -- Bitwise & Binary
-          | Binary {op::String, sym::String, ty::String, values::[String]}
-          | Bit {op::String, sym::String, ty::String, values::[String]}
+          | Binary {op::String, sym::String, ty::String, values::[String]}  -- ***
+          | Bit {op::String, sym::String, ty::String, values::[String]} -- ***
           -- Aggregate
           | Array {op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : [n x ty] <- [n x [n x ty]]
           | Struct {op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : {ty} <- {ty, {ty}}
           -- Memory
-          | Alloca {inalloca::Bool, ty::String, alloc_numE::Maybe String, alloc_align::Maybe String, alloc_addrspace::Maybe String}
-          | LOAD {atomic::Bool, volatile::Bool, ty::String, ptr::String, alignment::Maybe String, syncscope::Maybe String, order::Maybe String}
+          | Alloca {inalloca::Bool, ty::String, alloc_numE::Maybe String, alloc_align::Maybe String, alloc_addrspace::Maybe String} -- ***
+          | LOAD {atomic::Bool, volatile::Bool, ty::String, ptr::String, alignment::Maybe String, syncscope::Maybe String, order::Maybe String} -- ***
           | Fence {syncscope::Maybe String, ordering::String} -- <<
           | Cmpxchg {weak::Bool, volatile::Bool, ty::String, ptr::String, cmp::String, new::String, syncscope::Maybe String, succ_ordering::String, fail_ordering::String} -- <<
           | Atomicrmw {volatile::Bool, operation::String, ty::String, ptr::String, value::String, syncscope::Maybe String, ordering::String} -- <<
-          | GetElemPtr {inbound::Bool, ty::String, ptr::String, element::[(Bool, (String, String))]}
+          | GetElemPtr {inbound::Bool, ty::String, ptr::String, element::[(Bool, (String, String))]}  -- ***
           -- Converison
-          | Conv {op::String, ty1::String, ty::String, value::String}
+          | Conv {op::String, ty1::String, ty::String, value::String} -- ***
           -- Other
-          | Cmpi {cond::String, sym::String, ty::String, values::[String]}
-          | Cmpf {cond::String, flag::Maybe String, sym::String, ty::String, values::[String]}
-          | Phi {ty::String, vlabels::[(String, String)]}
+          | Cmpi {cond::String, sym::String, ty::String, values::[String]}  -- ***
+          | Cmpf {cond::String, flag::Maybe String, sym::String, ty::String, values::[String]}  -- ***
+          | Phi {ty::String, vlabels::[(String, String)]} -- ***
           | Select {selty::String, cond::String, ty::String, values::[String]}
           -- | Call {tailing::Maybe String, flag::Maybe String, ccov::Maybe String, retAttrs::Maybe String, ty::String, f_ptr::String, f_arg::[String], f_attr::[String], bundle::[String], normLabel::String, unwindLabel::String}
-          | VaArg {va_list::String, arglist::String, argty::String}
-          | LandingPad {resultty::String, cleanup::Bool, clause::[Clause]}
-          | CatchPad {catchswitch::String, arg::String}
-          | CleanUpPad {parent::String, arg::String}
+          | VaArg {va_list::String, arglist::String, argty::String} -- ***
+          | LandingPad {resultty::String, cleanup::Bool, clause::[Clause]}  -- ***
+          | CatchPad {catchswitch::String, arg::String} -- ***
+          | CleanUpPad {parent::String, arg::String}  -- ***
           -- undefined ones / temporary
           | Other deriving (Show)
 
