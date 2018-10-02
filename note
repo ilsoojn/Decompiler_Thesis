@@ -1,4 +1,3 @@
-cabal install happy derive strings split MissingH
 
 invoke CatchSwitch
 
@@ -11,3 +10,5 @@ getelementptr
 icmp fcmp phi select call va_arg
 
 landingpad catchpad cleanuppad
+
+ LLVM, Haskel, DFA, CFA, and why you chose LLVM, and Haskel.

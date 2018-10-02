@@ -21,10 +21,10 @@ import OtherFunction
 import IsGetSet
 import Lists
 
-propagatePointer :: [String] -> String -> RP -> [String]
-propagatePointer [] ptr p = []
-propagatePointer (line : nextCont) ptr p
-  | (isFunction line || isBasicBlock line || isBlockLabel line) = line : (propagatePointer nextCont ptr p)
+propagatePointer :: [String] -> String -> RP -> [LeftVar] -> [String]
+propagatePointer [] ptr p vList = []
+propagatePointer (line : nextCont) ptr p vList
+  | (isFunction line || isBasicBlock line || isBlockLabel line) = line : (propagatePointer nextCont ptr p vList)
   | (isInfixOf " = " line) = do
     let [v, state] = splitOn' " = " line
 
@@ -37,20 +37,20 @@ propagatePointer (line : nextCont) ptr p
             let n = read (bool (head reg) (last reg) (ptr == head reg)) :: Integer
 
             case (sym var) of
-              "+" -> concat[v, " = ", (getBase p), " +", show (getIndex p + n)] : (propagatePointer nextCont ptr p)
-              "-" -> concat[v, " = ", (getBase p), " -", show (getIndex p - n)] : (propagatePointer nextCont ptr p)
-              _ -> concat[v, " = ", (replace ptr (getRstate p) state)] : (propagatePointer nextCont ptr p)
+              "+" -> trace(" " ++ show n ++ " :: " ++ line)concat[v, " = ", (getBase p), " +", show (getIndex p + n)] : (propagatePointer nextCont ptr p vList)
+              "-" -> trace(" " ++ show n ++ " :: " ++ line)concat[v, " = ", (getBase p), " -", show (getIndex p - n)] : (propagatePointer nextCont ptr p vList)
+              _ -> concat[v, " = ", (replace ptr (getRstate p) state)] : (propagatePointer nextCont ptr p vList)
 
           else if (isConv var)
-            then concat[v, " = ", (getRstate p)] : (propagatePointer nextCont ptr p)
-            else concat[v, " = ", (replace ptr (getRstate p) state)] : (propagatePointer nextCont ptr p)
+            then concat[v, " = ", (getRstate p)] : (propagatePointer nextCont ptr p vList)
+            else concat[v, " = ", (replace ptr (getRstate p) state)] : (propagatePointer nextCont ptr p vList)
 
-    else line : (propagatePointer nextCont ptr p)
+    else line : (propagatePointer nextCont ptr p vList)
 
   | otherwise = do
     if (isUsePtr ptr line)
-      then (replace ptr (getRstate p) line) : (propagatePointer nextCont ptr p)
-      else line : (propagatePointer nextCont ptr p)
+      then (replace ptr (getRstate p) line) : (propagatePointer nextCont ptr p vList)
+      else line : (propagatePointer nextCont ptr p vList)
 
 propagateVariable :: [String] -> String -> String -> [LeftVar] -> [String] -> ([String], [LeftVar])
 propagateVariable [] orgV new vList preCont = (preCont, vList)
@@ -113,8 +113,8 @@ propagation (line: nextCont) fname vList pList preCont
   | (isLHS line fname) = do
     let (x, (xvar, xreg)) = statement (strip line)
         v = fromJust x
-
-    if (isRegPointer line && not (isInfixOf "_ptr" v) && not (elem v $ reg_32 ++ reg_64 ++ reg_ip))
+        base = reg_32 ++ reg_64 ++ reg_ip
+    if (isRegPointer line && not (isInfixOf "_ptr" v) && not (elem v $ base))
       then do
         let rp = fromJust $ lookupList_p v pList
             lv = fromJust $ lookupList v vList
@@ -124,12 +124,12 @@ propagation (line: nextCont) fname vList pList preCont
             let rp' = rp{ rstate=(getState lv), permit=True }
                 newLine = concat[v, " = ", getRstate rp']
                 newList = updateList_p rp' pList []
-                new_nextCont = bool nextCont (propagatePointer nextCont v rp') (getPermit rp')
+                new_nextCont = bool nextCont (propagatePointer nextCont v rp' vList) (getPermit rp')
             propagation new_nextCont fname vList newList (preCont ++ [newLine])
 
           else do
             let newLine = concat[v, " = ", getRstate rp]
-                new_nextCont = bool nextCont (propagatePointer nextCont v rp) (getPermit rp)
+                new_nextCont = bool nextCont (propagatePointer nextCont v rp vList) (getPermit rp)
               -- propagation nextCont fname vList pList (preCont ++ [newLine])
             propagation new_nextCont fname vList pList (preCont ++ [newLine])
 

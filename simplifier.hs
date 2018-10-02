@@ -20,6 +20,7 @@ import Text.Regex.Posix
 import OtherFunction
 import StatementInstr
 import StatementParse
+import Elimination
 import Propagation
 import RegisterPointer
 import IsGetSet
@@ -133,13 +134,18 @@ fnElimination [] = []
 fnElimination ((content, (vList, pList)):fs) =  do
   let (content_i, vList_i) = (detectIdiom content "" [] vList)
       (content_p, (vList_p, pList_p)) = propagation content_i "" vList_i pList []
-      --(content_e, vList_e) = elimination False content_p "" vList_p pList []
-  (content_p, (vList_p, pList_p)):fnElimination fs
-  -- (elimination False content_p "" vList_p pList []) : (fnElimination fs)
+      (content_e, vList_e) = elimination False content_p "" vList_p pList_p []
+  (content_e, (vList_e, pList_p)):fnElimination fs
+  -- (content_p, (vList_p, pList_p)):fnElimination fs
+  -- (content_i, (vList_i, pList)):fnElimination fs
 
 printRP [] = []
 printRP (p:ps) =
   (show (length ps) ++ " > " ++ rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") " ++ getRstate p) : (printRP ps)
+
+printLV [] = []
+printLV (p:ps) =
+  (show (length ps) ++ " > " ++ variable p ++ " ("++ getType p ++ ", " ++ show (getInstr p) ++ ") " ++ getState p) : (printLV ps)
 
 {-************************************************************************
             arguments: executable or binary/object fileE
@@ -191,13 +197,14 @@ main = do
           hClose handleTmp
 
           system $ "rm " ++ decir ++ " " ++ disas
-          renameFile tmpFile (prog_file ++ "Output_prop.ll")
+          renameFile tmpFile (prog_file ++ "Output_elim.ll")
           -- renameFile tmpFile "sampleOutput.ll"
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)
 
           print "ok"
           -- mapM_ print (printRP plist)
+          -- mapM_ print (printLV vlist)
         else do
 
           -- CLOSE FILES & TERMINATE

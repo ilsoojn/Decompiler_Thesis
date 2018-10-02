@@ -31,7 +31,7 @@ elimination :: Bool -> [String] -> String -> [LeftVar] -> [RP] -> [String] -> ([
 elimination False [] fname vList pList preCont = (preCont, vList)
 elimination True [] fname vList pList preCont = trace("\n\n---------------------\n\n") elimination False preCont "" vList pList []
 elimination change (line : nextCont) fname vList pList preCont
-  | trace("e: " ++ line)(isFunction line) = elimination (change || False) nextCont (getFunctionName line) vList pList (preCont ++ [line])
+  | trace(line)(isFunction line) = elimination (change || False) nextCont (getFunctionName line) vList pList (preCont ++ [line])
   | (isBlockLabel line || isBasicBlock line) = elimination (change || False) nextCont fname vList pList (preCont ++ [line])
   | (isEntryExit line) = elimination (change || False) nextCont fname vList pList (preCont ++ [line])
   | (isLHS line fname) = do
@@ -42,17 +42,30 @@ elimination change (line : nextCont) fname vList pList preCont
 
     if (null use)
       then do
-        let vInfo = lookupList v vList
-            info = fromJust vInfo
-            newList = removeVariable info vList []
-        trace("\tE NO")elimination (change || True) nextCont fname newList pList preCont
+        if (isNothing $ lookupList v vList)
+          then do --trace("use(" ++ v ++ ") : NO\n not in List")
+             elimination (change || True) nextCont fname vList pList preCont
+          else do
+            let v' = fromJust $ lookupList v vList
+                newList = removeVariable v' vList []
+                -- trace("use(" ++ v ++ ") : NO\n yes in List")
+            elimination (change || True) nextCont fname newList pList preCont
+
       else if (hasDeadVar op_variable vList)
-        then trace("\tE YES Dead")elimination (change || True) nextCont fname vList pList preCont
-        else trace("\tE YES Live")elimination (change || False) nextCont fname vList  pList(preCont ++ [line])
+        then
+          -- trace("use(" ++ v ++ ") : YES\n Dead variables")
+          elimination (change || True) nextCont fname vList pList preCont
+        else
+          -- trace("use(" ++ v ++ ") : YES\n No dead variables")
+          elimination (change || False) nextCont fname vList  pList (preCont ++ [line])
 
   | otherwise = do
     let (x, (var, ops)) = statement (strip line)
         op_var = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
     if (hasDeadVar op_var vList)
-      then trace("\tE Dead")elimination (change || True) nextCont fname vList pList preCont
-      else trace("\tE Live")elimination (change || False) nextCont fname vList  pList(preCont ++ [line])
+      then
+        -- trace("def-use( x )\n Dead variables"++ line)
+        elimination (change || True) nextCont fname vList pList preCont
+      else
+        -- trace("def-use( x )\n No dead variables")
+        elimination (change || False) nextCont fname vList  pList (preCont ++ [line])

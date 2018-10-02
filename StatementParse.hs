@@ -27,8 +27,8 @@ import OtherFunction
 -- store [atomic] [volatie] <type> <value>, <type ptr> <loc pointer>
 storeStatement :: String -> STORE
 storeStatement s
-  | s_type = STORE atomic volatile t [(v, Undef v)] [(at, Undef at)]
-  | otherwise = STORE atomic volatile t [(v, Const v)] [(at, Undef at)]
+  | s_type = STORE atomic volatile t [(v, Undef "none" "undef" v)] [(at, Undef "none" "undef" at)]
+  | otherwise = STORE atomic volatile t [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
   where (vInfo: vpInfo: _) = splitOn' "," s
         (v, tmp) = popBack vInfo
         (t, options) = popBack tmp
@@ -47,12 +47,12 @@ loadStatement line
   | (hasOpening loadInfo) = do
     let (ty: ptrInfo)= splitStartEndOneOf "{[<" ">]}" loadInfo
         ptr = unwords $ filter (hasAny "%@") $ splitOn' " " $ unwords ptrInfo
-    LOAD atomic volatile ty ptr align syncscope order
+    LOAD "memory" op atomic volatile ty ptr align syncscope order
 
   | otherwise = do
     let (ty: ptrInfo) = filter (not.null) (splitOneOf' " ," loadInfo)
         ptr = unwords $ filter (isPrefixOf "%") ptrInfo
-    LOAD atomic volatile ty ptr align syncscope order
+    LOAD "memory" op atomic volatile ty ptr align syncscope order
 
     where (op, info) = popFront line
           align = bool Nothing (Just $ last $ words $ unwords $ filter (isInfixOf "align") $ splitOn' "," info) (isInfixOf " align" info)
@@ -74,7 +74,7 @@ allocaStatement line = do
       type_a = unwords $ filter (not . isInfixOf "inalloca") (words infoLine)
 
   if (null option)
-    then (Alloca inalloca type_a Nothing Nothing Nothing)
+    then (Alloca "memory" op inalloca type_a Nothing Nothing Nothing)
     else do
       let num_element = words $ snd $ strSplit type_a option
           alignment = words $ snd $ strSplit "align " option
@@ -82,9 +82,9 @@ allocaStatement line = do
           numE = bool (Just $ head num_element) Nothing (null num_element)
           align = bool (Just $ head alignment) Nothing (null alignment)
           addrS = bool (Just $ head addr_space) Nothing (null addr_space)
-      (Alloca inalloca type_a numE align addrS)
+      (Alloca "memory" op inalloca type_a numE align addrS)
 
-fenceStatement line = Fence syncscope ordering
+fenceStatement line = Fence "memory" "fence" syncscope ordering
   where syncscope = getSyncscope line
         ordering = last $ words line
 
@@ -98,7 +98,7 @@ cmpxchgStatement line = do
       (ptype, ptr) = strSplit' "*" pInfo  -- cmpxchg ... <ty>* <pointer>
       (cmp, ty) = popBack cmpInfo    -- <ty> <cmp>
       new = (head.words) (snd $ strSplit ty newInfo)  -- <ty> <new> [syncscope(...)] <succ> <fail>
-  Cmpxchg weak volatile ty ptr cmp new syncscope succ_ordering fail_ordering
+  Cmpxchg "memory" "cmpxchg" weak volatile ty ptr cmp new syncscope succ_ordering fail_ordering
 
 atomicrmwStatement line = do
   let ordering = (last.words) line
@@ -108,7 +108,7 @@ atomicrmwStatement line = do
       (pInfo, vInfo) = strSplit' "," (unwords infoLine)
       (ty, ptr) = strSplit' "*" pInfo
       v = (head.words) (snd $ strSplit ty vInfo)
-  Atomicrmw volatile operation ty ptr v syncscope ordering
+  Atomicrmw "memory" "atomicrmw" volatile operation ty ptr v syncscope ordering
 
 getElemIndex :: [String] -> [(Bool, (String, String))] -> [(Bool, (String, String))]
 getElemIndex [] elements = elements
@@ -142,7 +142,7 @@ getelementptrStatement line = do
       element = getElemIndex (splitStartEndOneOf "{<[" "]>}" $ join ", " eLine) []
 
 
-  GetElemPtr inbound ty ptr element
+  GetElemPtr "memory" op inbound ty ptr element
 
 -- v = op [operator type] <value type> <value 1>, <value 2>
 -- return (op symbole types v1 v2)
@@ -152,13 +152,13 @@ binaryStatement line
     let set = splitStartEndOneOf "{[<" ">]}" info
         (v, tmp) = popLast set
         (u, tyInfo) = popLast tmp
-    Binary op (toSym op) (unwords tyInfo) [u, v]
+    Binary "binary" op (toSym op) (unwords tyInfo) [u, v]
 
   | otherwise = do
     let set = splitOneOf' ", " info
         (v, tmp) = popLast set
         (u, tyInfo) = popLast tmp
-    Binary op (toSym op) (unwords tyInfo) [u, v]
+    Binary "binary" op (toSym op) (unwords tyInfo) [u, v]
   where (op,info) = popFront line
 
 -- v = op [operator type] <value type> <value 1>, <value 2>
@@ -169,25 +169,25 @@ bitwiseStatement line
     let set = splitStartEndOneOf "{[<" ">]}" info
         (v, tmp) = popLast set
         (u, tyInfo) = popLast tmp
-    Bit op (toSym op) (unwords tyInfo) [u, v]
+    Bit "bitwise" op (toSym op) (unwords tyInfo) [u, v]
 
   | otherwise = do
     let set = splitOneOf' ", " info
         (v, tmp) = popLast set
         (u, tyInfo) = popLast tmp
-    Bit op (toSym op) (unwords tyInfo) [u, v]
+    Bit "bitwise" op (toSym op) (unwords tyInfo) [u, v]
   where (op,info) = popFront line
 
 -- v = icmp <condition> <value type> <value 1>, <value 2>
 -- return (cond symbole vType v1 v2)
 compareIntStatement :: String -> VAR
-compareIntStatement line = Cmpi cond (toSym cond) ty [vOne, vTwo]
+compareIntStatement line = Cmpi "other" op cond (toSym cond) ty [vOne, vTwo]
   where (op:cond:ty:vOne:vTwo:_) = words $ rmChar "," line
 
 -- v = fcmp [flag] <condition> <value type> <value 1>, <value 2>
 -- return (condition flags symbole vType v1 v2)
 compareFloatStatement :: String -> VAR
-compareFloatStatement line = Cmpf cond flag (toSym cond) ty [vOne, vTwo]
+compareFloatStatement line = Cmpf "other" "fcmp" cond flag (toSym cond) ty [vOne, vTwo]
   where (tmp_one, vTwo) = strSplit'"," ((unwords.tail.words) line)
         (vOne, tmp_two) = popBack tmp_one
         (ty, tmp) = popBack tmp_two
@@ -200,7 +200,7 @@ getPhiLabel (v:vs) phiList = do
   getPhiLabel vs (phiList ++ [strSplit' "," v])
 
 phiStatement :: String -> VAR
-phiStatement line = Phi ty vs
+phiStatement line = Phi "other" "phi" ty vs
   where (ty:labelInfo) = splitOneOf' "[]" ((unwords.tail.words) line)
         labels = map strip (filter (/=",") (filter (not.null) labelInfo))
         vs = getPhiLabel labels []
@@ -213,17 +213,17 @@ selectStatement line
         tmp2 = filter (not.null) (splitOneOf' "{<>}"line_2)
         (ty, vOne) = bool (popFront line_1) (head tmp1, unwords $ tail tmp1) (isInfixOf "x" line_1)
         (ty2, vTwo) = bool (popFront line_2) (head tmp2, unwords $ tail tmp2) (isInfixOf "x" line_2)
-    Select selty (unwords cond) ty [vOne, vTwo]
+    Select "other" "select" selty (unwords cond) ty [vOne, vTwo]
   | otherwise = do -- singlec
     let (selty, cond) = popFront cLine
         (ty, vOne) = popFront line_1
         (ty2, vTwo) = popFront line_2
-    Select selty cond ty [vOne, vTwo]
+    Select "other" "select" selty cond ty [vOne, vTwo]
   where (op, info) = popFront line
         (cLine: line_1: line_2: other) = splitOn' "," info
 
 va_argStatement :: String -> VAR
-va_argStatement line = VaArg va_list arg_list arg_ty
+va_argStatement line = VaArg "other" "va_arg" va_list arg_list arg_ty
   where (list, arg_ty) = strSplit' "," ((unwords.tail.words) line)
         (va_list, arg_list) = strSplit "*" list
 
@@ -267,7 +267,7 @@ landingpadStatement line = do
       split_filter =  split (startsWith "filter") clause_line
       split_catch = map (split (startsWith "catch")) split_filter
       clause = getClauses (concat split_catch)
-  LandingPad resultty cleanup clause
+  LandingPad "other" "landingpad" resultty cleanup clause
   --       (resultty:tmpLine:_) = get_regexLine_all line regex_landpad
   --       cleanup = isInfixOf "cleanup" tmpLine
   --       new_tmpLine = bool tmpLine (rmStr "cleanup" tmpLine) cleanup
@@ -277,16 +277,16 @@ catchpadStatement :: String -> VAR
 catchpadStatement line = do
   let tmp = unwords $ tail $ tail $ words $ line
       (catchswitch: arg: _) = get_regexLine_all tmp regex_pad
-  CatchPad catchswitch arg
+  CatchPad "other" "catchpad" catchswitch arg
 
 cleanuppadStatement :: String -> VAR
 cleanuppadStatement line = do
   let tmp = unwords $ tail $ tail $ words $ line
       (parent: arg: _) = get_regexLine_all tmp regex_pad
-  CleanUpPad parent arg
+  CleanUpPad "other" "cleanuppad" parent arg
 
 conversionStatement :: String -> VAR
-conversionStatement line = Conv conv_op ty1 ty2 r
+conversionStatement line = Conv "conversion" conv_op ty1 ty2 r
   where (conv_op, conv_s) = popFront line
         (tmp:ty2:_) = map strip $ splitOn' "to" conv_s
         -- (ty1, r) = bool (popFront tmp) (sBreak' " <" tmp) (isInfixOf "<" tmp)
@@ -294,21 +294,21 @@ conversionStatement line = Conv conv_op ty1 ty2 r
 
 retStatement :: String -> VAR
 retStatement line
-  | (line == "ret void") = RetVoid
+  | (line == "ret void") = RetVoid "terminator" "ret void"
   | (hasOpening info) = do
     let [ty, v] = map strip (split (startsWithOneOf "{<") info)
-    (Ret ty v)
+    (Ret "terminator" op ty v)
   | otherwise = do
     let (ty:v:_) = words info
-    (Ret ty v)
+    (Ret "terminator" op ty v)
   where (op, info) = popFront line
 
 brStatement :: String -> VAR
 brStatement line
   | (brType == "i1") = do
     let (cond: ifture: iffalse: _) = splitOn' "," info
-    CondBranch cond (getLabel ifture) (getLabel iffalse)
-  | otherwise = Branch info
+    CondBranch "terminator" op cond (getLabel ifture) (getLabel iffalse)
+  | otherwise = Branch "terminator" op info
   where (op, tmp) = popFront line
         (brType, info) = popFront tmp
 
@@ -331,7 +331,7 @@ switchStatement line = do
       --list
       table = bool (switchInfo $ filter (not.null) (splitOn' ty $ unwords listInfo)) [] (null listInfo)
 
-  Switch ty v (getLabel label) table
+  Switch "terminator" op ty v (getLabel label) table
 
 list_of_Label :: [String] -> [String] -> [String]
 list_of_Label [] list = list
@@ -344,13 +344,13 @@ indirectbrStatement line = do
       (ty, addr) = strSplit' "*" addressInfo
       dstInfo = splitOn' "," (get_regexLine labelInfo "\\[(.*)\\]")
       labels = list_of_Label dstInfo []
-  IndirBranch ty addr labels
+  IndirBranch "terminator" op ty addr labels
 
 resumeStatement :: String -> VAR
 resumeStatement line = do
   let (op, info) = popFront line
       (v, ty) = popBack info
-  Resume ty v
+  Resume "terminator" op ty v
 
 catchswitchStatement :: String -> VAR
 catchswitchStatement line = do
@@ -358,20 +358,20 @@ catchswitchStatement line = do
       parent = (last.words) pInfo
       handlers = list_of_Label (splitOn' "," hInfo) []
       unwindLabel = (last.words) unwindInfo
-  CatchSwitch parent handlers unwindLabel
+  CatchSwitch "terminator" "catchswitch" parent handlers unwindLabel
 
 catchretStatement :: String -> VAR
 catchretStatement line = do
   let (op, info) = strSplit' " from " line
       (token, label) = strSplit' " to " info
-  CatchRet token (getLabel label)
+  CatchRet "terminator" op token (getLabel label)
 
 cleanupretStatement :: String -> VAR
 cleanupretStatement line = do
   let (op, info) = strSplit' " from " line
       (value, labelInfo) = strSplit' " unwind " info
       unwind = (last.words) labelInfo
-  CleanUpRet value unwind
+  CleanUpRet "terminator" op value unwind
 
 parseStatement :: String -> (VAR, [String])
 parseStatement line
@@ -422,7 +422,7 @@ parseStatement line
         let s = cleanupretStatement line
         (s, [token s, normal s])
 
-      "unreachable" -> (Unreachable, [])
+      "unreachable" -> (Unreachable "terminator" "unreachable", [])
 
       -- memory
       "load" -> do
@@ -487,8 +487,8 @@ parseStatement line
             let (v1:v2:_) = getHighLowVariable line
                 hs = v1
                 ls = v2
-            (SemiColon hs ls, [hs, ls])
-          else (Other, [])
+            (SemiColon "none" ":" hs ls, [hs, ls])
+          else (Other "none" "other", [])
   where op = head $ words line
         opty = getInstructionType op
 
@@ -619,7 +619,8 @@ isMatchList u (v:vs)
 
 isUse v line
   | (isInfixOf v line) = do
-    let tmpList = map (head.words) (tail $ split (startsWith v) line)
+    let tmp = concat $ map words (split (startsWith v) line)
+        tmpList = filter (isPrefixOf v) tmp
     isMatchList v tmpList
   | otherwise = False
 
@@ -635,9 +636,9 @@ findUse :: String -> [String] -> [String] -> [String]
 findUse v [] uselist = uselist
 findUse v (line:nextCont) uselist
   | (isFunctionEnd line) = uselist
-  | (isUse v tmp) =  findUse v nextCont (uselist ++ [line])
+  | (isUse v state) =  findUse v nextCont (uselist ++ [line])
   | otherwise = findUse v nextCont uselist
-    where tmp = last $ splitOn' " = " line
+    where state = last $ splitOn' " = " line
 
 
 -- findDef :: String -> Integer -> (Integer, VAR) -- line_number and Operator Type
