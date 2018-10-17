@@ -12,3 +12,50 @@ icmp fcmp phi select call va_arg
 landingpad catchpad cleanuppad
 
  LLVM, Haskel, DFA, CFA, and why you chose LLVM, and Haskel.
+
+ In Figure~\ref{sec::eg-variableBefore}, we have a sample \gls{lir} code in LLVM IR format. $sub$ instruction, in statement~(\ref{state::5_sub}) and~(\ref{state::7_sub}), performs arithmetic subtraction; then, $inttoptr$ converts an integer typed variable to a pointer typed variable, in next statements. Accessing memory instruction $store$ saves value of typed variable at a location pointed by pointer variable; whereas, $load$ assigns a new variable to a value at a location pointed by pointer.
+
+   \begin{figure}[!ht]
+     \subfigure[Before Variable Propagation]{
+       \begin{minipage}{.46\linewidth}
+         \begin{tcolorbox}[colframe=black,colback=white,boxrule=0.3mm, top=-1mm, bottom=4mm, left=-2mm, right=2mm]
+           \begin{align}
+           \%5 &= \textbf{sub} 	\text{ i8 } \%RSP,\ 8					\label{state::5_sub}\\
+           \%6 &= \textbf{inttoptr}\text{ i8 } \%5 \textbf{ to } \text{i8*}\label{state::6_inttoptr}\\
+           \textbf{sto}&\textbf{re} 	\text{ i8 } \%4, \text{ i8* } \%6	\label{state::non_store}\\
+           \nonumber\\
+           \%7 &= \textbf{sub} 	\text{ i8 } \%RSP,\ 8					\label{state::7_sub}\\
+           \%8 &= \textbf{inttoptr}\text{ i8 } \%7 \textbf{ to } \text{i8*}\label{state::8_inttoptr}\\
+           \%9 &= \textbf{load} 	\text{ i8, i8* } \%8					\label{state::9_load}
+           \end{align}
+         \end{tcolorbox}
+         \label{sec::eg-variableBefore}
+       \end{minipage}
+     }
+     \begin{minipage}{.04\textwidth}
+       \begin{center}
+         $\Rightarrow$
+       \end{center}
+     \end{minipage}
+     \subfigure[After Variable Propagation]{
+       \begin{minipage}{.46\textwidth}
+         \begin{tcolorbox}[colframe=black,colback=white,boxrule=0.3mm, top=-1mm, bottom=4mm, left=-2mm, right=2mm]
+           \begin{align}
+           \%5 &= \textbf{sub} 	\text{ i8 } \%RSP,\ 8								\label{state::11_sub}\\
+           \%6 &= \textbf{inttoptr}\text{ i8 } \%5 \textbf{ to } \text{i8*}			\label{state::12_inttoptr}\\
+           \textbf{sto}&\textbf{re} 	\text{ i8 } \%4, \text{ i8* } \boldsymbol{\%5}	\label{state::13_store}\\
+           \nonumber\\
+           \%7 &= \textbf{sub} 	\text{ i8 } \%RSP,\ 8								\label{state::14_sub}\\
+           \%8 &= \textbf{inttoptr}\text{ i8 } \%7 \textbf{ to } \text{i8*}			\label{state::15_intoptr}\\
+           \%9 &= \textbf{load} 	\text{ i8, i8* } \boldsymbol{\%5}					\label{state::16_load}
+           \end{align}
+         \end{tcolorbox}
+         \label{sec::eg-variableAfter}
+       \end{minipage}
+     }
+     \caption{Example of Variable Propagation}
+     \label{sec::eg-variablePropagation}
+   \end{figure}
+
+
+   In statement~\ref{state::6_inttoptr}, $\%6$ holds same value as $\%5$ in a pointer type. This type conversion is used to represent a memory address in next statement; \%6 operand in statement~(\ref{state::non_store}) can be replaced with \%5 without changing program behaviour. Also, \%5 and \%7, from statement~(\ref{state::5_sub}) and~(\ref{state::7_sub}), holds same value, and statement~(\ref{state::6_inttoptr}) and~(\ref{state::8_inttoptr}) are similar. \%9 in statement~(\ref{state::9_load}) can be substituted to \%5 during the variable propagation phrase, see Figure~\ref{sec::eg-variableAfter}.

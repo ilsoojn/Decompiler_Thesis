@@ -1,4 +1,4 @@
-module IsGetSet where
+module RegexFunction where
 
 import Data.Bool
 import Data.Char

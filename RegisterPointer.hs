@@ -18,7 +18,7 @@ import Text.Regex.Posix
 import StatementParse
 import StatementInstr
 import OtherFunction
-import IsGetSet
+import RegexFunction
 import Lists
 
 baseIndex :: String -> Integer -> [RP] -> [LeftVar] -> (String, Integer)
@@ -50,14 +50,14 @@ baseIndex base idx pList vList
 
                 (base, idx + off1 + off2)
 
-              else if (length rp == 1 && isNum (unwords rn))
+              else if (length rp == 1 && isRegPointer (unwords rp) && isNum (unwords rn))
                 then baseIndex (unwords rp) (idx + strToInt (unwords rn)) pList vList
 
-                else do
-                  let (rBase1, rIdx1) = baseIndex (head rp) 0 pList vList
-                      (rBase2, rIdx2) = baseIndex (last rp) 0 pList vList
-
-                  bool (rBase1, idx + rIdx1 + rIdx2) (rBase2, idx + rIdx1 + rIdx2) (isRegPointer rBase2)
+                else (base, idx) --do
+                  -- let (rBase1, rIdx1) = baseIndex (head rp) 0 pList vList
+                  --     (rBase2, rIdx2) = baseIndex (last rp) 0 pList vList
+                  --
+                  -- trace(rBase1 ++ " (" ++ show rIdx1 ++ ") & " ++ rBase2++ " (" ++ show rIdx2 ++ ")") bool (rBase1, idx + rIdx1 + rIdx2) (rBase2, idx + rIdx1 + rIdx2) (isRegPointer rBase2)
 
           "conversion" -> baseIndex (head reg) idx pList vList
 
@@ -109,7 +109,7 @@ pointerInfo ptr state pList vList
 
   | (isLoad var) = do
     let (rbase, rindex) = baseIndex (head reg) 0 pList vList
-        sym = bool  " +" " " (rindex < 0)
+        sym = bool  "+" "" (rindex < 0)
         newState = bool (bool ("[ " ++ rbase ++ sym ++  show rindex ++ " ]") (show rindex) (null rbase)) rbase (rindex == 0)
     (RP ptr rbase rindex newState True)
   --

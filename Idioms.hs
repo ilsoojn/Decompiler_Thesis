@@ -15,7 +15,7 @@ import Data.Typeable
 import Debug.Trace
 import Text.Regex.Posix
 
-import IsGetSet
+import RegexFunction
 import Lists
 import OtherFunction
 import StatementInstr
@@ -34,19 +34,19 @@ import StatementParse
         then %v2 = %ptr+-n (no nextline)
         else %v1 = %ptr+-n          (keep nextline)
 -}
-idiom1 :: String -> String -> String -> [LeftVar] -> ([String], String, [LeftVar])
-idiom1 v new_state nextline vList
+binaryOP :: String -> String -> String -> [LeftVar] -> ([String], String, [LeftVar])
+binaryOP v new_state nextline vList
   | ((not.isNothing) nv && (isConv nvar) && (op nvar) == "inttoptr") = do
     let newLine = concat[(fromJust nv), " = ", new_state]
         n = fromJust $ lookupList (fromJust nv) vList
-        n' = n{ instruction="", state=new_state }
-        newList = updateList n (removeVariable c vList []) []
+        n' = n{ instruction="binaryOP", state=new_state }
+        newList = updateList n' (removeVariable c vList []) []
     ([newLine], "", newList)
 
   | otherwise = do
     let newLine = concat[v, " = ", new_state]
-        c' = c{ instruction="", state=new_state }
-        newList = updateList c vList []
+        c' = c{ instruction="binaryOP", state=new_state }
+        newList = updateList c' vList []
     ([newLine], nextline, newList)
 
     where (nv, (nvar, nreg)) = statement nextline
@@ -59,8 +59,8 @@ idiom1 v new_state nextline vList
   OUTPUT
     %v = %b_bitsize : %a_bitsize
 -}
-idiom2 :: String -> String -> String -> [String] -> [LeftVar] -> (String, [String], String, [LeftVar])
-idiom2 pre curr next content vList
+bitwiseOP :: String -> String -> String -> [String] -> [LeftVar] -> (String, [String], String, [LeftVar])
+bitwiseOP pre curr next content vList
   | ((not.isNothing) pv && (not.isNothing) nv) = do
 
     let p = fromJust $ lookupList (fromJust pv) vList
@@ -78,10 +78,10 @@ idiom2 pre curr next content vList
     if (isUse_one && isIdiomInstr && isIdiom)
       then do
         let newState = (head $ values cvar) ++ " : " ++ (value pvar)
-            newVariable = n{ instruction="", state=newState }
+            newVariable = n{ instruction="bitwiseOP", state=newState }
             newLine = concat [variable n, " = " , newState]
             new_vList = updateList newVariable (removeVariable c (removeVariable p vList []) []) []
-        ("", [pre, curr, newLine], "", new_vList)
+        ("", [newLine], "", new_vList)
 
       else (pre, [curr], next, vList)
 
@@ -116,7 +116,7 @@ detectIdiom (line: next) fn pre vList
                 let sym = bool (bool "+" "-" (idx < 0)) (bool "-" "+" (idx < 0)) ((op rhs) /= "add")
                     new_state = concat [ptr, sym, show (abs idx)]
 
-                    (cline, nline, newList) = idiom1 (fromJust v) new_state (head next) vList
+                    (cline, nline, newList) = binaryOP (fromJust v) new_state (head next) vList
                     newNext = filter (not.null) $ nline:(tail next)
                 detectIdiom newNext fn (pre ++ cline) newList
               else detectIdiom next fn (pre ++ [line]) vList
@@ -125,7 +125,7 @@ detectIdiom (line: next) fn pre vList
             then do
                 let sym = bool "+" "-" ((op rhs) /= "add")
                     new_state = concat [head reg, sym, last reg]
-                    (cline, nline, newList) = idiom1 (fromJust v) new_state (head next) vList
+                    (cline, nline, newList) = binaryOP (fromJust v) new_state (head next) vList
                     newNext = filter (not.null) $ nline:(tail next)
                 detectIdiom newNext fn (pre ++ cline) newList
 
@@ -143,7 +143,7 @@ detectIdiom (line: next) fn pre vList
 
           if ((instr == "and") && (isNum b || isNum' b) && (isInt $ strToFloat b) && (is0s $ strToInt b))
             then do
-              let (pline, cline, nline, newList) = idiom2 (last pre) (line) (head next) (line : next) vList
+              let (pline, cline, nline, newList) = bitwiseOP (last pre) (line) (head next) (line : next) vList
                   newNext = filter (not.null) $ nline:(tail next)
                   newPre = filter (not.null) $ init pre ++ [pline] ++ cline
               detectIdiom newNext fn newPre newList

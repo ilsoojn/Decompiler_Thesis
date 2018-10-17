@@ -12,12 +12,15 @@ import Data.String.Utils hiding (split)
 import Data.Strings
 import Data.Tuple
 import Data.Typeable
+import Numeric
 
 import Debug.Trace
 import Text.Regex.Posix
 
 import Lists
-import IsGetSet
+import RegexFunction
+import StatementInstr
+
 
 
 {- Architecture Instructions related -}
@@ -83,6 +86,21 @@ sBreak' dlm str = (strip x, strip xs) where (x, xs) = sBreak dlm str
 splitOn' dlm str = filter (not.null) $ map strip (splitOn dlm str)
 splitOneOf' dlm str = filter (not.null) $ map strip (splitOneOf dlm str)
 
+replaceline :: String -> String -> [String] -> [String]
+replaceline old new [] = []
+replaceline old new (x:xs)
+  | (old == x) = new : (replaceline old new xs)
+  | (old == v) = (f ++ new ++ b) : (replaceline old new xs)
+  | otherwise = x : (replace' old new xs)
+    where v = str_var ++ get_regexLine x regex_var
+          [f, b] = get_regexLine_all x regex_fbpadding
+
+replace' :: String -> String -> [String] -> [String]
+replace' old new [] = []
+replace' old new (x:xs) = unwords (replaceline old new (words x)) : replace' old new xs
+
+
+
 replaceWord :: String -> String -> [String] -> String -> [String]
 replaceWord old new [] regex = []
 replaceWord old new (str:ss) regex
@@ -117,13 +135,61 @@ usePropagation :: String -> String -> [String] -> [String]
 usePropagation old new [] = []
 usePropagation old new (x:xs) = ((unwords $ usePropLine old new $ words x):(usePropagation old new xs))
 
-{- Type Conversion-}
+{-************************************************************************
+                            Type conversions
+  *************************************************************************-}
 
 strToInt :: String -> Integer
 strToInt x = round (read x :: Double)
 
 strToFloat :: String -> Double
 strToFloat x = read x :: Double
+
+strHexToStrBin :: String -> String
+strHexToStrBin [] = ""
+strHexToStrBin (x:xs) = do
+  case toUpper(x) of
+    '0' -> "0000" ++ (strHexToStrBin xs)
+    '1' -> "0001" ++ (strHexToStrBin xs)
+    '2' -> "0010" ++ (strHexToStrBin xs)
+    '3' -> "0011" ++ (strHexToStrBin xs)
+    '4' -> "0100" ++ (strHexToStrBin xs)
+    '5' -> "0101" ++ (strHexToStrBin xs)
+    '6' -> "0110" ++ (strHexToStrBin xs)
+    '7' -> "0111" ++ (strHexToStrBin xs)
+    '8' -> "1000" ++ (strHexToStrBin xs)
+    '9' -> "1001" ++ (strHexToStrBin xs)
+    'A' -> "1010" ++ (strHexToStrBin xs)
+    'B' -> "1011" ++ (strHexToStrBin xs)
+    'C' -> "1101" ++ (strHexToStrBin xs)
+    'D' -> "1110" ++ (strHexToStrBin xs)
+    'E' -> "1111" ++ (strHexToStrBin xs)
+    _ -> "ERROR"
+
+printList [] = []
+printList (x:xs) = show x : (printList xs)
+test x = printList (zipWith (\a b-> b * 2^a) [0..(length x)] (map digitToInt x))
+test2 x = strBinToDec x
+
+strBinToDec :: String -> Int
+strBinToDec x = sum $ zipWith (\a b -> b * 2^a) [0..(length x)] (map digitToInt x)
+fractionConv x = 1 + (sum $ zipWith (\i b -> b * 2^(-i)) [0..(length x)] (map digitToInt x))
+
+strBinToDec_exp :: Fractional a => String -> a
+strBinToDec_exp (s:x) = do
+  let sign = (-1) ^ (bool 0 1 (s == '1'))
+      e = 2 ^^ (strBinToDec (reverse x) - 1023)
+  (sign * e)
+
+strBinToDec_frac :: String -> Double
+strBinToDec_frac x = 1 + 1 / (fromIntegral $ strBinToDec x)
+
+strHexToDouble :: String -> Double
+strHexToDouble x = do
+  let (e, f) = splitAt 3 (filter (/= ' ') x)
+      e' = strBinToDec_exp (strHexToStrBin e)
+      f' = strBinToDec_frac (strHexToStrBin f)
+  (e' * f')
 
 {-************************************************************************
                             All Ones Byte
@@ -161,5 +227,135 @@ complementSet [] _ = []
 complementSet (x:xs) y = complementSet xs (filter (/= x) y)
 
 {-************************************************************************
-                        Boolean Matching Function
+                      LeftVar : Ordinary  VARIABLES
   *************************************************************************-}
+
+addVariable :: String -> String -> String -> String -> [LeftVar] -> [LeftVar]
+addVariable v t i s varList = varList ++ [(LeftVar v t i s)]
+
+removeVariable :: LeftVar -> [LeftVar] -> [LeftVar] -> [LeftVar]
+removeVariable vInfo [] px = px
+removeVariable vInfo (x:xs) px
+  | (variable vInfo == variable x) = (px ++ xs) -- found matching info
+  | otherwise = removeVariable vInfo xs (px ++ [x])
+
+lookupList :: String -> [LeftVar] -> Maybe LeftVar
+lookupList v [] = Nothing
+lookupList v (x:xs)
+  | (v == variable x) = Just x
+  | otherwise = lookupList v xs
+
+updateList :: LeftVar -> [LeftVar] -> [LeftVar] -> [LeftVar]
+updateList vInfo [] px = px
+updateList vInfo (x:xs) px
+  | (variable vInfo == variable x) = (px ++ [vInfo] ++ xs) -- found matching info
+  | otherwise = updateList vInfo xs (px ++ [x])
+
+setType, setInstr, setState :: String -> LeftVar -> LeftVar
+setType new_type x =  x { vtype=new_type }
+setInstr new_instr x = x { instruction=new_instr }
+setState new_state x = x { state=new_state }
+
+getType, getInstr, getState :: LeftVar -> String
+getType x = vtype x
+getInstr x = instruction x
+getState x = state x
+
+
+{-************************************************************************
+                      RP : REGISTER FILE VARIABLES
+  *************************************************************************-}
+
+removePointer :: RP -> [RP] -> [RP] -> [RP]
+removePointer pInfo [] px = px
+removePointer pInfo (x:xs) px
+  | (rname pInfo == rname x) = (px ++ xs) -- found matching info
+  | otherwise = removePointer pInfo xs (px ++ [x])
+
+lookupList_p :: String -> [RP] -> Maybe RP
+lookupList_p p [] = Nothing
+lookupList_p p (x:xs)
+  | (p == rname x) = Just x
+  | otherwise = lookupList_p p xs
+
+updateList_p :: RP -> [RP] -> [RP] -> [RP]
+updateList_p pInfo [] px = px
+updateList_p pInfo (x:xs) px
+  | (rname pInfo == rname x) = (px ++ [pInfo] ++ xs) -- found matching info
+  | otherwise = updateList_p pInfo xs (px ++ [x])
+
+setName, setBase, setRstate :: String -> RP -> RP
+setName name x =  x { rname=name }
+setBase base x = x { rbase=base }
+setRstate state x = x { rstate = state }
+
+setIndex :: Integer -> RP -> RP
+setIndex idx x = x { ridx=idx }
+
+setPermit :: Bool -> RP -> RP
+setPermit bool x = x { permit=bool }
+
+getName, getBase, getRstate :: RP -> String
+getName x = rname x
+getBase x = rbase x
+getRstate x = rstate x
+
+getIndex :: RP -> Integer
+getIndex x = ridx x
+
+getPermit :: RP -> Bool
+getPermit x = permit x
+
+variableType :: VAR -> String
+variableType var
+  | (isVaArg var) = (argty var)
+  | (isCatchPad var) || (isCatchSwitch var) || (isCleanUpPad var) = "token"
+  | otherwise = do
+    if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
+      then (ty var)
+      else "none"
+
+{-************************************************************************
+                              Use (variable)
+  *************************************************************************-}
+isMatchPointer u [] = False
+isMatchPointer u (v:vs)
+  | (u == v || u == p) = True
+  | otherwise = isMatchPointer u vs
+    where p = str_var ++ get_regexLine v regex_fb
+
+isUsePtr p line
+  | (isInfixOf p line) = do
+    let tmpList = map (str_var ++) $ splitOn "%" line
+    isMatchPointer p tmpList
+  | otherwise = False
+
+isMatchList u [] = False
+isMatchList u (v:vs)
+  | (u == v || a == b) = True
+  | otherwise = isMatchList u vs
+    where a = filter isDigit u
+          b = filter isDigit v
+
+isUse v line
+  | (isInfixOf v line) = do
+    let tmp = concat $ map words (split (startsWith v) line)
+        tmpList = filter (isPrefixOf v) tmp
+    isMatchList v tmpList
+  | otherwise = False
+
+findDef :: String -> [LeftVar] -> String
+findDef v vList
+  | (not.isNothing) vInfo = getState (fromJust vInfo)
+  | otherwise = ""
+  where vInfo = lookupList v vList
+
+-- value content fname line_number recursive_list
+-- -> (line_number, (used variable info))
+findUse :: String -> [String] -> [String] -> [String]
+findUse v [] uselist = uselist
+findUse v (line:nextCont) uselist
+  | (isFunctionEnd line) = uselist
+  | (isUse v state) =  findUse v nextCont (uselist ++ [line])
+  | otherwise = findUse v nextCont uselist
+    where state = last $ splitOn' " = " line

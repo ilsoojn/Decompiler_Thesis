@@ -88,7 +88,7 @@ bb_400480:                                        ; preds = %entry_fn_400480
 %RBP_0 = %RBP
 %RSP_0 = %RSP
 %21 = %RSP-8
-store i64 %RBP_0, i64* %RSP-8, align 1
+store i64 %RBP_0, i64* %21, align 1
 %RSP_1 = %RSP-8
 %ESP_0 = %RSP-8
 %RIP_2 = 4195460
@@ -104,7 +104,7 @@ store i64 %RBP_0, i64* %RSP-8, align 1
 %RIP_4 = 4195470
 %EIP_3 = 4195470
 %24 = 4195672
-%25 = load double, double* 4195672, align 1
+%25 = load double, double* %24, align 1
 %26 = %25
 %ZMM0_0 = %ZMM0
 %27 = %ZMM0
@@ -118,7 +118,7 @@ store i64 %RBP_0, i64* %RSP-8, align 1
 %RIP_5 = 4195478
 %EIP_4 = 4195478
 %37 = 4195680
-%38 = load double, double* 4195680, align 1
+%38 = load double, double* %37, align 1
 %39 = %38
 %ZMM1_0 = %ZMM1
 %40 = %ZMM1
@@ -132,23 +132,23 @@ store i64 %RBP_0, i64* %RSP-8, align 1
 %RIP_6 = 4195485
 %EIP_5 = 4195485
 %50 = %RSP-12
-store i32 0, i32* %RSP-12, align 1
+store i32 0, i32* %50, align 1
 %RIP_7 = 4195492
 %EIP_6 = 4195492
 %52 = %RSP-16
-store i32 10, i32* %RSP-16, align 1
+store i32 10, i32* %52, align 1
 %RIP_8 = 4195497
 %EIP_7 = 4195497
 %53 = %XMM1_0
 %54 = %38
 %56 = %RSP-24
-store double %38, double* %RSP-24, align 1
+store double %38, double* %56, align 1
 %RIP_9 = 4195502
 %EIP_8 = 4195502
 %57 = %XMM0_0
 %58 = %25
 %60 = %RSP-32
-store double %25, double* %RSP-32, align 1
+store double %25, double* %60, align 1
 %RIP_10 = 4195505
 %EIP_9 = 4195505
 %62 = %RSP-16
@@ -168,7 +168,7 @@ store double %25, double* %RSP-32, align 1
 %72 = %XMM0_1
 %73 = %64
 %75 = %RSP-32
-%76 = load double, double* %RSP-32, align 1
+%76 = load double, double* %75, align 1
 %77 = fmul double %64, %76
 %78 = %77
 %XMM0_3 = %XMM0_2 : %77
@@ -179,7 +179,7 @@ store double %25, double* %RSP-32, align 1
 %85 = %XMM0_2
 %86 = %77
 %88 = %RSP-24
-%89 = load double, double* %RSP-24, align 1
+%89 = load double, double* %88, align 1
 %90 = fadd double %77, %89
 %91 = %90
 %XMM0_4 = %XMM0_3 : %90
@@ -190,7 +190,7 @@ store double %25, double* %RSP-32, align 1
 %98 = %XMM0_3
 %99 = %90
 %101 = %RSP-40
-store double %90, double* %RSP-40, align 1
+store double %90, double* %101, align 1
 %RIP_15 = 4195525
 %EIP_14 = 4195525
 %RSP_2 = %RSP

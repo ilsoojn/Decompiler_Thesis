@@ -2,7 +2,6 @@ module StatementInstr where
 
 import Data.Maybe
 import Data.Tuple
-import OtherFunction
 
 import Debug.Trace
 
@@ -11,6 +10,7 @@ import Debug.Trace
 data RP = RP{rname::String, rbase::String, ridx::Integer, rstate:: String, permit::Bool} deriving (Ord, Eq, Show, Read)
 data LeftVar = LeftVar{variable::String, vtype::String, instruction::String, state::String} deriving (Show, Read, Eq, Ord)
 isLeftVar (LeftVar _ _ _ _) = True
+isRP (RP _ _ _ _ _) = True
 
 data Clause = Catch {cty::String, cvalue::String} | Filter {cty::String, cvalue::String} | CleanUp deriving (Show)-- Catch <= single val, Filter <= Array
 data Chain = Chain {v::String, def::(Integer, VAR), use::[(Integer, VAR)]} deriving (Show)

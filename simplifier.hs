@@ -23,7 +23,7 @@ import StatementParse
 import Elimination
 import Propagation
 import RegisterPointer
-import IsGetSet
+import RegexFunction
 import Idioms
 import Lists
 
@@ -166,7 +166,7 @@ main = do
 
       -- OPEN & READ FILES
       handleIr <- openFile decir ReadMode
-      handleAsm <- openFile disas ReadMode
+      handleAsm <- openFile disas ReadMode -- get .data & .rodata
       contentIr <- hGetContents handleIr
       contentAsm <- hGetContents handleAsm
 
@@ -197,14 +197,16 @@ main = do
           hClose handleTmp
 
           system $ "rm " ++ decir ++ " " ++ disas
+          -- renameFile tmpFile (prog_file ++ "Output_idiom.ll")
+          -- renameFile tmpFile (prog_file ++ "Output_prop.ll")
           renameFile tmpFile (prog_file ++ "Output_elim.ll")
           -- renameFile tmpFile "sampleOutput.ll"
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)
-
-          print "ok"
+          --
           -- mapM_ print (printRP plist)
           -- mapM_ print (printLV vlist)
+          print "ok"
         else do
 
           -- CLOSE FILES & TERMINATE
