@@ -26,16 +26,16 @@ import OtherFunction
 
 -- store [atomic] [volatie] <type> <value>, <type ptr> <loc pointer>
 storeStatement :: String -> STORE
-storeStatement s
-  | s_type = STORE atomic volatile t [(v, Undef "none" "undef" v)] [(at, Undef "none" "undef" at)]
-  | otherwise = STORE atomic volatile t [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
+storeStatement s = STORE atomic volatile t v at-- [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
+  -- | s_type = STORE atomic volatile t [(v, Undef "none" "undef" v)] [(at, Undef "none" "undef" at)]
+  -- | otherwise = STORE atomic volatile t [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
   where (vInfo: vpInfo: _) = splitOn' "," s
         (v, tmp) = popBack vInfo
         (t, options) = popBack tmp
         atomic = isInfixOf "atomic" options
         volatile = isInfixOf "volatile" options
         at = fst $ popBack vpInfo
-        s_type = isInfixOf "%" v
+        -- s_type = isInfixOf "%" v
 
 -- <result> = <ty>, <ty>* <pointer>
 -- <result> = <ty>, <ty>* <pointer> [syncscope("<target-scope>")] <ordering>
@@ -46,12 +46,14 @@ loadStatement, allocaStatement:: String -> VAR
 loadStatement line
   | (hasOpening loadInfo) = do
     let (ty: ptrInfo)= splitStartEndOneOf "{[<" ">]}" loadInfo
-        ptr = unwords $ filter (hasAny "%@") $ splitOn' " " $ unwords ptrInfo
+        tmpPtr = unwords $ filter (hasAny "%@") $ splitOn' " " $ unwords ptrInfo
+        ptr = bool tmpPtr ((head.tail) $ splitOn' (ty ++ "*") loadInfo) (null tmpPtr)
     LOAD "memory" op atomic volatile ty ptr align syncscope order
 
   | otherwise = do
     let (ty: ptrInfo) = filter (not.null) (splitOneOf' " ," loadInfo)
-        ptr = unwords $ filter (isPrefixOf "%") ptrInfo
+        tmpPtr = unwords $ filter (isPrefixOf "%") ptrInfo
+        ptr = bool tmpPtr ((head.tail) $ splitOn' (ty ++ "*") loadInfo) (null tmpPtr)
     LOAD "memory" op atomic volatile ty ptr align syncscope order
 
     where (op, info) = popFront line
@@ -482,12 +484,12 @@ parseStatement line
         (s, [parent s])
 
       _ -> do
-        if (isSemiColon line)
+        if (isColonLine line)
           then do
             let (v1:v2:_) = getHighLowVariable line
                 hs = v1
                 ls = v2
-            (SemiColon "none" ":" hs ls, [hs, ls])
+            (Colon "colon" ":" hs ls, [hs, ls])
           else (Other "none" "other", [])
   where op = head $ words line
         opty = getInstructionType op

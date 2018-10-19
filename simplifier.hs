@@ -7,6 +7,7 @@ import Data.Bool
 import Data.Char
 import Data.DeriveTH
 import Data.List
+import Data.List.Split
 import Data.List.Utils
 import Data.Maybe
 import Data.String.Utils
@@ -61,45 +62,10 @@ remove_r [] content = content
 remove_r (r:rs) content = do
   remove_r rs (remove_st r content [])
 
-{-************************************************************************
-            Find Address-Based Function and Basic Block Names
-                    Replace them to Simple Numeric Ones
-  *************************************************************************-}
-
-replace_addr :: [String] -> Int -> Int -> [String] -> [String]
-replace_addr [] fcount bcount preContent = preContent
-replace_addr (line: nextContent) fcount bcount preContent
-
-  -- | (startswith strStart_fn line) = do
-  --
-  --   let (fn, new_name) = (getFunctionName line, str_fn ++ (show fcount))
-  --       new_line = replace fn new_name line
-  --       new_preContent = map (replaceLine fn new_name str_fn) preContent
-  --       new_nextContent = map (replaceLine fn new_name str_fn) nextContent
-  --   replace_addr new_nextContent (fcount + 1) bcount (new_preContent ++ [new_line])
-
-  | (startswith strStart_bb line) = do
-
-    let (bn, new_name) = (getBlockName line, str_bb ++ (show bcount))
-        new_line = line_bb ++ (show bcount)
-        new_preContent =  map (replaceLine bn new_name str_bb) preContent
-        new_nextContent = map (replaceLine bn new_name str_bb) nextContent
-    replace_addr new_nextContent fcount (bcount + 1) (new_preContent ++ [new_line])
-
-  | otherwise = replace_addr nextContent fcount bcount (preContent ++ [line])
 
 {-************************************************************************
       Split Up Contents by Function and Create a list of Varaibles
   ************************************************************************-}
-createPtrTable [] = []
-createPtrTable (p:ps) = do
-  let s = rname p ++ ": " ++ getBase p ++ " + " ++ show (getIndex p) ++ "(" ++ getRstate p ++ ")"
-  s:(createPtrTable ps)
-
-fnStartEndBlock (line: nextCont)
-  | (isBasicBlock line || isBlockLabel line) = (line:nextCont)
-  | otherwise = fnStartEndBlock nextCont
-
 splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
 splitFn [] fn c v p set = set
 splitFn (line: nextC) fn cList vList pList set
@@ -129,15 +95,15 @@ splitFn (line: nextC) fn cList vList pList set
 
   | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
 
-fnElimination :: [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
-fnElimination [] = []
-fnElimination ((content, (vList, pList)):fs) =  do
-  let (content_i, vList_i) = (detectIdiom content "" [] vList)
-      (content_p, (vList_p, pList_p)) = propagation content_i "" vList_i pList []
-      (content_e, vList_e) = elimination False content_p "" vList_p pList_p []
-  (content_e, (vList_e, pList_p)):fnElimination fs
-  -- (content_p, (vList_p, pList_p)):fnElimination fs
-  -- (content_i, (vList_i, pList)):fnElimination fs
+fnElimination :: [([String] , ([LeftVar],[RP]))] -> Int -> String -> [([String] , ([LeftVar],[RP]))]
+fnElimination [] _ _ = []
+fnElimination ((content, (vList, pList)):fs) dataAddr dataValue=  do
+  let (functionName, (content_i, vList_i)) = (detectIdiom content "" [] vList)
+      (content_p, (vList_p, pList_p)) = propagation functionName content_i [] vList_i pList []
+      (content_e, vList_e) = elimination content_p vList_p pList_p
+  (content_e, (vList_e, pList_p)):fnElimination fs dataAddr dataValue
+  -- (content_p, (vList_p, pList_p)):fnElimination fs dataAddr dataValue
+  -- (content_i, (vList_i, pList)):fnElimination fs dataAddr dataValue
 
 printRP [] = []
 printRP (p:ps) =
@@ -162,8 +128,8 @@ main = do
       let disas = prog_file ++ "_disasm"
 
       system $ "llvm-dec " ++ prog_file ++ " >> " ++ decir
-      system $ "objdump -M intel -D " ++ prog_file ++ " >>" ++ disas
-
+      --system $ "objdump -M intel -D " ++ prog_file ++ " >>" ++ disas
+      system $ "objdump -s --section=.rodata " ++ prog_file ++ " >> " ++ disas
       -- OPEN & READ FILES
       handleIr <- openFile decir ReadMode
       handleAsm <- openFile disas ReadMode -- get .data & .rodata
@@ -175,14 +141,21 @@ main = do
           -- TEMPORARY FILE
           (tmpFile, handleTmp) <- openTempFile "." "tmpIR"
 
+          -- Assembly
+          let rodata = last $ splitWhen (isInfixOf ".rodata") (lines contentAsm)
+              -- addr = map (read.head.words) rodata :: [Integer]
+              address = (strHexToDec.head.words.head) rodata
+              values = map toUpper $ concat $ map (concat.tail.words) rodata
+
+          -- Intermediate Representation
           let unnecessaryReg = reg_8 ++ reg_16 ++ flags ++ ["%IP"]
               sourceIR = remove_r unnecessaryReg $ (init.lines.fst) (strSplit str_main  contentIr)
-              nameIR = filter (not.null) $ map strip sourceIR -- (replace_addr sourceIR 0 0 [])
+              nameIR = filter (not.null) $ map strip sourceIR
               functionIR = splitFn nameIR "" [] [] [] []
               contentIR = map fst functionIR
               -- pointerList = createPtrTable $ snd $ snd $ head (splitFn readyIR "" [] [] [] [])
               -- result = map fst $ fnElimination $ fnSplit readyIR "" [] [] []
-              ((resultFn, (vlist, plist)):_)  = fnElimination functionIR
+              ((resultFn, (vlist, plist)):_)  = fnElimination functionIR address values
               result = [resultFn]
               --result = map fst $ fnElimination functionIR
 

@@ -18,7 +18,7 @@ data Chain = Chain {v::String, def::(Integer, VAR), use::[(Integer, VAR)]} deriv
 -- data LOAD = LOAD {ld_ty::String, rsp::String, index::Integer}
 data VAR = Undef {instrType::String, op::String, value::String}
           | Const {instrType::String, op::String, value::String}
-          | SemiColon {instrType::String, op::String, high::String, low::String}
+          | Colon {instrType::String, op::String, high::String, low::String}
           -- Terminator
           | RetVoid {instrType::String, op::String}
           | Ret {instrType::String, op::String, ty::String, value::String} -- <<
@@ -60,7 +60,7 @@ data VAR = Undef {instrType::String, op::String, value::String}
           -- undefined ones / temporary
           | Other{instrType::String, op::String} deriving (Show)
 
-data STORE = STORE {str_atomic::Bool, str_volatile::Bool, str_ty::String, str_v::[(String, VAR)], str_at::[(String, VAR)]} deriving (Show)
+data STORE = STORE {str_atomic::Bool, str_volatile::Bool, str_ty::String, str_v::String, str_at::String} deriving (Show) -- str_v::[(String, VAR)], str_at::[(String, VAR)]} deriving (Show)
 
 isStore (STORE _ _ _ _ _) = True
 
@@ -68,8 +68,8 @@ isUndef (Undef _ _ _) = True
 isUndef _ = False
 isConst (Const _ _ _) = True
 isConst _ = False
-isSemicolon (SemiColon _ _ _ _) = True
-isSemicolon _ = False
+isColon (Colon _ _ _ _) = True
+isColon _ = False
 isVoidRet (RetVoid _ _) = True
 isVoidRet _ = False
 isRet (Ret _ _ _ _) = True

@@ -90,10 +90,10 @@ bitwiseOP pre curr next content vList
           (cv, (cvar, creg)) = statement curr
           (nv, (nvar, nreg)) = statement next
 
-detectIdiom :: [String] -> String -> [String] -> [LeftVar] -> ([String], [LeftVar])
-detectIdiom [] fn pre vList = (pre, vList)
+detectIdiom :: [String] -> String -> [String] -> [LeftVar] -> (String, ([String], [LeftVar]))
+detectIdiom [] fn pre vList = (fn,(pre, vList))
 detectIdiom (line: next) fn pre vList
-  | (next == [""]) = (pre, vList)
+  | (next == [""]) = (fn,(pre, vList))
   | (isFunction line) = detectIdiom next (getFunctionName line) (pre ++ [line]) vList
   | (isLHS line fn) = do
 

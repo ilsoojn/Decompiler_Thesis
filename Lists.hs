@@ -1,5 +1,8 @@
 module Lists where
 
+import Data.List
+import Data.Ord
+
 {-************************************************************************
                     Archtecture Registers and Pointer
   *************************************************************************-}
@@ -13,6 +16,8 @@ reg_other = ["%XMM0","%XMM1","%XMM2","%YMM0","%YMM1","%YMM2","%ZMM0","%ZMM1","%Z
 reg_ip = ["%IP","%EIP","%RIP"]
 
 flags = ["CtlSysEFLAGS", "%EFLAGS"]
+
+reg_base = reg_32 ++ reg_64 ++ reg_ip ++ reg_other
 
 {-************************************************************************
                             LLVM INSTRUCTIONS
@@ -62,6 +67,13 @@ condition= [("eq","=="), ("ne","!="),
             ("true", ""), ("false", "")
             ]
 
+
+{-************************************************************************
+                          Variable Naming
+  *************************************************************************-}
+
+names = sortBy (comparing length) $ sort (filter (not.null) (subsequences "abcdefghijk"))
+
 {-************************************************************************
                             REGEX EXPRESSIONS
   *************************************************************************-}
@@ -79,7 +91,7 @@ condition= [("eq","=="), ("ne","!="),
 
 regexLine_fn, regexEnd_fn, regexLine_bb, regex_fn, regex_bb :: String
 str_main, str_fn, str_bb, line_bb, strStart_fn, strStart_bb:: String
-regex_useRsp, regex_useEsp, regex_padding, regex_semicolon, regex_array, regex_sync, regex_pad, regex_landpad, regex_fbpadding, regex_fb, regex_var, regex_ab :: String
+regex_useRsp, regex_useEsp, regex_padding, regex_colon, regex_array, regex_sync, regex_pad, regex_landpad, regex_fbpadding, regex_fb, regex_var, regex_ab :: String
 regexLine_fn = "^define void @fn_(.*)\\(.*\\{"
 regexEnd_fn = "^}"
 regexLine_bb = "^bb_(.*):.*"
@@ -100,17 +112,17 @@ regex_useRsp = ".* = .*%R([0-9a-zA-Z\\_\\-\\+]*).*"
 regex_useEsp = ".* = .*%E([0-9a-zA-Z\\_\\-\\+]*).*"
 regex_padding = "(.*)%([0-9]*)(.*)"
 
-regex_semicolon = "([0-9A-Z\\%\\_\\+\\-]*) : ([0-9A-Z\\%\\_\\+\\-]*)"
+regex_colon = "([0-9A-Z\\%\\_\\+\\-]*) : ([0-9A-Z\\%\\_\\+\\-]*)"
 regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)" -- syncscope
 regex_pad = "(.*)[(.*)]"
 regex_landpad = ".*?\\{(.*)\\}(.*)"
 regex_fb = ".*%([0-9a-zA-Z\\_]*).*"
 regex_ab = ".* = %([0-9a-zA-Z\\_\\-\\+]*)"
-regex_var = ".*%([0-9a-zA-Z\\_\\-\\+]*).*"
+regex_var = ".*%([0-9a-zA-Z\\+\\_\\-]*).*"
 
 -- regex expression for FRONT & BACK padding
-regex_fbpadding= "(.*)%[0-9a-zA-Z\\_\\-]*(.*)"
+regex_fbpadding= "(.*)%[0-9a-zA-Z\\+\\_\\-]*(.*)"
 regex_after_padding = "[0-9a-zA-Z\\_\\-]*(.*)"
 
 

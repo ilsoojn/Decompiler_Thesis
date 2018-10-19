@@ -12,7 +12,7 @@ define i32 @main() #0 {
   %5 = alloca double, align 8
   store i32 0, i32* %1, align 4
   store i32 10, i32* %2, align 4
-  store double 2.000000e+01, double* %3, align 8
+  store double 3.132400e+02, double* %3, align 8
   store double 1.000000e+01, double* %4, align 8
   %6 = load i32, i32* %2, align 4
   %7 = sitofp i32 %6 to double

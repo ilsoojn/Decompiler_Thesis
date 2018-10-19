@@ -80,6 +80,12 @@ splitStartEndOneOf dlm_s dlm_e str = do
       list' = filter (/= ",") $ filter (not.null) $ map strip list
   map strip (splitBrackets list' "" 0 [])
 
+splitByLength :: Int -> String -> [String]
+splitByLength n [] = []
+splitByLength n x = do
+  let (s, xs) = splitAt n x
+  s : (splitByLength n xs)
+
 {-************** Modifing Functions **************-}
 strSplit' dlm str = (strip x, strip xs) where (x, xs) = strSplit dlm str
 sBreak' dlm str = (strip x, strip xs) where (x, xs) = sBreak dlm str
@@ -89,8 +95,8 @@ splitOneOf' dlm str = filter (not.null) $ map strip (splitOneOf dlm str)
 replaceline :: String -> String -> [String] -> [String]
 replaceline old new [] = []
 replaceline old new (x:xs)
-  | (old == x) = new : (replaceline old new xs)
-  | (old == v) = (f ++ new ++ b) : (replaceline old new xs)
+  | (old == x) = trace(old ++ " -> " ++ new)new : (replaceline old new xs)
+  | (old == v) = trace(old ++ " ->> " ++ f ++ new ++ b)(f ++ new ++ b) : (replaceline old new xs)
   | otherwise = x : (replace' old new xs)
     where v = str_var ++ get_regexLine x regex_var
           [f, b] = get_regexLine_all x regex_fbpadding
@@ -98,8 +104,6 @@ replaceline old new (x:xs)
 replace' :: String -> String -> [String] -> [String]
 replace' old new [] = []
 replace' old new (x:xs) = unwords (replaceline old new (words x)) : replace' old new xs
-
-
 
 replaceWord :: String -> String -> [String] -> String -> [String]
 replaceWord old new [] regex = []
@@ -139,12 +143,36 @@ usePropagation old new (x:xs) = ((unwords $ usePropLine old new $ words x):(useP
                             Type conversions
   *************************************************************************-}
 
+-- STR to
 strToInt :: String -> Integer
 strToInt x = round (read x :: Double)
 
 strToFloat :: String -> Double
 strToFloat x = read x :: Double
 
+-- Unsigned / non-negative Int
+showBin :: Int -> String
+showBin x = showIntAtBase 2 intToDigit x ""
+
+-- BIN to
+strBinToDec :: String -> Int
+strBinToDec x = do
+  let n = reverse x
+      calc = zipWith (\a b -> b * 2^a) [0..(length n)] (map digitToInt n)
+  sum calc
+
+strBinToDouble :: Int -> String -> Double
+strBinToDouble i (s:x) = do
+  let expBias = (2 ^ (i -1)) -1
+      sign = (-1) ^ (bool 0 1 (s == '1'))
+      eBit = take i x
+      fBit = drop i x
+      n = strBinToDec eBit
+      e = 2 ^^(n - expBias)
+      f = 1 + (sum $ zipWith (\i b -> fromIntegral(b) * 2**(0-fromIntegral(i))) [1..(length fBit)] (map digitToInt fBit))
+  (sign * e * f)
+
+-- HEX to
 strHexToStrBin :: String -> String
 strHexToStrBin [] = ""
 strHexToStrBin (x:xs) = do
@@ -159,37 +187,39 @@ strHexToStrBin (x:xs) = do
     '7' -> "0111" ++ (strHexToStrBin xs)
     '8' -> "1000" ++ (strHexToStrBin xs)
     '9' -> "1001" ++ (strHexToStrBin xs)
-    'A' -> "1010" ++ (strHexToStrBin xs)
-    'B' -> "1011" ++ (strHexToStrBin xs)
-    'C' -> "1101" ++ (strHexToStrBin xs)
-    'D' -> "1110" ++ (strHexToStrBin xs)
-    'E' -> "1111" ++ (strHexToStrBin xs)
+    'A' -> "1010" ++ (strHexToStrBin xs) -- 10
+    'B' -> "1011" ++ (strHexToStrBin xs) -- 11
+    'C' -> "1100" ++ (strHexToStrBin xs) -- 12
+    'D' -> "1101" ++ (strHexToStrBin xs) -- 13
+    'E' -> "1110" ++ (strHexToStrBin xs) -- 14
+    'F' -> "1111" ++ (strHexToStrBin xs) -- 15
     _ -> "ERROR"
 
-printList [] = []
-printList (x:xs) = show x : (printList xs)
-test x = printList (zipWith (\a b-> b * 2^a) [0..(length x)] (map digitToInt x))
-test2 x = strBinToDec x
+strHexToDec :: String -> Int
+strHexToDec x = strBinToDec (strHexToStrBin x)
 
-strBinToDec :: String -> Int
-strBinToDec x = sum $ zipWith (\a b -> b * 2^a) [0..(length x)] (map digitToInt x)
-fractionConv x = 1 + (sum $ zipWith (\i b -> b * 2^(-i)) [0..(length x)] (map digitToInt x))
+strHexToDouble :: Int -> String -> Double
+strHexToDouble bit x = do
+  case bit of
+    16 -> strBinToDouble 5 (strHexToStrBin x)
+    32 -> strBinToDouble 8 (strHexToStrBin x)
+    64 -> strBinToDouble 11 (strHexToStrBin x)
+    128 -> strBinToDouble 15 (strHexToStrBin x)
+    256 -> strBinToDouble 19 (strHexToStrBin x)
+    _ ->  strBinToDouble bit (strHexToStrBin x)
 
-strBinToDec_exp :: Fractional a => String -> a
-strBinToDec_exp (s:x) = do
-  let sign = (-1) ^ (bool 0 1 (s == '1'))
-      e = 2 ^^ (strBinToDec (reverse x) - 1023)
-  (sign * e)
+  -- let (e, f) = splitAt 3 (filter (/= ' ') x)
+  --     binE = strHexToStrBin e
+  --     binF = strHexToStrBin f
+  --     -- sign
+  --     sign = (-1) ^ (bool 0 1 (head binE == '1'))
+  --     -- exponent
+  --     n = strBinToDec (reverse $ tail binE)
+  --     e' = 2 ^^(n - 1023)
+  --     -- fractional
+  --     f' = 1 + (sum $ zipWith (\i b -> fromIntegral(b) * 2**(0-fromIntegral(i))) [1..(length binF)] (map digitToInt binF))
+  -- (sign * e' * f')
 
-strBinToDec_frac :: String -> Double
-strBinToDec_frac x = 1 + 1 / (fromIntegral $ strBinToDec x)
-
-strHexToDouble :: String -> Double
-strHexToDouble x = do
-  let (e, f) = splitAt 3 (filter (/= ' ') x)
-      e' = strBinToDec_exp (strHexToStrBin e)
-      f' = strBinToDec_frac (strHexToStrBin f)
-  (e' * f')
 
 {-************************************************************************
                             All Ones Byte
@@ -208,7 +238,7 @@ isNum' s = (length $ filter (isHexDigit) s) == (length s)
 
 -- pre: Double
 isInt :: (RealFrac a) => a -> Bool
-isInt x = x == fromInteger (round x)
+isInt x = (x == fromInteger (round x))
 
 -- pre: Integer
 is0s :: Integer -> Bool --, Bits a // (Num a, Integral a, Eq a, Floating a, RealFrac a) => a
@@ -314,6 +344,21 @@ variableType var
     if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
       then (ty var)
       else "none"
+
+{-************************************************************************
+                            Little Endian Data
+  *************************************************************************-}
+littleEnd :: [String] -> Int -> Int -> [String]
+littleEnd d a 0 = []
+littleEnd str at count = (str !! (at + count -1)) : (littleEnd str at (count - 1))
+
+
+getData :: Int -> Int -> String -> Int -> String
+getData bit dataAddr dataValue address = do
+  let str = (splitByLength 2 dataValue)
+      at =(address - dataAddr)
+      n = (round (fromIntegral(bit) / 8))
+  trace(show (length str) ++ " > " ++ "(" ++ show (at + n) ++ ")") concat $ littleEnd (splitByLength 2 dataValue) (address - dataAddr) (round (fromIntegral(bit) / 8))
 
 {-************************************************************************
                               Use (variable)

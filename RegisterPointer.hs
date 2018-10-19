@@ -110,7 +110,7 @@ pointerInfo ptr state pList vList
   | (isLoad var) = do
     let (rbase, rindex) = baseIndex (head reg) 0 pList vList
         sym = bool  "+" "" (rindex < 0)
-        newState = bool (bool ("[ " ++ rbase ++ sym ++  show rindex ++ " ]") (show rindex) (null rbase)) rbase (rindex == 0)
+        newState = bool (bool ("[" ++ rbase ++ sym ++  show rindex ++ "]") (show rindex) (null rbase)) rbase (rindex == 0)
     (RP ptr rbase rindex newState True)
   --
   | (isBitwise var) = do

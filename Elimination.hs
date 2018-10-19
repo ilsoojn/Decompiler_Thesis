@@ -21,20 +21,22 @@ import OtherFunction
 import RegexFunction
 import Lists
 
-hasDeadVar [] vList = False
-hasDeadVar (v:vs) vList
+-- Def(ops) > 0 := True / False
+hasNoDef [] vList = False
+hasNoDef (v:vs) vList
   | (isNothing vInfo) = True
-  | otherwise = False || (hasDeadVar vs vList)
+  | otherwise = False || (hasNoDef vs vList)
   where vInfo = lookupList v vList
 
-elimination :: Bool -> [String] -> String -> [LeftVar] -> [RP] -> [String] -> ([String], [LeftVar])
-elimination False [] fname vList pList preCont = (preCont, vList)
-elimination True [] fname vList pList preCont = trace("\n\n---------------------\n\n") elimination False preCont "" vList pList []
-elimination change (line : nextCont) fname vList pList preCont
-  | trace(line)(isFunction line) = elimination change nextCont (getFunctionName line) vList pList (preCont ++ [line])
-  | (isBlockLabel line || isBasicBlock line) = elimination change nextCont fname vList pList (preCont ++ [line])
-  | (isEntryExit line) = elimination change nextCont fname vList pList (preCont ++ [line])
-  | (isLHS line fname) = do
+variableElim :: Bool -> [String] -> [LeftVar] -> [RP] -> [String] -> ([String], [LeftVar])
+variableElim False [] vList pList preCont = (preCont, vList)
+variableElim True [] vList pList preCont = variableElim False preCont vList pList []
+variableElim change (line : nextCont) vList pList preCont
+  -- | (isFunction line) = variableElim change nextCont (getFunctionName line) vList pList (preCont ++ [line])
+  | (isFunction line || isBlockLabel line || isBasicBlock line) = variableElim change nextCont vList pList (preCont ++ [line])
+  | (isEntryExit line) = variableElim change nextCont vList pList (preCont ++ [line])
+  | (isInfixOf " = " line) = do
+    -- LHS
     let (x, (var, ops)) = statement (strip line)
         v = fromJust x
         use = filter (not.null) (findUse v nextCont [])
@@ -42,30 +44,64 @@ elimination change (line : nextCont) fname vList pList preCont
 
     if (null use)
       then do
+        -- DEAD Variable
         if (isNothing $ lookupList v vList)
-          then do --trace("use(" ++ v ++ ") : NO\n not in List")
-             elimination True nextCont fname vList pList preCont
+          then do
+             variableElim True nextCont vList pList preCont --trace("use(" ++ v ++ ") : NO\n not in List")
           else do
             let v' = fromJust $ lookupList v vList
                 newList = removeVariable v' vList []
-                -- trace("use(" ++ v ++ ") : NO\n yes in List")
-            elimination True nextCont fname newList pList preCont
+            variableElim True nextCont newList pList preCont -- trace("use(" ++ v ++ ") : NO\n yes in List")
 
-      else if (hasDeadVar op_variable vList)
+      else if (hasNoDef op_variable vList)
         then
-          -- trace("use(" ++ v ++ ") : YES\n Dead variables")
-          elimination True nextCont fname vList pList preCont
+          -- LIVE Variable but NoDef(ops)
+          variableElim True nextCont vList pList preCont -- trace("use(" ++ v ++ ") : YES\n Dead variables")
         else
-          -- trace("use(" ++ v ++ ") : YES\n No dead variables")
-          elimination change nextCont fname vList  pList (preCont ++ [line])
+          -- LIVE Variable and Def(ops)
+          variableElim change nextCont vList  pList (preCont ++ [line]) -- trace("use(" ++ v ++ ") : YES\n No dead variables")
 
   | otherwise = do
+    -- No LHS
     let (x, (var, ops)) = statement (strip line)
         op_var = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
-    if (hasDeadVar op_var vList)
+    if (hasNoDef op_var vList)
       then
-        -- trace("def-use( x )\n Dead variables"++ line)
-        elimination True nextCont fname vList pList preCont
+        -- NoDef(ops)
+        variableElim True nextCont vList pList preCont -- trace("def-use( x )\n Dead variables"++ line)
       else
-        -- trace("def-use( x )\n No dead variables")
-        elimination change nextCont fname vList  pList (preCont ++ [line])
+        -- Def(ops)
+        variableElim change nextCont vList  pList (preCont ++ [line]) -- trace("def-use( x )\n No dead variables")
+
+registerElim :: [String] -> [(String, String)] -> [String] ->[String]
+registerElim [] nameList preContent = preContent
+registerElim (line:nextContent) nameList preContent
+  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) = registerElim nextContent nameList (preContent ++ [line])
+  | (isPrefixOf "store" line) = do
+    -- STORE statement
+    let s = storeStatement line
+        value = str_v s
+        location = str_at s
+    if (isInfixOf "_ptr" line || elem location reg_base)
+      then
+        registerElim nextContent nameList preContent
+      else do
+        -- Possible Variable State
+        let str = lookup location nameList
+            vname = bool (fromJust str) (str_var ++ (names !! length nameList)) (isNothing str)
+            pair = trace("(" ++ location ++ ", " ++ vname ++ ")")(location, vname)
+
+            newLine = replace location vname line
+            new_nextCont = replace' location vname nextContent
+            new_preCont = replace' location vname preContent
+            newList = map head $ (group.sort) (pair : nameList)
+        registerElim new_nextCont newList (new_preCont ++ [newLine])
+
+    | otherwise = registerElim nextContent nameList (preContent ++ [line])
+
+elimination :: [String] -> [LeftVar] -> [RP] -> ([String], [LeftVar])
+elimination content vList pList = do
+
+  let (newContent, newVarList) = variableElim False content vList pList []
+  (newContent, newVarList)
+  --(registerElim newContent [] [], newVarList)

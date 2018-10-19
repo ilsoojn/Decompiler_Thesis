@@ -25,7 +25,7 @@ is_regexLine line regex = (not.null) $ map (head.tail) (line =~ regex :: [[Strin
 isFunction line = is_regexLine line regexLine_fn
 isBasicBlock line = is_regexLine line regexLine_bb    -- bb_#: ...
 isBlockLabel line = is_regexLine line regexLine_label -- ; <label>:bb_#...
-isSemiColon line = is_regexLine line regex_semicolon  -- v = %a  : %b
+isColonLine line = is_regexLine line regex_colon  -- v = %a  : %b
 isFunctionEnd line = is_regexLine line regexEnd_fn
 isLHSRHS line = is_regexLine line regex_ab            -- L = R
 
@@ -49,7 +49,7 @@ getFrontBackNonPadding line = get_regexLine line regex_fb
 
 -- %v = %a : %b -> [a, b]
 getHighLowVariable :: String -> [String]
-getHighLowVariable line = get_regexLine_all line regex_semicolon
+getHighLowVariable line = get_regexLine_all line regex_colon
 
 -- paddings
 
