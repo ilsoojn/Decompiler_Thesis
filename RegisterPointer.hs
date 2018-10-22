@@ -24,7 +24,7 @@ import Lists
 baseIndex :: String -> Integer -> [RP] -> [LeftVar] -> (String, Integer)
 baseIndex base idx pList vList
   | (elem base (reg_32 ++ reg_64 ++ reg_ip ++ reg_other)) = (base, idx)
-  | (isRegPointer base && not (isInfixOf "_ptr" base)) = do
+  | (isRegPointer base && not (isInfixOf "_ptr" base || isInfixOf "_init" base)) = do
     let p = lookupList_p base pList
     if (isNothing p || not (getPermit $ fromJust p))
       then (base, idx)

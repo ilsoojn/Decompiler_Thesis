@@ -23,7 +23,8 @@ import StatementInstr
 import StatementParse
 import Elimination
 import Propagation
-import RegisterPointer
+import ControlFlow
+import RegisterPointer2
 import RegexFunction
 import Idioms
 import Lists
@@ -87,7 +88,6 @@ splitFn (line: nextC) fn cList vList pList set
             newList_var = addVariable variable vtype instr state vList
             newLine = concat[v, " = ", getRstate rp]
         splitFn nextC fn (cList ++ [line]) newList_var newList_ptr set
-        -- splitFn nextC fn (cList ++ [newLine]) newList_var newList_ptr set
 
       _ -> do
         let newList = addVariable variable vtype instr state vList
@@ -95,15 +95,49 @@ splitFn (line: nextC) fn cList vList pList set
 
   | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
 
-fnElimination :: [([String] , ([LeftVar],[RP]))] -> Int -> String -> [([String] , ([LeftVar],[RP]))]
-fnElimination [] _ _ = []
-fnElimination ((content, (vList, pList)):fs) dataAddr dataValue=  do
-  let (functionName, (content_i, vList_i)) = (detectIdiom content "" [] vList)
-      (content_p, (vList_p, pList_p)) = propagation functionName content_i [] vList_i pList []
-      (content_e, vList_e) = elimination content_p vList_p pList_p
-  (content_e, (vList_e, pList_p)):fnElimination fs dataAddr dataValue
-  -- (content_p, (vList_p, pList_p)):fnElimination fs dataAddr dataValue
-  -- (content_i, (vList_i, pList)):fnElimination fs dataAddr dataValue
+-- fnRun :: [([String] , ([LeftVar],[RP]))] -> Int -> String -> [([String] , ([LeftVar],[RP]))]
+-- fnRun [] _ _ = []
+-- fnRun ((content, (vList, pList)):fs) dataAddr dataValue=  do
+--   let (functionName, (content_i, vList_i)) = (detectIdiom content "" [] vList)
+--       (content_p, (vList_p, pList_p)) = propagation functionName content_i vList_i pList []
+--       (content_e, vList_e) = elimination content_p vList_p pList_p
+--   -- (content_e, (vList_e, pList_p)):fnRun fs dataAddr dataValue
+--   (content_p, (vList_p, pList_p)):fnRun fs dataAddr dataValue
+--   -- (content_i, (vList_i, pList)):fnRun fs dataAddr dataValue
+
+forMod (f:fs) (v:vs) addr val = do
+  let tmp1 = precisionConversion f addr val []
+      (tmp2, v2) = variableName tmp1 [] v []
+      tmp3 = nameConversion tmp2 []
+  tmp3 : (forMod fs vs addr val)
+
+forFunction :: String -> [ ([String] , ([LeftVar],[RP])) ] -> Int -> String -> [( [String], [LeftVar] )]
+forFunction _ [] _ _ = []
+forFunction run (f : fs) addr val = do
+  let (fname, (iContent, vIdiom)) = trace("IDIOM:")detectIdiom content "" [] vlist
+      (pContent, (vProp, pProp)) = trace("PROPAGATION:")propagation fname iContent vIdiom plist []
+      (eContent, vElim) = trace("ELIMINATION:")elimination pContent vProp pProp
+
+      pcContent = trace("PRECISION:")precisionConversion eContent addr val []
+
+      (vnContent, (vName, nameList)) = trace("NAME LIST:")variableName pcContent [] vElim []
+      ncContent = trace("NAME CONVERSION:")nameConversion vnContent nameList
+
+      -- bBlock = splitBasicBlock ncContent "" [] [] []
+
+  case trace("-----" ++ fname ++ "----")run of
+    -- let (content, (vlist, plist)) = f
+    "idiom" -> (iContent, vIdiom) : (forFunction run fs addr val)
+    "prop"  -> (pContent, vProp) : (forFunction run fs addr val)
+    "elim"  -> (eContent, vElim) : (forFunction run fs addr val)
+    "vname" -> (ncContent, vName) : (forFunction run fs addr val)
+    _ -> (ncContent, vName) : (forFunction run fs addr val)
+    -- _ -> do
+    --   let (fname, (iContent, vIdiom)) = detectIdiom content "" [] vlist
+    --       (pContent, (vProp, pProp)) = propagation fname iContent vIdiom plist []
+    --       (eContent, vElim) = elimination pContent vProp pProp
+    --       ()
+  where (content, (vlist, plist)) = f
 
 printRP [] = []
 printRP (p:ps) =
@@ -143,24 +177,26 @@ main = do
 
           -- Assembly
           let rodata = last $ splitWhen (isInfixOf ".rodata") (lines contentAsm)
-              -- addr = map (read.head.words) rodata :: [Integer]
               address = (strHexToDec.head.words.head) rodata
-              values = map toUpper $ concat $ map (concat.tail.words) rodata
+              values = map toUpper $ concat $ map (concat.init.tail.words) rodata
 
           -- Intermediate Representation
           let unnecessaryReg = reg_8 ++ reg_16 ++ flags ++ ["%IP"]
               sourceIR = remove_r unnecessaryReg $ (init.lines.fst) (strSplit str_main  contentIr)
               nameIR = filter (not.null) $ map strip sourceIR
               functionIR = splitFn nameIR "" [] [] [] []
-              contentIR = map fst functionIR
-              -- pointerList = createPtrTable $ snd $ snd $ head (splitFn readyIR "" [] [] [] [])
-              -- result = map fst $ fnElimination $ fnSplit readyIR "" [] [] []
-              ((resultFn, (vlist, plist)):_)  = fnElimination functionIR address values
-              result = [resultFn]
-              --result = map fst $ fnElimination functionIR
+
+              -- runOption = "idiom"
+              -- runOption = "prop"
+              runOption = "vname"
+              trimS = forFunction runOption functionIR address values
+              trimContent = map fst trimS -- [(content)]
+              trimListV = map snd trimS
+
+              -- result = forMod trimContent trimListV address values
 
           -- hPutStr handleTmp $ unlines sourceIR
-          hPutStr handleTmp $ unlines (map unlines result)
+          hPutStr handleTmp $ unlines (map unlines trimContent)
 
           -- BEGIN EDITION
 
@@ -171,8 +207,8 @@ main = do
 
           system $ "rm " ++ decir ++ " " ++ disas
           -- renameFile tmpFile (prog_file ++ "Output_idiom.ll")
-          -- renameFile tmpFile (prog_file ++ "Output_prop.ll")
-          renameFile tmpFile (prog_file ++ "Output_elim.ll")
+          renameFile tmpFile (prog_file ++ "Output_" ++ runOption ++ ".ll")
+          -- renameFile tmpFile (prog_file ++ "Output_elim.ll")
           -- renameFile tmpFile "sampleOutput.ll"
           -- putStrLn $ "Open: " ++ prog_file
           -- print $ bool "ok" "fail" (null srcIR)

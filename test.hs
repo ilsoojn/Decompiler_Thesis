@@ -27,14 +27,48 @@ import RegexFunction
 import Idioms
 import Lists
 
+
 main = do
-  let rodata = ["400550 01000200 00000000 00000000 00002440", "400560 a4703d0a d7937340"]
-      addr = (strHexToDec.head.words.head) rodata
-      values = concat $ map (concat.tail.words) rodata
-      x = 4195680
-  print $ (show addr ++" "++ show (addr + length values))
-  print $ splitByLength 2 values
-  print $ getData 64 (fromIntegral addr) values x
+  let t = "%t = <%RSP-34"
+      u = "%u = %RSP-34,"
+      v = "%v = %RSP-34"
+      w = "%w = [%RSP-34]"
+      x = "%x = [%RSP-34]==0"
+      y = "%y = RSP-34"
+      z = "%z = %RSP-%34"
+
+      a = "%RSP-34"
+      b = "$$$"
+      s = [t, u, v, w, x, y, z]
+      s' = replace' a b s
+  mapM_ print s
+  putStrLn ""
+  mapM_ print s'
+-- main = do
+--   let x = "%x = [%123] : [%234]"
+--       y = "%y = [123] : [%234]"
+--       z = "%z = [%123] : [234]"
+--       w = "%w = [123] : [234]"
+--
+--   putStrLn $ bool ("x: " ++ w) ("v: " ++ w) (isColonLine w)
+--   putStrLn $ bool ("x: " ++ x) ("v: " ++ x) (isColonLine x)
+--   putStrLn $ bool ("x: " ++ y) ("v: " ++ y) (isColonLine y)
+--   putStrLn $ bool ("x: " ++ z) ("v: " ++ z) (isColonLine z)
+--
+--   print $ getHighLowVariable w
+--   print $ getHighLowVariable x
+--   print $ getHighLowVariable y
+--   print $ getHighLowVariable z
+
+
+-- main = do
+--   let rodata = ["400550 01000200 00000000 00000000 00002440", "400560 a4703d0a d7937340"]
+--       addr = (strHexToDec.head.words.head) rodata
+--       values = concat $ map (concat.tail.words) rodata
+--       x = 4195680
+--   print $ (show addr ++" "++ show (addr + length values))
+--   print $ splitByLength 2 values
+--   print $ getData 64 (fromIntegral addr) values x
 
 -- main = do
 --   let x = "[%RSP-43]"

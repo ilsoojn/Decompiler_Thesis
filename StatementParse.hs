@@ -25,8 +25,8 @@ import OtherFunction
   *************************************************************************-}
 
 -- store [atomic] [volatie] <type> <value>, <type ptr> <loc pointer>
-storeStatement :: String -> STORE
-storeStatement s = STORE atomic volatile t v at-- [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
+storeStatement :: String -> VAR
+storeStatement s = STORE "memory" "store" atomic volatile t v at-- [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
   -- | s_type = STORE atomic volatile t [(v, Undef "none" "undef" v)] [(at, Undef "none" "undef" at)]
   -- | otherwise = STORE atomic volatile t [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
   where (vInfo: vpInfo: _) = splitOn' "," s
@@ -425,8 +425,12 @@ parseStatement line
         (s, [token s, normal s])
 
       "unreachable" -> (Unreachable "terminator" "unreachable", [])
-
+      "invoke" -> (Other "terminator" "invoke", [])
       -- memory
+      "store" -> do
+        let s = storeStatement line
+        (s, [value s, at s])
+
       "load" -> do
         let s = loadStatement line
         (s, [ptr s])
@@ -482,6 +486,11 @@ parseStatement line
       "cleanuppad" -> do
         let s = cleanuppadStatement line
         (s, [parent s])
+      -- call CALL
+      "call" -> (Other "other" "call", [])
+      "tail" -> (Other "other" "call", [])
+      "musttail" -> (Other "other" "call", [])
+      "notail" -> (Other "other" "call", [])
 
       _ -> do
         if (isColonLine line)
@@ -490,7 +499,9 @@ parseStatement line
                 hs = v1
                 ls = v2
             (Colon "colon" ":" hs ls, [hs, ls])
-          else (Other "none" "other", [])
+          else if(isEqualLine line || isEqualState line)
+            then (Other "none" "equal", [getRHS line])
+            else (Other "none" "other", [])
   where op = head $ words line
         opty = getInstructionType op
 
@@ -500,159 +511,3 @@ statement line = do
   if (null rhs)
     then (Nothing, parseStatement lhs)
     else (Just lhs, parseStatement rhs)
-
---
--- {- LeftSideVar List -}
---
--- addVariable :: String -> String -> String -> String -> [LeftVar] -> [LeftVar]
--- addVariable v t i s varList = varList ++ [(LeftVar v t i s)]
---
--- removeVariable :: LeftVar -> [LeftVar] -> [LeftVar] -> [LeftVar]
--- removeVariable vInfo [] px = px
--- removeVariable vInfo (x:xs) px
---   | (variable vInfo == variable x) = (px ++ xs) -- found matching info
---   | otherwise = removeVariable vInfo xs (px ++ [x])
---
--- lookupList :: String -> [LeftVar] -> Maybe LeftVar
--- lookupList v [] = Nothing
--- lookupList v (x:xs)
---   | (v == variable x) = Just x
---   | otherwise = lookupList v xs
---
--- updateList :: LeftVar -> [LeftVar] -> [LeftVar] -> [LeftVar]
--- updateList vInfo [] px = px
--- updateList vInfo (x:xs) px
---   | (variable vInfo == variable x) = (px ++ [vInfo] ++ xs) -- found matching info
---   | otherwise = updateList vInfo xs (px ++ [x])
---
--- setType, setInstr, setState :: String -> LeftVar -> LeftVar
--- setType new_type x =  x { vtype=new_type }
--- setInstr new_instr x = x { instruction=new_instr }
--- setState new_state x = x { state=new_state }
---
--- getType, getInstr, getState :: LeftVar -> String
--- getType x = vtype x
--- getInstr x = instruction x
--- getState x = state x
---
---
--- {- RP List -}
---
---
--- removePointer :: RP -> [RP] -> [RP] -> [RP]
--- removePointer pInfo [] px = px
--- removePointer pInfo (x:xs) px
---   | (rname pInfo == rname x) = (px ++ xs) -- found matching info
---   | otherwise = removePointer pInfo xs (px ++ [x])
---
--- lookupList_p :: String -> [RP] -> Maybe RP
--- lookupList_p p [] = Nothing
--- lookupList_p p (x:xs)
---   | (p == rname x) = Just x
---   | otherwise = lookupList_p p xs
---
--- updateList_p :: RP -> [RP] -> [RP] -> [RP]
--- updateList_p pInfo [] px = px
--- updateList_p pInfo (x:xs) px
---   | (rname pInfo == rname x) = (px ++ [pInfo] ++ xs) -- found matching info
---   | otherwise = updateList_p pInfo xs (px ++ [x])
---
--- setName, setBase, setRstate :: String -> RP -> RP
--- setName name x =  x { rname=name }
--- setBase base x = x { rbase=base }
--- setRstate state x = x { rstate = state }
---
--- setIndex :: Integer -> RP -> RP
--- setIndex idx x = x { ridx=idx }
---
--- setPermit :: Bool -> RP -> RP
--- setPermit bool x = x { permit=bool }
---
--- getName, getBase, getRstate :: RP -> String
--- getName x = rname x
--- getBase x = rbase x
--- getRstate x = rstate x
---
--- getIndex :: RP -> Integer
--- getIndex x = ridx x
---
--- getPermit :: RP -> Bool
--- getPermit x = permit x
---
--- variableType :: VAR -> String
--- variableType var
---   | (isVaArg var) = (argty var)
---   | (isCatchPad var) || (isCatchSwitch var) || (isCleanUpPad var) = "token"
---   | otherwise = do
---     if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
---       then (ty var)
---       else "none"
---
--- -- detectVariable :: [String] -> String -> [(String, String)] -> [(String, String)]
--- -- detectVariable [] fname varSet = varSet
--- -- detectVariable (line:nextCont) fname varSet
--- --   | (isLHS line fname) = do
--- --     let (v, (var, reg)) = statement line fname
--- --         newList = addVariable (fromJust v) (variableType var) varSet
--- --     detectVariable nextCont fname newList
--- --   | otherwise = detectVariable nextCont fname varSet
---
--- {-************************************************************************
---                               Def and Use
---   *************************************************************************-}
--- isMatchPointer u [] = False
--- isMatchPointer u (v:vs)
---   | (u == v || u == p) = True
---   | otherwise = isMatchPointer u vs
---     where p = str_var ++ get_regexLine v regex_fb
---
--- isUsePtr p line
---   | (isInfixOf p line) = do
---     let tmpList = (split (startsWith p) line)
---     isMatchPointer p tmpList
---   | otherwise = False
---
--- isMatchList u [] = False
--- isMatchList u (v:vs)
---   | (u == v || a == b) = True
---   | otherwise = isMatchList u vs
---     where a = filter isDigit u
---           b = filter isDigit v
---
--- isUse v line
---   | (isInfixOf v line) = do
---     let tmp = concat $ map words (split (startsWith v) line)
---         tmpList = filter (isPrefixOf v) tmp
---     isMatchList v tmpList
---   | otherwise = False
---
--- findDef :: String -> [LeftVar] -> String
--- findDef v vList
---   | (not.isNothing) vInfo = getState (fromJust vInfo)
---   | otherwise = ""
---   where vInfo = lookupList v vList
---
--- -- value content fname line_number recursive_list
--- -- -> (line_number, (used variable info))
--- findUse :: String -> [String] -> [String] -> [String]
--- findUse v [] uselist = uselist
--- findUse v (line:nextCont) uselist
---   | (isFunctionEnd line) = uselist
---   | (isUse v state) =  findUse v nextCont (uselist ++ [line])
---   | otherwise = findUse v nextCont uselist
---     where state = last $ splitOn' " = " line
-
-
--- findDef :: String -> Integer -> (Integer, VAR) -- line_number and Operator Type
--- findDef cLine line_num = (line_num, parseStatement cLine)
---
--- chainDefUse :: [String] -> Integer -> [Chain] -> [Chain]
--- chainDefUse [] line_num chainList = chainList
--- chainDefUse (line:content)  line_num chainList = do
---   if isInfixOf " = " $ fst $ strSplit ";" line
---     then do
---       let (v, cLine) = strSplit'" = " line
---           def = findDef cLine line_num
---           use = findUse v content (line_num + 1) []
---       chainDefUse content (line_num + 1) $ chainList ++ [Chain v def use]
---     else chainDefUse content (line_num + 1) chainList

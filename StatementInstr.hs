@@ -6,7 +6,7 @@ import Data.Tuple
 import Debug.Trace
 
 {-************** Format and Regex **************-}
-
+data BasicBlock = BasicBlock{blockName::String, pred::[String], bcontent::[String]}
 data RP = RP{rname::String, rbase::String, ridx::Integer, rstate:: String, permit::Bool} deriving (Ord, Eq, Show, Read)
 data LeftVar = LeftVar{variable::String, vtype::String, instruction::String, state::String} deriving (Show, Read, Eq, Ord)
 isLeftVar (LeftVar _ _ _ _) = True
@@ -40,6 +40,7 @@ data VAR = Undef {instrType::String, op::String, value::String}
           | Struct {instrType::String, op::String, agg_ty::String, value::String, e_ty::Maybe String, e::Maybe String, e_idx::[String]} -- agg_ty : {ty} <- {ty, {ty}}
           -- Memory
           | Alloca {instrType::String, op::String, inalloca::Bool, ty::String, alloc_numE::Maybe String, alloc_align::Maybe String, alloc_addrspace::Maybe String} -- ***
+          | STORE {instrType::String, op::String, atomic::Bool, volatile::Bool, ty::String, value::String, at::String}
           | LOAD {instrType::String, op::String, atomic::Bool, volatile::Bool, ty::String, ptr::String, alignment::Maybe String, syncscope::Maybe String, order::Maybe String} -- ***
           | Fence {instrType::String, op::String, syncscope::Maybe String, ordering::String} -- <<
           | Cmpxchg {instrType::String, op::String, weak::Bool, volatile::Bool, ty::String, ptr::String, cmp::String, new::String, syncscope::Maybe String, succ_ordering::String, fail_ordering::String} -- <<
@@ -60,10 +61,10 @@ data VAR = Undef {instrType::String, op::String, value::String}
           -- undefined ones / temporary
           | Other{instrType::String, op::String} deriving (Show)
 
-data STORE = STORE {str_atomic::Bool, str_volatile::Bool, str_ty::String, str_v::String, str_at::String} deriving (Show) -- str_v::[(String, VAR)], str_at::[(String, VAR)]} deriving (Show)
+-- data STORE = STORE {instrType::String, op::String, atomic::Bool, volatile::Bool, ty::String, value::String, at::String} deriving (Show) -- str_v::[(String, VAR)], str_at::[(String, VAR)]} deriving (Show)
 
-isStore (STORE _ _ _ _ _) = True
-
+isStore (STORE _ _ _ _ _ _ _) = True
+isStore _ = False
 isUndef (Undef _ _ _) = True
 isUndef _ = False
 isConst (Const _ _ _) = True

@@ -37,14 +37,6 @@ toSym op
   | otherwise = fromJust symOP
   where symOP = lookup op (arithmetic ++ condition)
 
-{-************** Other Regex Functions **************-}
-
-isAequalB :: String -> Bool
-isAequalB s = (not.null) (s =~ regex_ab :: [[String]])
-
-getB :: String -> String
-getB s = unwords $ map (head.tail) (s =~ regex_ab :: [[String]])
-
 {-************** remove character or substring from String **************-}
 
 rmChar :: String -> String -> String
@@ -95,9 +87,9 @@ splitOneOf' dlm str = filter (not.null) $ map strip (splitOneOf dlm str)
 replaceline :: String -> String -> [String] -> [String]
 replaceline old new [] = []
 replaceline old new (x:xs)
-  | (old == x) = trace(old ++ " -> " ++ new)new : (replaceline old new xs)
-  | (old == v) = trace(old ++ " ->> " ++ f ++ new ++ b)(f ++ new ++ b) : (replaceline old new xs)
-  | otherwise = x : (replace' old new xs)
+  | (old == x) = new : (replaceline old new xs) --trace(old ++ " -> " ++ new)
+  | (old == v) = (f ++ new ++ b) : (replaceline old new xs) --trace(old ++ " ->> " ++ f ++ new ++ b)
+  | otherwise = x : (replaceline old new xs)
     where v = str_var ++ get_regexLine x regex_var
           [f, b] = get_regexLine_all x regex_fbpadding
 
@@ -358,7 +350,7 @@ getData bit dataAddr dataValue address = do
   let str = (splitByLength 2 dataValue)
       at =(address - dataAddr)
       n = (round (fromIntegral(bit) / 8))
-  trace(show (length str) ++ " > " ++ "(" ++ show (at + n) ++ ")") concat $ littleEnd (splitByLength 2 dataValue) (address - dataAddr) (round (fromIntegral(bit) / 8))
+  concat $ littleEnd (splitByLength 2 dataValue) (address - dataAddr) (round (fromIntegral(bit) / 8))
 
 {-************************************************************************
                               Use (variable)

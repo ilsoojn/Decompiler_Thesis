@@ -106,7 +106,7 @@ detectIdiom (line: next) fn pre vList
                 %v2 = inttoptr int_type %register_ptr to ptr_type
     -}
     if (isBinary rhs)
-      then if ((isNum $ last reg) || (isNum $ head reg))
+      then if (or $ map isNum reg)
           then do
             let ptr = bool (last reg) (head reg) (isNum $ last reg)
                 idx = bool (read (head reg) :: Integer) (read (last reg) :: Integer) (isNum $ last reg)
