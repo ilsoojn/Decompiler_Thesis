@@ -1,70 +1,70 @@
 define void @fn_400480(%regset* noalias nocapture) {
 entry_fn_400480:
 %RIP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 14
-%RIP_init = %regset*
+%RIP_init = %RIP_ptr
 %RIP = alloca i64
 store i64 %RIP_init, i64* %RIP
-%EIP_init = %regset*
+%EIP_init = %RIP_ptr
 %EIP = alloca i32
 store i32 %EIP_init, i32* %EIP
 %RBP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 9
-%RBP_init = %regset*
+%RBP_init = %RBP_ptr
 %RBP = alloca i64
 store i64 %RBP_init, i64* %RBP
 %RSP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 16
-%RSP_init = %regset*
+%RSP_init = %RSP_ptr
 %RSP = alloca i64
 store i64 %RSP_init, i64* %RSP
-%ESP_init = %regset*
+%ESP_init = %RSP_ptr
 %ESP = alloca i32
 store i32 %ESP_init, i32* %ESP
-%EBP_init = %regset*
+%EBP_init = %RBP_ptr
 %EBP = alloca i32
 store i32 %EBP_init, i32* %EBP
 %RAX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 8
-%RAX_init = %regset*
+%RAX_init = %RAX_ptr
 %RAX = alloca i64
 store i64 %RAX_init, i64* %RAX
-%EAX_init = %regset*
+%EAX_init = %RAX_ptr
 %EAX = alloca i32
 store i32 %EAX_init, i32* %EAX
-%1 = lshr i64 %regset*, 8
+%1 = lshr i64 %RAX_init, 8
 %ZMM0_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 85
-%ZMM0_init = %regset*
+%ZMM0_init = %ZMM0_ptr
 %ZMM0 = alloca <16 x float>
 store <16 x float> %ZMM0_init, <16 x float>* %ZMM0
-%2 = %regset*
-%3 = %2
-%XMM0_init = %regset*
+%2 = %ZMM0_init
+%3 = %ZMM0_init
+%XMM0_init = %ZMM0_ptr
 %XMM0 = alloca <4 x float>
 store <4 x float> %XMM0_init, <4 x float>* %XMM0
-%4 = %regset*
-%5 = %4
-%YMM0_init = %regset*
+%4 = %ZMM0_init
+%5 = %ZMM0_init
+%YMM0_init = %ZMM0_ptr
 %YMM0 = alloca <8 x float>
 store <8 x float> %YMM0_init, <8 x float>* %YMM0
 %ZMM1_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 86
-%ZMM1_init = %regset*
+%ZMM1_init = %ZMM1_ptr
 %ZMM1 = alloca <16 x float>
 store <16 x float> %ZMM1_init, <16 x float>* %ZMM1
-%6 = %regset*
-%7 = %6
-%XMM1_init = %regset*
+%6 = %ZMM1_init
+%7 = %ZMM1_init
+%XMM1_init = %ZMM1_ptr
 %XMM1 = alloca <4 x float>
 store <4 x float> %XMM1_init, <4 x float>* %XMM1
-%8 = %regset*
-%9 = %8
-%YMM1_init = %regset*
+%8 = %ZMM1_init
+%9 = %ZMM1_init
+%YMM1_init = %ZMM1_ptr
 %YMM1 = alloca <8 x float>
 store <8 x float> %YMM1_init, <8 x float>* %YMM1
 %RCX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 11
-%RCX_init = %regset*
+%RCX_init = %RCX_ptr
 %RCX = alloca i64
 store i64 %RCX_init, i64* %RCX
-%ECX_init = %regset*
+%ECX_init = %RCX_ptr
 %ECX = alloca i32
 store i32 %ECX_init, i32* %ECX
-%10 = lshr i64 %regset*, 8
+%10 = lshr i64 %RCX_init, 8
 br label %bb_400480
 exit_fn_400480:                                   ; preds = %bb_400480
 %13 = load i64, i64* %RAX
@@ -88,7 +88,7 @@ bb_400480:                                        ; preds = %entry_fn_400480
 %RBP_0 = %RBP
 %RSP_0 = %RSP
 %21 = %RSP-8
-store i64 %RBP_0, i64* %21, align 1
+store i64 %RBP, i64* %RSP-8, align 1
 %RSP_1 = %RSP-8
 %ESP_0 = %RSP-8
 %RIP_2 = 4195460
@@ -104,103 +104,104 @@ store i64 %RBP_0, i64* %21, align 1
 %RIP_4 = 4195470
 %EIP_3 = 4195470
 %24 = 4195672
-%25 = load double, double* %24, align 1
+%25 = load double, double* 4195672, align 1
 %26 = %25
 %ZMM0_0 = %ZMM0
 %27 = %ZMM0
 %XMM0_0 = %ZMM0
-%XMM0_1 = %XMM0_0 : %25
+%XMM0_1 = %25
 %30 = %ZMM0
 %YMM0_0 = %ZMM0
-%YMM0_1 = %YMM0_0 : %XMM0_1
+%YMM0_1 = %25
 %33 = %ZMM0
-%ZMM0_1 = %33 : %XMM0_1
+%ZMM0_1 = %25
 %RIP_5 = 4195478
 %EIP_4 = 4195478
 %37 = 4195680
-%38 = load double, double* %37, align 1
+%38 = load double, double* 4195680, align 1
 %39 = %38
 %ZMM1_0 = %ZMM1
 %40 = %ZMM1
 %XMM1_0 = %ZMM1
-%XMM1_1 = %XMM1_0 : %38
+%XMM1_1 = %38
 %43 = %ZMM1
 %YMM1_0 = %ZMM1
-%YMM1_1 = %YMM1_0 : %XMM1_1
+%YMM1_1 = %38
 %46 = %ZMM1
-%ZMM1_1 = %46 : %XMM1_1
+%ZMM1_1 = %38
 %RIP_6 = 4195485
 %EIP_5 = 4195485
 %50 = %RSP-12
-store i32 0, i32* %50, align 1
+store i32 0, i32* %RSP-12, align 1
 %RIP_7 = 4195492
 %EIP_6 = 4195492
 %52 = %RSP-16
-store i32 10, i32* %52, align 1
+store i32 10, i32* %RSP-16, align 1
 %RIP_8 = 4195497
 %EIP_7 = 4195497
-%53 = %XMM1_0
+%53 = %38
 %54 = %38
 %56 = %RSP-24
-store double %38, double* %56, align 1
+store double %38, double* %RSP-24, align 1
 %RIP_9 = 4195502
 %EIP_8 = 4195502
-%57 = %XMM0_0
+%57 = %25
 %58 = %25
 %60 = %RSP-32
-store double %25, double* %60, align 1
+store double %25, double* %RSP-32, align 1
 %RIP_10 = 4195505
 %EIP_9 = 4195505
 %62 = %RSP-16
-%ECX_0 = [ %RSP-16 ]
+%ECX_0 = %RSP-16
 %RCX_0 = %RCX
 %RCX_1 = %RSP-16
-%63 = lshr i32 [ %RSP-16 ], 8
+%63 = lshr i32 %RSP-16, 8
 %RIP_11 = 4195509
 %EIP_10 = 4195509
-%64 = [ %RSP-16 ]
-%65 = %64
-%XMM0_2 = %XMM0_1 : %64
-%YMM0_2 = %YMM0_1 : %XMM0_2
-%ZMM0_2 = %ZMM0_1 : %XMM0_2
+%64 = %RSP-16
+%65 = %RSP-16
+%XMM0_2 = %RSP-16
+%YMM0_2 = %RSP-16
+%ZMM0_2 = %RSP-16
 %RIP_12 = 4195514
 %EIP_11 = 4195514
-%72 = %XMM0_1
-%73 = %64
+%72 = %RSP-16
+%73 = %RSP-16
 %75 = %RSP-32
-%76 = load double, double* %75, align 1
-%77 = fmul double %64, %76
+%76 = load double, double* %RSP-32, align 1
+%77 = fmul double %RSP-16, %76
 %78 = %77
-%XMM0_3 = %XMM0_2 : %77
-%YMM0_3 = %YMM0_2 : %XMM0_3
-%ZMM0_3 = %ZMM0_2 : %XMM0_3
+%XMM0_3 = %77
+%YMM0_3 = %77
+%ZMM0_3 = %77
 %RIP_13 = 4195519
 %EIP_12 = 4195519
-%85 = %XMM0_2
+%85 = %77
 %86 = %77
 %88 = %RSP-24
-%89 = load double, double* %88, align 1
+%89 = load double, double* %RSP-24, align 1
 %90 = fadd double %77, %89
 %91 = %90
-%XMM0_4 = %XMM0_3 : %90
-%YMM0_4 = %YMM0_3 : %XMM0_4
-%ZMM0_4 = %ZMM0_3 : %XMM0_4
+%XMM0_4 = %90
+%YMM0_4 = %90
+%ZMM0_4 = %90
 %RIP_14 = 4195524
 %EIP_13 = 4195524
-%98 = %XMM0_3
+%98 = %90
 %99 = %90
 %101 = %RSP-40
-store double %90, double* %101, align 1
+store double %90, double* %RSP-40, align 1
 %RIP_15 = 4195525
 %EIP_14 = 4195525
 %RSP_2 = %RSP
 %ESP_1 = %RSP
 %103 = %RSP-8
-%RBP_1 = [ %RSP+8 ]
-%EBP_1 = %RSP+8
+%RBP_1 = %RSP-8
+%EBP_1 = %RSP-8
 %RIP_16 = 4195526
 %EIP_15 = 4195526
-%104 = %RSP+8
+%RSP_3 = %RSP+8
+%104 = %RSP
 %RIP_17 = %RSP
 %ESP_2 = %RSP+8
 %EIP_16 = %RSP
@@ -223,27 +224,27 @@ store double %90, double* %101, align 1
 %123 = false
 %124 = shl i32 false, 11
 store i32 %EAX_1, i32* %EAX
-store i32 %EBP_1, i32* %EBP
-store i32 %ECX_0, i32* %ECX
-store i32 %EIP_16, i32* %EIP
-store i32 %ESP_2, i32* %ESP
-store i64 %RAX_1, i64* %RAX
-store i64 %RBP_1, i64* %RBP
-store i64 %RCX_1, i64* %RCX
-store i64 %RIP_17, i64* %RIP
-store i64 %RSP_3, i64* %RSP
-%125 = %XMM0_3
+store i32 %RSP-8, i32* %EBP
+store i32 %RSP-16, i32* %ECX
+store i32 %RSP, i32* %EIP
+store i32 %RSP+8, i32* %ESP
+store i64 %EAX_1, i64* %RAX
+store i64 %RSP-8, i64* %RBP
+store i64 %RSP-16, i64* %RCX
+store i64 %RSP, i64* %RIP
+store i64 %RSP+8, i64* %RSP
+%125 = %90
 store <4 x float> %90, <4 x float>* %XMM0
-%126 = %XMM1_0
+%126 = %38
 store <4 x float> %38, <4 x float>* %XMM1
-%127 = %YMM0_3
-store <8 x float> %XMM0_4, <8 x float>* %YMM0
-%128 = %YMM1_0
-store <8 x float> %XMM1_1, <8 x float>* %YMM1
-%129 = %ZMM0_3
-store <16 x float> %XMM0_4, <16 x float>* %ZMM0
-%130 = %46
-store <16 x float> %XMM1_1, <16 x float>* %ZMM1
+%127 = %90
+store <8 x float> %90, <8 x float>* %YMM0
+%128 = %38
+store <8 x float> %38, <8 x float>* %YMM1
+%129 = %90
+store <16 x float> %90, <16 x float>* %ZMM0
+%130 = %38
+store <16 x float> %38, <16 x float>* %ZMM1
 br label %exit_fn_400480
 }
 

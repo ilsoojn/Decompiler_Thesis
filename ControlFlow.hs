@@ -21,31 +21,6 @@ import OtherFunction
 import RegexFunction
 import Lists
 
-nameConversion content [] = content
-nameConversion content ((location, str) : nameList) = trace(location ++ " :: " ++ str) nameConversion (replace' location str content) nameList
-
-variableName [] nameList vList content = (content, (vList, nameList))
-variableName (line : next) nameList vList content
-  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) = variableName next nameList vList (content ++ [line])
-  | (isPrefixOf "store" line) = do
-    let s = storeStatement line
-        (vtype, v, addr) = (ty s, value s, at s)
-        str = lookup addr nameList
-        vname = bool (fromJust str) (str_var ++ (names !! length nameList)) (isNothing str)
-        pair = (addr, vname) --trace("(" ++ addr ++ ", " ++ vname ++ ")")
-
-        tmpSz = dropWhile (isLetter) vtype
-        align_sz = bool (show $ round $ fromInteger(strToInt tmpSz)/8) ("8") (vtype == "double")
-        state = "alloca " ++ vtype ++ ", align " ++ align_sz
-        v' = LeftVar vname vtype "alloca" state
-        newState = vname ++ " = " ++ state
-
-    if (isNothing str)
-      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line])
-      else variableName next nameList vList (content ++ [line])
-
-  | otherwise = variableName next nameList vList (content ++ [line])
-
 splitBasicBlock :: [String] -> String -> [String] -> [String]  -> [BasicBlock] -> [BasicBlock]
 splitBasicBlock [] _ _ _ blockList = blockList
 splitBasicblock (line : next) label preds content list

@@ -21,6 +21,33 @@ import OtherFunction
 import RegexFunction
 import Lists
 
+
+propagateName content [] = content
+propagateName content ((location, str) : nameList) = trace(location ++ " :: " ++ str) propagateName (replace' location str content) nameList
+
+variableName [] nameList vList content = (content, (vList, nameList))
+variableName (line : next) nameList vList content
+  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) = variableName next nameList vList (content ++ [line])
+  | (isPrefixOf "store" line && (not $ or $ map (`elem` reg_base) (words line)) && (not $ hasInitialPointer line)) = do
+    let s = storeStatement line
+        (vtype, v, addr) = (ty s, value s, at s)
+        str = lookup addr nameList
+        vname = bool (fromJust str) (str_var ++ (names !! length nameList)) (isNothing str)
+        pair = (addr, vname) --trace("(" ++ addr ++ ", " ++ vname ++ ")")
+
+        tmpSz = dropWhile (isLetter) vtype
+        align_sz = bool (show $ round $ fromInteger(strToInt tmpSz)/8) ("8") (vtype == "double")
+        state = "alloca " ++ vtype ++ ", align " ++ align_sz
+        v' = LeftVar vname vtype "alloca" state
+        newState = vname ++ " = " ++ state
+
+    if (isNothing str)
+      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line])
+      else variableName next nameList vList (content ++ [line])
+
+  | otherwise = variableName next nameList vList (content ++ [line])
+
+
 propagateRegister :: [String] -> String -> RP -> [LeftVar] -> [String] -> ([String], [LeftVar])
 propagateRegister [] ptr p vList content = (content, vList)
 propagateRegister (line : nextCont) ptr p vList content
@@ -124,7 +151,7 @@ propagateVariable (line : nextCont) old new vList preCont
             let newState = "[" ++ new ++ "]"
                 v' = fromJust $ lookupList v vList
                 newList = updateList (setState newState v') vList []
-            propagateVariable nextCont old new newList (preCont ++ [v ++ " = [" ++ new ++ "]"]) --trace(" (" ++ old ++ " -> " ++ new ++") " ++ line)
+            propagateVariable nextCont old new newList (preCont ++ [replace old new line])--(preCont ++ [v ++ " = [" ++ new ++ "]"]) --trace(" (" ++ old ++ " -> " ++ new ++") " ++ line)
 
           else do
             let newState = replace old new state
@@ -144,29 +171,6 @@ propagateVariable (line : nextCont) old new vList preCont
         propagateVariable nextCont old new vList (preCont ++ [newLine]) --trace(" (" ++ old ++ " -> " ++ new ++") " ++ line)
 
       else propagateVariable nextCont old new vList (preCont ++ [line])
-
-propagateName :: [String] -> [(String, String)] -> [LeftVar] -> [RP] -> [String] -> ([String], ([LeftVar], [RP]))
-propagateName content [] vList pList preCont = (preCont, (vList, pList))
-propagateName (line : nextCont) nameList vList pList preCont
-  | (isPrefixOf "store" line) = do
-    let s = storeStatement line
-        (t, v, location) = (ty s, value s, at s)
-
-        str = lookup location nameList
-        vname = bool (fromJust str) (str_var ++ (names !! length nameList)) (isNothing str)
-        pair = (location, vname) --trace("(" ++ location ++ ", " ++ vname ++ ")")
-        align_sz = bool ("8") (dropWhile (isLetter) t) (t == "double")
-        v' = LeftVar vname t "alloca" ("alloca " ++ t ++ ", align " ++ align_sz)
-
-        newState = vname ++ " = alloca " ++ t ++ ", align " ++ align_sz
-        newLine = replace location vname line
-        newPre = replace' location vname preCont
-
-    if (isNothing str)
-      then propagateName nextCont (pair : nameList) (v' : vList) pList ((newState : newPre) ++ [newLine])
-      else propagateName nextCont nameList vList pList (newPre ++ [newLine])
-
-  | otherwise = propagateName nextCont nameList vList pList (preCont ++ [line])
 
 propagation :: String -> [String] -> [LeftVar] -> [RP] -> [String] -> ([String], ([LeftVar], [RP]))
 propagation _ [] vList pList preCont = (preCont, (vList, pList))
@@ -224,22 +228,22 @@ propagation fname (line: nextCont) vList pList preCont
           _->
             if (isLoad xvar)
               then do
-                let newState = "[" ++ head xreg ++ "]"
+                let newState = replace v (head xreg) (snd $  strSplit' "=" line)--"[" ++ head xreg ++ "]"
                     v' = fromJust $ lookupList v vList
                     newList = updateList (setState newState v') vList []
                 propagation fname nextCont newList pList (preCont ++ [v ++ " = " ++ newState])
               -- else propagation fname nextCont vList pList (preCont ++ [line])
               else
-                if (op xvar == "icmp" || op xvar == "fcmp")
-                  then do
-                    let symbol = sym xvar
-                        [a, b] = values xvar
-                        newState = concat["(", a, symbol, b, ")"]
-                        (new_nextCont, newList) = propagateVariable nextCont v newState vList []
-                    propagation fname new_nextCont newList pList (preCont ++ [v ++ " = " ++ newState])
-                  else
-                    if (op xvar == "equal")
-                      then propagation fname (replace' v (getRHS line) nextCont) vList pList (preCont ++ [line])
-                      else propagation fname nextCont vList pList (preCont ++ [line])
+                -- if (op xvar == "icmp" || op xvar == "fcmp")
+                --   then do
+                --     let symbol = sym xvar
+                --         [a, b] = values xvar
+                --         newState = concat["(", a, symbol, b, ")"]
+                --         (new_nextCont, newList) = propagateVariable nextCont v newState vList []
+                --     propagation fname new_nextCont newList pList (preCont ++ [v ++ " = " ++ newState])
+                --   else
+                if (op xvar == "equal")
+                  then propagation fname (replace' v (getRHS line) nextCont) vList pList (preCont ++ [line])
+                  else propagation fname nextCont vList pList (preCont ++ [line])
 
   | otherwise = propagation fname nextCont vList pList (preCont ++ [line])

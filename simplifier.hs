@@ -67,13 +67,41 @@ remove_r (r:rs) content = do
 {-************************************************************************
       Split Up Contents by Function and Create a list of Varaibles
   ************************************************************************-}
+-- splitFn :: [String] -> [String]-> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
+-- splitFn [] content fn c v p set = set
+-- splitFn (line: nextC) preC fn cList vList pList set
+--   | (isFunction line) = splitFn nextC (preC ++ [line]) (getFunctionName line) [line] [] [] set
+--   | (isFunctionEnd line) = splitFn nextC (preC ++ [line]) fn [] [] [] $ set ++ [(cList ++ [line], (vList, pList))]
+--   -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
+--   | (isLHS line fn) = do
+--     let (x, (des, reg)) = statement line
+--         (v, state) = strSplit' "=" line
+--
+--         variable = fromJust x
+--         vtype = variableType des
+--         instr = head $ words state
+--
+--     case (isRegPointer $ fromJust x) of
+--       True -> do
+--         let rp = pointerInfo variable state pList vList preC
+--             newList_ptr = pList ++ [rp]
+--             newList_var = addVariable variable vtype instr state vList
+--             newLine = concat[v, " = ", getRstate rp]
+--         splitFn nextC (preC ++ [line]) fn (cList ++ [line]) newList_var newList_ptr set
+--
+--       _ -> do
+--         let newList = addVariable variable vtype instr state vList
+--         splitFn nextC (preC ++ [line]) fn (cList ++ [line]) newList pList set
+--
+--   | otherwise = splitFn nextC (preC ++ [line]) fn (cList ++ [line]) vList pList set
+
 splitFn :: [String] -> String -> [String] -> [LeftVar] -> [RP] -> [([String] , ([LeftVar],[RP]))] -> [([String] , ([LeftVar],[RP]))]
 splitFn [] fn c v p set = set
-splitFn (line: nextC) fn cList vList pList set
-  | (isFunction line) = splitFn nextC (getFunctionName line) [line] [] [] set
-  | (isFunctionEnd line) = splitFn nextC fn [] [] [] $ set ++ [(cList ++ [line], (vList, pList))]
-  -- | (isPrefixOf "entry_fn_" line || isPrefixOf "exit_fn_" line) =  splitFn (fnStartEndBlock (line:nextC)) fn cList vList pList set
-  | (isLHS line fn) = do
+splitFn (line: content) fn cList vList pList set
+  | (isFunction line) = splitFn content (getFunctionName line) [] [] [] $ set ++ [(line:cList, (vList, pList))]
+  | (isFunctionEnd line) = splitFn content fn [line] [] [] set
+  | (isBasicBlock line || isBlockLabel line || isEntryExit line) =  splitFn content fn (line:cList) vList pList set
+  | (isLHS line "temporary") = do
     let (x, (des, reg)) = statement line
         (v, state) = strSplit' "=" line
 
@@ -81,57 +109,40 @@ splitFn (line: nextC) fn cList vList pList set
         vtype = variableType des
         instr = head $ words state
 
-    case (isRegPointer $ fromJust x) of
+    case (isRegPointer v) of
       True -> do
-        let rp = pointerInfo variable state pList vList
+        let rp = pointerInfo variable state pList vList content
             newList_ptr = pList ++ [rp]
             newList_var = addVariable variable vtype instr state vList
-            newLine = concat[v, " = ", getRstate rp]
-        splitFn nextC fn (cList ++ [line]) newList_var newList_ptr set
+            newLine = concat[v, " = ", getRstate rp]--trace(v ++ ": (" ++ getBase rp ++ ", " ++ show (getIndex rp) ++ ") : " ++ getRstate rp)
+        splitFn content fn (newLine:cList) newList_var newList_ptr set
 
       _ -> do
         let newList = addVariable variable vtype instr state vList
-        splitFn nextC fn (cList ++ [line]) newList pList set
+        splitFn content fn (line:cList) newList pList set
 
-  | otherwise = splitFn nextC fn (cList ++ [line]) vList pList set
+  | otherwise = splitFn content fn (line:cList) vList pList set
 
--- fnRun :: [([String] , ([LeftVar],[RP]))] -> Int -> String -> [([String] , ([LeftVar],[RP]))]
--- fnRun [] _ _ = []
--- fnRun ((content, (vList, pList)):fs) dataAddr dataValue=  do
---   let (functionName, (content_i, vList_i)) = (detectIdiom content "" [] vList)
---       (content_p, (vList_p, pList_p)) = propagation functionName content_i vList_i pList []
---       (content_e, vList_e) = elimination content_p vList_p pList_p
---   -- (content_e, (vList_e, pList_p)):fnRun fs dataAddr dataValue
---   (content_p, (vList_p, pList_p)):fnRun fs dataAddr dataValue
---   -- (content_i, (vList_i, pList)):fnRun fs dataAddr dataValue
-
-forMod (f:fs) (v:vs) addr val = do
-  let tmp1 = precisionConversion f addr val []
-      (tmp2, v2) = variableName tmp1 [] v []
-      tmp3 = nameConversion tmp2 []
-  tmp3 : (forMod fs vs addr val)
-
-forFunction :: String -> [ ([String] , ([LeftVar],[RP])) ] -> Int -> String -> [( [String], [LeftVar] )]
+forFunction :: String -> [ ([String] , ([LeftVar],[RP])) ] -> Int -> String -> [( [String], ([LeftVar], [RP]) )]
 forFunction _ [] _ _ = []
 forFunction run (f : fs) addr val = do
-  let (fname, (iContent, vIdiom)) = trace("IDIOM:")detectIdiom content "" [] vlist
-      (pContent, (vProp, pProp)) = trace("PROPAGATION:")propagation fname iContent vIdiom plist []
-      (eContent, vElim) = trace("ELIMINATION:")elimination pContent vProp pProp
+  let (fname, (iContent, vIdiom)) = detectIdiom content "" [] vlist
+      (pContent, (vProp, pProp)) = propagation fname iContent vIdiom plist []
 
-      pcContent = trace("PRECISION:")precisionConversion eContent addr val []
+      (vnContent, (vName, nameList)) = variableName pContent [] vProp []
+      ncContent = propagateName vnContent (sort nameList)
 
-      (vnContent, (vName, nameList)) = trace("NAME LIST:")variableName pcContent [] vElim []
-      ncContent = trace("NAME CONVERSION:")nameConversion vnContent nameList
+      pcContent = precisionConversion ncContent addr val []
 
-      -- bBlock = splitBasicBlock ncContent "" [] [] []
+      (eContent, vElim) = elimination pcContent vName pProp
 
   case trace("-----" ++ fname ++ "----")run of
     -- let (content, (vlist, plist)) = f
-    "idiom" -> (iContent, vIdiom) : (forFunction run fs addr val)
-    "prop"  -> (pContent, vProp) : (forFunction run fs addr val)
-    "elim"  -> (eContent, vElim) : (forFunction run fs addr val)
-    "vname" -> (ncContent, vName) : (forFunction run fs addr val)
-    _ -> (ncContent, vName) : (forFunction run fs addr val)
+    "idiom" -> (iContent, (vIdiom, plist)) : (forFunction run fs addr val)
+    "prop"  -> (pContent, (vProp, pProp)) : (forFunction run fs addr val)
+    "vname" -> (ncContent, (vName, pProp)) : (forFunction run fs addr val)
+    "elim"  -> (eContent, (vElim, pProp)) : (forFunction run fs addr val)
+    _ -> (ncContent, (vName, pProp)) : (forFunction run fs addr val)
     -- _ -> do
     --   let (fname, (iContent, vIdiom)) = detectIdiom content "" [] vlist
     --       (pContent, (vProp, pProp)) = propagation fname iContent vIdiom plist []
@@ -184,17 +195,21 @@ main = do
           let unnecessaryReg = reg_8 ++ reg_16 ++ flags ++ ["%IP"]
               sourceIR = remove_r unnecessaryReg $ (init.lines.fst) (strSplit str_main  contentIr)
               nameIR = filter (not.null) $ map strip sourceIR
-              functionIR = splitFn nameIR "" [] [] [] []
+              functionIR = splitFn (reverse nameIR) "" [] [] [] []
+              -- functionIR = splitFn nameIR [] "" [] [] [] []
 
               -- runOption = "idiom"
               -- runOption = "prop"
-              runOption = "vname"
+              -- runOption = "vname"
+              runOption = "elim"
               trimS = forFunction runOption functionIR address values
               trimContent = map fst trimS -- [(content)]
-              trimListV = map snd trimS
+              trimListV = map fst $ map snd trimS -- map snd trimS
+              trimListP = map snd $ map snd trimS -- map snd trimS
 
-              -- result = forMod trimContent trimListV address values
-
+          -- mapM_ print (printRP $ head trimListP)
+          -- putStrLn ""
+          -- mapM_ print (printLV $ head trimListV)
           -- hPutStr handleTmp $ unlines sourceIR
           hPutStr handleTmp $ unlines (map unlines trimContent)
 

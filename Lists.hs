@@ -135,6 +135,6 @@ regex_equal = ".* = %([0-9a-zA-Z\\+\\_\\-]*)"
 regex_equalLoad = ".* = \\[([0-9a-zA-Z\\%\\+\\_\\-]*)\\]"
 regex_equalNumber = ".* = ([0-9\\+\\-]*)"
 
-regex_rhs = "%([a-zA-Z0-9\\+\\_\\-]*)"
+regex_rhs = "%([a-zA-Z0-9\\+\\%\\_\\-]*)"
 regex_rhsLoad = "\\[([0-9a-zA-Z\\%\\+\\_\\-]*)\\]"
 regex_rhsNumber = "([0-9\\+\\-]*)"

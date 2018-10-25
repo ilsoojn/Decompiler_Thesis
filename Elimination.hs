@@ -26,12 +26,15 @@ precisionConversion [] _ _ content = content
 precisionConversion (line : next) addr val preCont
   | (isInfixOf " = " line) = do
     let [v, state] = splitOn " = " line
-    if (isEqualState state && isDoubleRHS state)
+        (lhs, (x, r)) = statement line
+    --if (isEqualState state && isDoubleRHS state)
+    if (isLoad x && "double" == (ty x) && isNum(ptr x))
       then do
-        let address = fromInteger $ strToInt $ getDoubleRHS state
+        -- let address = fromInteger $ strToInt $ getDoubleRHS state
+        let address = fromInteger $ strToInt (ptr x)
             value = getData 64 addr val address
             double = show $ strHexToDouble 64 value
-            newLine = trace(v ++ " -> " ++ double) concat[v, " = ", double]
+            newLine = concat[v, " = ", double]
             new_next = replace' v double next
         precisionConversion new_next addr val (preCont ++ [newLine])
 
@@ -41,13 +44,13 @@ precisionConversion (line : next) addr val preCont
 -- Def(ops) > 0 := True / False
 hasNoDef [] vList = False
 hasNoDef (v:vs) vList
-  | (isNothing vInfo) = True
+  | (isNothing vInfo) = trace("hasNoDef("++v++") x" ) True
   | otherwise = False || (hasNoDef vs vList)
   where vInfo = lookupList v vList
 
 variableElim :: Bool -> [String] -> [LeftVar] -> [RP] -> [String] -> ([String], [LeftVar])
 variableElim False [] vList pList preCont = (preCont, vList)
-variableElim True [] vList pList preCont = variableElim False preCont vList pList []
+variableElim True [] vList pList preCont = trace("\n-----------------\n")variableElim False preCont vList pList []
 variableElim change (line : nextCont) vList pList preCont
   -- | (isFunction line) = variableElim change nextCont (getFunctionName line) vList pList (preCont ++ [line])
   | (isFunction line || isBlockLabel line || isBasicBlock line) = variableElim change nextCont vList pList (preCont ++ [line])
@@ -64,19 +67,19 @@ variableElim change (line : nextCont) vList pList preCont
         -- DEAD Variable
         if (isNothing $ lookupList v vList)
           then do
-             variableElim True nextCont vList pList preCont -- trace("use(" ++ v ++ ") = 0 : " ++ line)
+             trace("use(" ++ v ++ ") = 0 : " ++ line) variableElim True nextCont vList pList preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
           else do
             let v' = fromJust $ lookupList v vList
                 newList = removeVariable v' vList []
-            variableElim True nextCont newList pList preCont -- trace("use(" ++ v ++ ") = 0 : " ++ line)
+            trace("use(" ++ v ++ ") = 0 : " ++ line) variableElim True nextCont newList pList preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
 
       else if (hasNoDef op_variable vList)
         then
           -- LIVE Variable but NoDef(ops)
-          variableElim True nextCont vList pList preCont -- trace("def(" ++ v ++ ") = 0 : " ++ line)
+          trace("def(" ++ v ++ ") = 0 : " ++ line) variableElim True nextCont vList pList preCont --trace("def(" ++ v ++ ") = 0 : " ++ line)
         else
           -- LIVE Variable and Def(ops)
-          variableElim change nextCont vList  pList (preCont ++ [line]) -- trace("good\t" ++ line)
+          trace("good\t" ++ line) variableElim change nextCont vList  pList (preCont ++ [line]) --trace("good\t" ++ line)
 
   | otherwise= do
     -- No LHS
@@ -93,10 +96,10 @@ variableElim change (line : nextCont) vList pList preCont
         if (hasNoDef op_var vList)
           then
             -- NoDef(ops)
-            variableElim True nextCont vList pList preCont -- trace("def( - ) = 0 : " ++ line)
+            trace("def( - ) = 0 : " ++ line) variableElim True nextCont vList pList preCont --trace("def( - ) = 0 : " ++ line)
           else
             -- Def(ops)
-            variableElim change nextCont vList pList (preCont ++ [line]) -- trace("good\t" ++ line)
+            trace("good\t" ++ line)variableElim change nextCont vList pList (preCont ++ [line]) --trace("good\t" ++ line)
 
 elimination :: [String] -> [LeftVar] -> [RP] -> ([String], [LeftVar])
 elimination content vList pList = do
