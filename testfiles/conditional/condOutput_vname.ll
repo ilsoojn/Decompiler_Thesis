@@ -1,4 +1,5 @@
 define void @fn_400480(%regset* noalias nocapture) {
+%j = alloca i32, align 4
 %i = alloca i32, align 4
 %h = alloca i32, align 4
 %g = alloca i32, align 4
@@ -58,6 +59,14 @@ store <4 x float> %XMM1_init, <4 x float>* %XMM1
 %YMM1_init = %ZMM1_ptr
 %YMM1 = alloca <8 x float>
 store <8 x float> %YMM1_init, <8 x float>* %YMM1
+%CtlSysEFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 1
+%CtlSysEFLAGS_init = load i32, i32* %CtlSysEFLAGS_ptr
+%e = alloca i32
+store i32 %CtlSysEFLAGS_init, i32* %e
+%EFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 3
+%EFLAGS_init = %EFLAGS_ptr
+%EFLAGS = alloca i32
+store i32 %EFLAGS_init, i32* %EFLAGS
 %RAX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 8
 %RAX_init = %RAX_ptr
 %RAX = alloca i64
@@ -76,6 +85,10 @@ store i32 %ECX_init, i32* %ECX
 %10 = lshr i64 %RCX_init, 8
 br label %bb_400480
 exit_fn_400480: ; preds = %bb_40053F
+%11 = load i32, i32* %e
+store i32 %11, i32* %CtlSysEFLAGS_ptr
+%12 = load i32, i32* %EFLAGS
+store i32 %12, i32* %EFLAGS_ptr
 %13 = load i64, i64* %RAX
 store i64 %13, i64* %RAX_ptr
 %14 = load i64, i64* %RBP
@@ -164,22 +177,31 @@ store double %24, double* %d, align 1
 %ZF_0 = fcmp ueq double %60, %72
 %PF_0 = fcmp uno double %60, %72
 %CF_0 = fcmp ult double %60, %72
+%CtlSysEFLAGS_0 = load i32, i32* %e
 %73 = %CF_0
 %74 = shl i32 %CF_0, 0
+%75 = or i32 %74, %CtlSysEFLAGS_0
 %76 = %PF_0
 %77 = shl i32 %PF_0, 2
+%78 = or i32 %77, %75
 %79 = false
 %80 = shl i32 false, 4
+%81 = or i32 %80, %78
 %82 = %ZF_0
 %83 = shl i32 %ZF_0, 6
+%84 = or i32 %83, %81
 %85 = false
 %86 = shl i32 false, 7
+%87 = or i32 %86, %84
 %88 = false
 %89 = shl i32 false, 11
+%EFLAGS_0 = or i32 %87, %89
 %RIP_10 = 4195509
 %EIP_9 = 4195509
 %CC_NE_0 = xor i1 %ZF_0, true
+store i32 %CtlSysEFLAGS_0, i32* %e
 store i32 %a, i32* %EBP
+store i32 %EFLAGS_0, i32* %EFLAGS
 store i32 4195527, i32* %EIP
 store i32 %a, i32* %ESP
 store i64 %a, i64* %RBP
@@ -201,14 +223,19 @@ br i1 %CC_NE_0, label %bb_4004C7, label %bb_4004B5
 bb_4004B5: ; preds = %bb_400480
 %RIP_13 = 4195515
 %EIP_11 = 4195515
+%EFLAGS_1 = %EFLAGS_0
+%96 = lshr i32 %EFLAGS_0, 2
+%PF_01 = %96
+store i32 %EFLAGS_0, i32* %EFLAGS
 store i32 4195527, i32* %EIP
 store i64 4195527, i64* %RIP
+br i1 %96, label %bb_4004C7, label %bb_4004BB
 bb_4004BB: ; preds = %bb_4004B5
 %RIP_22 = 4195522
 %EIP_18 = 4195522
 %RBP_2 = %a
-%98 = %e
-store i32 0, i32* %e, align 1
+%98 = %f
+store i32 0, i32* %f, align 1
 %RIP_23 = 4195527
 %EIP_19 = 4195527
 store i32 4195571, i32* %EIP
@@ -254,21 +281,30 @@ bb_4004C7: ; preds = %bb_4004B5, %bb_400480
 %ZF_02 = fcmp ueq double %114, %101
 %PF_03 = fcmp uno double %114, %101
 %CF_04 = fcmp ult double %114, %101
+%CtlSysEFLAGS_1 = load i32, i32* %e
 %129 = %CF_04
 %130 = shl i32 %CF_04, 0
+%131 = or i32 %130, %CtlSysEFLAGS_1
 %132 = %PF_03
 %133 = shl i32 %PF_03, 2
+%134 = or i32 %133, %131
 %135 = false
 %136 = shl i32 false, 4
+%137 = or i32 %136, %134
 %138 = %ZF_02
 %139 = shl i32 %ZF_02, 6
+%140 = or i32 %139, %137
 %141 = false
 %142 = shl i32 false, 7
+%143 = or i32 %142, %140
 %144 = false
 %145 = shl i32 false, 11
+%EFLAGS_2 = or i32 %143, %145
 %RIP_19 = 4195547
 %EIP_16 = 4195547
 %CC_BE_0 = or i1 %CF_04, %ZF_02
+store i32 %CtlSysEFLAGS_1, i32* %e
+store i32 %EFLAGS_2, i32* %EFLAGS
 store i32 4195559, i32* %EIP
 store i64 %a, i64* %RBP
 store i64 4195559, i64* %RIP
@@ -289,8 +325,8 @@ bb_4004DB: ; preds = %bb_4004C7
 %RIP_26 = 4195554
 %EIP_21 = 4195554
 %RBP_3 = %a
-%153 = %e
-store i32 -1, i32* %e, align 1
+%153 = %f
+store i32 -1, i32* %f, align 1
 %RIP_27 = 4195559
 %EIP_22 = 4195559
 store i32 4195566, i32* %EIP
@@ -301,8 +337,8 @@ bb_4004E7: ; preds = %bb_4004C7
 %RIP_30 = 4195566
 %EIP_24 = 4195566
 %RBP_4 = %a
-%155 = %e
-store i32 1, i32* %e, align 1
+%155 = %f
+store i32 1, i32* %f, align 1
 store i32 4195566, i32* %EIP
 store i64 %a, i64* %RBP
 store i64 4195566, i64* %RIP
@@ -317,60 +353,73 @@ bb_4004F3: ; preds = %bb_4004EE, %bb_4004BB
 %RIP_32 = 4195574
 %EIP_25 = 4195574
 %RBP_5 = %a
-%157 = %e
-%EAX_0 = %e
+%157 = %f
+%EAX_0 = %f
 %RAX_0 = %RAX
-%RAX_1 = %e
-%158 = lshr i32 %e, 8
+%RAX_1 = %f
+%158 = lshr i32 %f, 8
 %RIP_33 = 4195576
 %EIP_26 = 4195576
 %RCX_0 = %RCX
-%RCX_1 = %e
-%159 = lshr i32 %e, 8
+%RCX_1 = %f
+%159 = lshr i32 %f, 8
 %RIP_34 = 4195579
 %EIP_27 = 4195579
 %ECX_0 = %RSP-35
 %RCX_2 = %RSP-35
 %160 = lshr i32 %RSP-35, 8
+%EFLAGS_3 = %EFLAGS_2
 %RIP_35 = 4195582
 %EIP_28 = 4195582
-%162 = %f
-store i32 %e, i32* %f, align 1
+%162 = %g
+store i32 %f, i32* %g, align 1
 %RIP_36 = 4195585
 %EIP_29 = 4195585
-%164 = %g
-store i32 %RSP-35, i32* %g, align 1
+%164 = %h
+store i32 %RSP-35, i32* %h, align 1
 %RIP_37 = 4195591
 %EIP_30 = 4195591
 %ZF_05 = icmp eq i32 %RSP-35, 0
 %SF_0 = icmp slt i32 %RSP-35, 0
-%165 = call { i32, i1 } @llvm.ssub.with.overflow.i32(i32 %e, i32 -1)
+%165 = call { i32, i1 } @llvm.ssub.with.overflow.i32(i32 %f, i32 -1)
 %OF_0 = extractvalue { i32, i1 } %165, 1
-%166 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %e, i32 -1)
+%166 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %f, i32 -1)
 %CF_06 = extractvalue { i32, i1 } %166, 1
 %167 = %RSP-35
 %168 = call i8 @llvm.ctpop.i8(i8 %RSP-35)
 %169 = %168
 %PF_07 = icmp eq i1 %168, false
+%CtlSysEFLAGS_2 = load i32, i32* %e
 %170 = %166
 %171 = shl i32 %166, 0
+%172 = or i32 %171, %CtlSysEFLAGS_2
 %173 = %PF_07
 %174 = shl i32 %PF_07, 2
+%175 = or i32 %174, %172
 %176 = false
 %177 = shl i32 false, 4
+%178 = or i32 %177, %175
 %179 = %ZF_05
 %180 = shl i32 %ZF_05, 6
+%181 = or i32 %180, %178
 %182 = %SF_0
 %183 = shl i32 %SF_0, 7
+%184 = or i32 %183, %181
 %185 = %165
 %186 = shl i32 %165, 11
-store i32 %e, i32* %EAX
+%EFLAGS_4 = or i32 %184, %186
+%187 = lshr i32 %EFLAGS_4, 6
+%ZF_1 = %187
+store i32 %CtlSysEFLAGS_2, i32* %e
+store i32 %f, i32* %EAX
 store i32 %RSP-35, i32* %ECX
+store i32 %EFLAGS_4, i32* %EFLAGS
 store i32 4195616, i32* %EIP
-store i64 %e, i64* %RAX
+store i64 %f, i64* %RAX
 store i64 %a, i64* %RBP
 store i64 %RSP-35, i64* %RCX
 store i64 4195616, i64* %RIP
+br i1 %187, label %bb_400520, label %bb_400507
 bb_400507: ; preds = %bb_4004F3
 %RIP_43 = 4195596
 %EIP_34 = 4195596
@@ -381,49 +430,62 @@ bb_40050C: ; preds = %bb_400507
 %RIP_50 = 4195599
 %EIP_39 = 4195599
 %RBP_7 = %a
-%189 = %f
-%EAX_1 = %f
-%RAX_2 = %e
-%RAX_3 = %f
-%190 = lshr i32 %f, 8
+%189 = %g
+%EAX_1 = %g
+%RAX_2 = %f
+%RAX_3 = %g
+%190 = lshr i32 %g, 8
 %RIP_51 = 4195602
 %EIP_40 = 4195602
 %EAX_2 = %RSP-45
 %RAX_4 = %RSP-45
 %191 = lshr i32 %RSP-45, 8
+%EFLAGS_5 = %EFLAGS_4
 %RIP_52 = 4195605
 %EIP_41 = 4195605
-%193 = %h
-store i32 %RSP-45, i32* %h, align 1
+%193 = %i
+store i32 %RSP-45, i32* %i, align 1
 %RIP_53 = 4195611
 %EIP_42 = 4195611
 %ZF_08 = icmp eq i32 %RSP-45, 0
 %SF_09 = icmp slt i32 %RSP-45, 0
-%194 = call { i32, i1 } @llvm.ssub.with.overflow.i32(i32 %f, i32 1)
+%194 = call { i32, i1 } @llvm.ssub.with.overflow.i32(i32 %g, i32 1)
 %OF_010 = extractvalue { i32, i1 } %194, 1
-%195 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %f, i32 1)
+%195 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %g, i32 1)
 %CF_011 = extractvalue { i32, i1 } %195, 1
 %196 = %RSP-45
 %197 = call i8 @llvm.ctpop.i8(i8 %RSP-45)
 %198 = %197
 %PF_012 = icmp eq i1 %197, false
+%CtlSysEFLAGS_3 = load i32, i32* %e
 %199 = %195
 %200 = shl i32 %195, 0
+%201 = or i32 %200, %CtlSysEFLAGS_3
 %202 = %PF_012
 %203 = shl i32 %PF_012, 2
+%204 = or i32 %203, %201
 %205 = false
 %206 = shl i32 false, 4
+%207 = or i32 %206, %204
 %208 = %ZF_08
 %209 = shl i32 %ZF_08, 6
+%210 = or i32 %209, %207
 %211 = %SF_09
 %212 = shl i32 %SF_09, 7
+%213 = or i32 %212, %210
 %214 = %194
 %215 = shl i32 %194, 11
+%EFLAGS_6 = or i32 %213, %215
+%216 = lshr i32 %EFLAGS_6, 6
+%ZF_113 = %216
+store i32 %CtlSysEFLAGS_3, i32* %e
 store i32 %RSP-45, i32* %EAX
+store i32 %EFLAGS_6, i32* %EFLAGS
 store i32 4195628, i32* %EIP
 store i64 %RSP-45, i64* %RAX
 store i64 %a, i64* %RBP
 store i64 4195628, i64* %RIP
+br i1 %216, label %bb_40052C, label %bb_40051B
 bb_40051B: ; preds = %bb_40050C
 %RIP_61 = 4195616
 %EIP_48 = 4195616
@@ -434,8 +496,8 @@ bb_400520: ; preds = %bb_4004F3
 %RIP_46 = 4195623
 %EIP_36 = 4195623
 %RBP_6 = %a
-%218 = %i
-store i32 -1, i32* %i, align 1
+%218 = %j
+store i32 -1, i32* %j, align 1
 %RIP_47 = 4195628
 %EIP_37 = 4195628
 store i32 4195647, i32* %EIP
@@ -446,8 +508,8 @@ bb_40052C: ; preds = %bb_40050C
 %RIP_64 = 4195635
 %EIP_50 = 4195635
 %RBP_10 = %a
-%220 = %i
-store i32 1, i32* %i, align 1
+%220 = %j
+store i32 1, i32* %j, align 1
 %RIP_65 = 4195640
 %EIP_51 = 4195640
 store i32 4195647, i32* %EIP
@@ -458,8 +520,8 @@ bb_400538: ; preds = %bb_40051B
 %RIP_68 = 4195647
 %EIP_53 = 4195647
 %RBP_11 = %a
-%222 = %i
-store i32 0, i32* %i, align 1
+%222 = %j
+store i32 0, i32* %j, align 1
 store i32 4195647, i32* %EIP
 store i64 %a, i64* %RBP
 store i64 4195647, i64* %RIP
@@ -468,11 +530,11 @@ bb_40053F: ; preds = %bb_400538, %bb_40052C, %bb_400520
 %RIP_56 = 4195650
 %EIP_44 = 4195650
 %RBP_8 = %a
-%224 = %i
-%EAX_3 = %i
+%224 = %j
+%EAX_3 = %j
 %RAX_5 = %RSP-45
-%RAX_6 = %i
-%225 = lshr i32 %i, 8
+%RAX_6 = %j
+%225 = lshr i32 %j, 8
 %RIP_57 = 4195651
 %EIP_45 = 4195651
 %RSP_2 = %a
@@ -488,11 +550,11 @@ bb_40053F: ; preds = %bb_400538, %bb_40052C, %bb_400520
 %RIP_59 = %RSP
 %ESP_2 = %RSP+8
 %EIP_47 = %RSP
-store i32 %i, i32* %EAX
+store i32 %j, i32* %EAX
 store i32 %a, i32* %EBP
 store i32 %RSP, i32* %EIP
 store i32 %RSP+8, i32* %ESP
-store i64 %i, i64* %RAX
+store i64 %j, i64* %RAX
 store i64 %a, i64* %RBP
 store i64 %RSP, i64* %RIP
 store i64 %RSP+8, i64* %RSP

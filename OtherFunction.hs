@@ -24,7 +24,7 @@ import StatementInstr
 
 
 {- Architecture Instructions related -}
-
+-- caller: parseStatement() @ StatementParse.hs
 getInstructionType ::  String -> String
 getInstructionType op
   | isNothing found_op = "none"
@@ -36,14 +36,6 @@ toSym op
   | isNothing symOP = "call"
   | otherwise = fromJust symOP
   where symOP = lookup op (arithmetic ++ condition)
-
-{-************** remove character or substring from String **************-}
-
-rmChar :: String -> String -> String
-rmChar ch str = (filter.flip notElem) ch str
-
-rmStr :: String -> String -> String
-rmStr st str = unwords $ splitOn st str
 
 {-************** Pop Front & Back **************-}
 
@@ -91,7 +83,9 @@ replaceline old new (x:xs)
   | (old == v) = (f ++ new ++ b) : (replaceline old new xs) --trace(old ++ " ->> " ++ f ++ new ++ b)
   | otherwise = x : (replaceline old new xs)
     where v = str_var ++ get_regexLine x regex_var
-          [f, b] = get_regexLine_all x regex_fbpadding
+          tmp = get_regexLine_all x regex_fbpadding
+          [f, b] = bool (fromJust tmp) ["", ""] (isNothing tmp)
+          -- [f, b] = fromJust (get_regexLine_all x regex_fbpadding)
 
 replace' :: String -> String -> [String] -> [String]
 replace' old new [] = []
@@ -113,23 +107,6 @@ replaceLine old new tyStr line
         r = tyStr ++ get_regexLine line regex_fb
     unwords $ replaceWord old new s r
   | otherwise = line
-
-
-{-************** USE(variable) **************-}
-
-usePropLine :: String -> String -> [String] -> [String]
-usePropLine old new [] = []
-usePropLine old new (x:xs)
-  | (not.null) rs = do
-    let (lpad : v : rpad :etc) = (tail.head) rs
-        new_word = bool x (lpad ++ new ++ rpad) ("%" ++ v == old)
-    (new_word : usePropLine old new xs)
-  | otherwise = (x : usePropLine old new xs)
-  where rs = (x =~ regex_padding :: [[String]])
-
-usePropagation :: String -> String -> [String] -> [String]
-usePropagation old new [] = []
-usePropagation old new (x:xs) = ((unwords $ usePropLine old new $ words x):(usePropagation old new xs))
 
 {-************************************************************************
                             Type conversions
@@ -220,7 +197,7 @@ isHexCap :: Char -> Bool
 isHexCap c = isDigit c || ((fromIntegral (ord c - ord 'A')::Word) <= 5)
 
 isNum :: String -> Bool
-isNum s = case reads s :: [(Double, String)] of
+isNum s = case (reads s :: [(Double, String)]) of
   [(_, "")] -> True
   [(_, "-")] -> True
   _         -> False
@@ -244,9 +221,6 @@ areZeros, hasZeros :: [Integer] -> Bool --(Num a, Integral a, Eq a, Floating a, 
 areZeros x = null $ dropWhile (==True) (map is0s x)
 hasZeros x = null $ takeWhile (==True) (map is0s x)
 
-complementSet :: [String] -> [String] -> [String]
-complementSet [] _ = []
-complementSet (x:xs) y = complementSet xs (filter (/= x) y)
 
 {-************************************************************************
                       LeftVar : Ordinary  VARIABLES
@@ -330,12 +304,14 @@ getPermit x = permit x
 
 variableType :: VAR -> String
 variableType var
-  | (isVaArg var) = (argty var)
-  | (isCatchPad var) || (isCatchSwitch var) || (isCleanUpPad var) = "token"
-  | otherwise = do
-    if ((isAlloca var) || (isBinary var) || (isBitwise var) || (isCmpf var) || (isCmpi var) || (isConv var) || (isGetElemPtr var) || (isLoad var) || (isPhi var) || (isSelect var)) --(isInvoke var) ||
-      then (ty var)
-      else "none"
+  | (iType == "binary" || iType == "bitwise" || iType == "conversion" || (iType == "memory" && instr /= "fence")) = ty var
+  | (iType == "aggregate") = bool (fromJust $ e_ty var) "none" (isNothing $ e_ty var)
+  | (instr == "icmp" || instr == "fcmp" || instr == "phi" || instr == "select") = ty var
+  | (instr == "va_arg") = (argty var)
+  | (instr == "catchpad" || instr == "catchswitch" || instr == "cleanuppad") = "token"
+  | otherwise = "none"
+    where instr = op var
+          iType = instrType var
 
 {-************************************************************************
                             Little Endian Data

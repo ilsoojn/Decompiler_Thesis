@@ -1,4 +1,5 @@
 define void @fn_400480(%regset* noalias nocapture) {
+%g = alloca i32, align 4
 %f = alloca double, align 8
 %e = alloca double, align 8
 %d = alloca double, align 8
@@ -7,6 +8,7 @@ define void @fn_400480(%regset* noalias nocapture) {
 %a = alloca i64, align 8
 entry_fn_400480:
 %RBP = alloca i64
+%g = alloca i32
 br label %bb_400480
 exit_fn_400480: ; preds = %bb_400480
 ret void
@@ -21,6 +23,8 @@ store double 10.0, double* %e, align 1
 %89 = load double, double* %d, align 1
 %90 = fadd double %77, %89
 store double %90, double* %f, align 1
+%CtlSysEFLAGS_0 = load i32, i32* %g
+store i32 %CtlSysEFLAGS_0, i32* %g
 br label %exit_fn_400480
 }
 

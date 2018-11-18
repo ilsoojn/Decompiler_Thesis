@@ -8,16 +8,16 @@ import Data.Ord
   *************************************************************************-}
 
 reg_8, reg_16, reg_32, reg_64, reg_other, reg_ip :: [String]
-reg_8 = ["%AH","%AL","%BH","%BL","%CH","%CL","%DH","%DL","%SIL","%DIL","%SPL","%BPL"]
-reg_16 = ["%AX","%BX","%CX","%DX","%SI","%DI","%SP","%BP"]
-reg_32 = ["%EAX","%EBX","%ECX","%EDX","%ESI","%EDI","%ESP","%EBP","%EFLAGS"]
-reg_64 = ["%RAX","%RBX","%RCX","%RDX","%RSI","%RDI","%RSP","%RBP","%RFLAGS"]
+reg_8 = ["%AH","%AL","%BH","%BL","%CH","%CL","%DH","%DL","%SIL","%DIL","%SPL","%BPL", "%R8B", "%R9B", "%R10B", "%R11B", "%R12B", "%R13B", "%R14B", "%R15B"]
+reg_16 = ["%AX","%BX","%CX","%DX","%SI","%DI","%SP","%BP", "%R8W", "%R9W", "%R10W", "%R11W", "%R12W", "%R13W", "%R14W", "%R15W"]
+reg_32 = ["%EAX","%EBX","%ECX","%EDX","%ESI","%EDI","%ESP","%EBP","%EFLAGS", "%R8D", "%R9D", "%R10D", "%R11D", "%R12D", "%R13D", "%R14D", "%R15D"]
+reg_64 = ["%RAX","%RBX","%RCX","%RDX","%RSI","%RDI","%RSP","%RBP","%RFLAGS", "%R8", "%R9", "%R10", "%R11", "%R12", "%R13", "%R14", "%R15"]
 reg_other = ["%XMM0","%XMM1","%XMM2","%YMM0","%YMM1","%YMM2","%ZMM0","%ZMM1","%ZMM2"]
 reg_ip = ["%IP","%EIP","%RIP"]
 
-flags = ["CtlSysEFLAGS", "%EFLAGS"]
+flags = ["%CtlSysEFLAGS", "%EFLAGS"]
 
-reg_base = reg_32 ++ reg_64 ++ reg_ip ++ reg_other
+reg_base = reg_32 ++ reg_64 ++ reg_ip ++ reg_other ++ flags
 
 {-************************************************************************
                             LLVM INSTRUCTIONS
@@ -93,15 +93,15 @@ regexLine_fn, regexEnd_fn, regexLine_bb, regex_fn, regex_bb, regex_bb_pred :: St
 regexLine_fn = "^define void @fn_(.*)\\(.*\\{"
 regexEnd_fn = "^}"
 regexLine_bb = "^bb_(.*):.*"
-regexLine_label = "^; <label>:bb_(.*)"
+regexLine_label = "^; <label>:(.*):.*"
 regex_fn = ".*?@fn_(.*)\\(.*\\{"
 regex_bb = ".*?%bb_(.*)\\ .*"
 regex_bb_pred = ".*preds = (.*)"
+regex_asm = "(.*) <(.*)>:"
 
 str_main, str_fn, str_bb, line_bb, strStart_fn, strStart_bb:: String
 strStart_fn = "define void @fn_"
 strStart_bb = "bb_"
-
 str_main = "@main"
 str_fn = "@fn_"
 str_bb = "%bb_"

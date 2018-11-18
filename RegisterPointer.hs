@@ -21,105 +21,115 @@ import OtherFunction
 import RegexFunction
 import Lists
 
-baseIndex :: String -> Integer -> [RP] -> [LeftVar] -> (String, Integer)
-baseIndex base idx pList vList
-  | (elem base (reg_32 ++ reg_64 ++ reg_ip ++ reg_other)) = (base, idx)
-  | (isRegPointer base && not (isInfixOf "_ptr" base || isInfixOf "_init" base)) = do
-    let p = lookupList_p base pList
-    if (isNothing p || not (getPermit $ fromJust p))
-      then (base, idx)
-      else baseIndex (getBase $ fromJust p) (idx + (getIndex $ fromJust p)) pList vList
+baseIndex :: String -> Integer -> [RP] -> [LeftVar] -> [String] -> (String, Integer)
+baseIndex base idx pList vList (line : content)
+  | (isBasicBlock line || isBlockLabel line || isEntryExit line) = baseIndex base idx pList vList content
+  | (isInfixOf base line && isPrefixOf "store" line) = do
+    -- STORE type v, type* BASE
+    let s = storeStatement line
+        val = value s
+        loc = at s
+    case (base == loc, isInitialPointer val) of
+      (True, True) -> (base, idx)
+      (True, False) ->
+        if (isNum val)
+          then ("", strToInt val + idx)
+          else baseIndex val idx pList vList content
+      (False, _) -> baseIndex base idx pList vList content
 
-  | (isPrefixOf str_var base) = do
-    let v = lookupList base vList
-    if (isNothing v)
-      then (base, idx)
-      else do
-        let state = getState (fromJust v)
-            itype = getInstructionType (getInstr $ fromJust v)
-            (x, (var, reg)) = statement state
+  | (isInfixOf base line && isInfixOf " = " line) = do
+    let (lhs, (x, r)) = statement line
+        v = fromJust lhs
+        operator = op x
 
-        case itype of
-          "binary" -> do
-            let rp = filter (isPrefixOf str_var) reg
-            let rn = filter (not . isPrefixOf str_var) reg
-            if (null rp)
-              then do
-                let off1 = read (filter isDigit $ head rp) :: Integer
-                    off2 = read (filter isDigit $ last rp) :: Integer
+    if (base == v)
+      then if ((instrType x == "binary") && (operator == "add" || operator == "sub"))
+        then do
+          let rp = filter (isPrefixOf str_var) r        -- Variable
+              rn = filter (not . isPrefixOf str_var) r  -- Constant
+              isSub = (operator == "sub")
+          case (length rp) of
+            0 -> do -- |rp| = 0 & |rn| = 2
+              let [off1, off2] = map strToInt rn
+                  off = bool (off1 + off2) (off1 - off2) isSub
+              ("", idx + off)
+            1 -> do -- |rp| = 1 & |rn| = 1
+              let n = bool 0 (strToInt $ unwords rn) (isNum (unwords rn))
+                  off = bool (idx + n) (idx - n) isSub
+              baseIndex (unwords rp) off pList vList content
+            _ -> do -- |rp| = 2 & |rn| = 0
+              let (rBase1, rIdx1) = baseIndex (head rp) 0 pList vList content
+                  (rBase2, rIdx2) = baseIndex (last rp) 0 pList vList content
+                  rBase = bool rBase1 rBase2 (isRegPointer rBase2)
+                  rIdx = bool (rIdx1 + rIdx2) (rIdx1 - rIdx2) isSub
+              (rBase, idx + rIdx)
+              -- bool (rBase1, idx + rIdx1 + rIdx2) (rBase2, idx + rIdx1 + rIdx2) (isRegPointer rBase2)
 
-                (base, idx + off1 + off2)
+        else
+          case (instrType x, operator) of
+            ("bitwise", "xor") -> (base, idx)--do
+            --   let [a, b] = values x
+            --   if (a == b)
+            --     then ("0", idx)
+            --     else (base, idx)
+            ("conversion", _) -> baseIndex (unwords r) idx pList vList content
+            ("memory", "load") -> baseIndex (unwords r) idx pList vList content
+            _ -> (base, idx)
+      else baseIndex base idx pList vList content
 
-              else if (length rp == 1 && isRegPointer (unwords rp) && isNum (unwords rn))
-                then baseIndex (unwords rp) (idx + strToInt (unwords rn)) pList vList
+  | otherwise = baseIndex base idx pList vList content
 
-                else (base, idx) --do
-                  -- let (rBase1, rIdx1) = baseIndex (head rp) 0 pList vList
-                  --     (rBase2, rIdx2) = baseIndex (last rp) 0 pList vList
-                  --
-                  -- trace(rBase1 ++ " (" ++ show rIdx1 ++ ") & " ++ rBase2++ " (" ++ show rIdx2 ++ ")") bool (rBase1, idx + rIdx1 + rIdx2) (rBase2, idx + rIdx1 + rIdx2) (isRegPointer rBase2)
-
-          "conversion" -> baseIndex (head reg) idx pList vList
-
-          "memory" -> baseIndex (head reg) idx pList vList-- alloca, load, getelementptr
-
-          _ -> (base, idx)
-
-  | otherwise = (base, idx)
-
-pointerInfo :: String -> String -> [RP] -> [LeftVar] -> RP
-pointerInfo ptr state pList vList
+pointerInfo ptr state pList vList content
   | (isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state False)
-  | (isBinary var && isNum (head reg) && isNum (last reg)) = do
-    let m = strToInt (head reg)
-        n = strToInt (last reg)
-        newState = show (m + n)
-    (RP ptr "" (m + n) newState True)
+  | (instrType var == "binary") = do
+    let isSub = (op var == "sub")
+        [a, b] = reg
+    case (map isNum reg) of
+      [True, True] -> do
+        let (x, y) = (strToInt a, strToInt b)
+            z = bool y (0-y) isSub
+            newState = show (x + y)
+        (RP ptr "" (x + y) newState True)
 
-  | (isBinary var && isNum (head reg)) = do
-    let idx = strToInt (head reg)
-        rdix = bool (0-idx) (idx) (op var == "add")
-        (rbase, rindex) = baseIndex (last reg) rdix pList vList
-        sym = bool "+" "" (rindex < 0)
-        newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
-    (RP ptr rbase rindex newState True)
+      [False, False] -> do
+        let (rbase1, rindex1) = baseIndex (head reg) 0 pList vList content
+            (rbase2, rindex2) = baseIndex (last reg) 0 pList vList content
+            rbase = bool rbase1 rbase2 (isRegPointer rbase2)
+            rindex = bool (rindex1 + rindex2) (rindex1 - rindex2) isSub
+            sym = bool "+" "" (rindex < 0)
+            newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
+        (RP ptr rbase rindex newState True)
 
-  | (isBinary var && isNum (last reg)) = do
-    let idx = strToInt (last reg)
-        rdix = bool (0-idx) (idx) (op var == "add")
-        (rbase, rindex) = baseIndex (head reg) rdix pList vList
-        sym = bool "+" "" (rindex < 0)
-        newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
-    (RP ptr rbase rindex newState True)
+      _ -> do
+        let idx = strToInt (bool a b (isNum b))
+            rdix = bool (idx) (0-idx) isSub
+            (rbase, rindex) = baseIndex (bool b a (isNum b)) rdix pList vList content
+            sym = bool "+" "" (rindex < 0)
+            newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
+        (RP ptr rbase rindex newState True)
 
-  | (isBinary var) = do
-    let (rbase1, rindex1) = baseIndex (head reg) 0 pList vList
-        (rbase2, rindex2) = baseIndex (last reg) 0 pList vList
-        rbase = bool rbase1 rbase2 (isRegPointer rbase2)
-        sym = bool "+" "" ((rindex1 + rindex2) < 0)
-        newState = bool (bool (rbase ++ sym ++  show (rindex1 + rindex2)) (show (rindex1 + rindex2)) (null rbase)) rbase ((rindex1 + rindex2) == 0)
-    (RP ptr rbase (rindex1 + rindex2) newState True)
   --
-  | (isConv var) = do
-    let (rbase, rindex) = baseIndex (head reg) 0 pList vList
+  | (instrType var == "conversion") = do
+    let (rbase, rindex) = baseIndex (head reg) 0 pList vList content
         sym = bool "+" "" (rindex < 0)
         newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
         -- newState = newPtr --replaceLine (head reg) newPtr str_var state
     (RP ptr rbase rindex newState True)
 
-  | (isLoad var) = do
-    let (rbase, rindex) = baseIndex (head reg) 0 pList vList
+  | (op var == "load") = do
+    let (rbase, rindex) = baseIndex (head reg) 0 pList vList content
         sym = bool  "+" "" (rindex < 0)
-        newState = bool (bool ("[" ++ rbase ++ sym ++  show rindex ++ "]") (show rindex) (null rbase)) rbase (rindex == 0)
+        tmp = bool (rbase ++ sym ++ show rindex) (show rindex) (null rbase) -- bool ("[" ++ rbase ++ sym ++  show rindex ++ "]") (show rindex) (null rbase)
+        newState = bool tmp rbase (rindex == 0)
     (RP ptr rbase rindex newState True)
   --
-  | (isBitwise var) = do
+  | (instrType var == "bitwise") = do
     let newState = join " " [op var, ty var, head reg ++ ",", last reg]
     if (head reg == last reg)
       then (RP ptr "" 0 newState False)
       else (RP ptr ptr 0 newState False)
 
-  | (isAlloca var) = (RP ptr ptr 0 state False)
+  | (op var == "alloca") = (RP ptr ptr 0 state False)
 
   | otherwise = (RP ptr ptr 0 state False)
     where (px, (var, reg)) = statement state

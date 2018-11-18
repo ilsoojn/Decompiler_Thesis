@@ -1,4 +1,5 @@
 define void @fn_400480(%regset* noalias nocapture) {
+%g = alloca i32, align 4
 %f = alloca double, align 8
 %e = alloca double, align 8
 %d = alloca double, align 8
@@ -35,6 +36,10 @@ store i64 %RAX_init, i64* %RAX
 %EAX = alloca i32
 store i32 %EAX_init, i32* %EAX
 %1 = lshr i64 %RAX_init, 8
+%EFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 3
+%EFLAGS_init = %EFLAGS_ptr
+%EFLAGS = alloca i32
+store i32 %EFLAGS_init, i32* %EFLAGS
 %ZMM0_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 85
 %ZMM0_init = %ZMM0_ptr
 %ZMM0 = alloca <16 x float>
@@ -71,8 +76,16 @@ store i64 %RCX_init, i64* %RCX
 %ECX = alloca i32
 store i32 %ECX_init, i32* %ECX
 %10 = lshr i64 %RCX_init, 8
+%CtlSysEFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 1
+%CtlSysEFLAGS_init = load i32, i32* %CtlSysEFLAGS_ptr
+%g = alloca i32
+store i32 %CtlSysEFLAGS_init, i32* %g
 br label %bb_400480
 exit_fn_400480: ; preds = %bb_400480
+%11 = load i32, i32* %g
+store i32 %11, i32* %CtlSysEFLAGS_ptr
+%12 = load i32, i32* %EFLAGS
+store i32 %12, i32* %EFLAGS_ptr
 %13 = load i64, i64* %RAX
 store i64 %13, i64* %RAX_ptr
 %14 = load i64, i64* %RBP
@@ -107,6 +120,7 @@ store i64 %RBP, i64* %a, align 1
 %EAX_1 = xor i32 %EAX_0, %EAX_0
 %RAX_1 = %EAX_1
 %22 = lshr i32 %EAX_1, 8
+%EFLAGS_0 = %EFLAGS
 %RIP_4 = 4195470
 %EIP_3 = 4195470
 %24 = 4195672
@@ -217,21 +231,30 @@ store double %90, double* %f, align 1
 %106 = call i8 @llvm.ctpop.i8(i8 %EAX_1)
 %107 = %106
 %PF_0 = icmp eq i1 %106, false
+%CtlSysEFLAGS_0 = load i32, i32* %g
 %108 = false
 %109 = shl i32 false, 0
+%110 = or i32 %109, %CtlSysEFLAGS_0
 %111 = %PF_0
 %112 = shl i32 %PF_0, 2
+%113 = or i32 %112, %110
 %114 = false
 %115 = shl i32 false, 4
+%116 = or i32 %115, %113
 %117 = %ZF_0
 %118 = shl i32 %ZF_0, 6
+%119 = or i32 %118, %116
 %120 = %SF_0
 %121 = shl i32 %SF_0, 7
+%122 = or i32 %121, %119
 %123 = false
 %124 = shl i32 false, 11
+%EFLAGS_1 = or i32 %122, %124
+store i32 %CtlSysEFLAGS_0, i32* %g
 store i32 %EAX_1, i32* %EAX
 store i32 %a, i32* %EBP
 store i32 %c, i32* %ECX
+store i32 %EFLAGS_1, i32* %EFLAGS
 store i32 %RSP, i32* %EIP
 store i32 %RSP+8, i32* %ESP
 store i64 %EAX_1, i64* %RAX

@@ -1,5 +1,6 @@
 module RegexFunction where
 
+import Control.Monad
 import Data.Bool
 import Data.Char
 import Data.DeriveTH
@@ -45,11 +46,21 @@ isDoubleRHS line = do
 get_regexLine :: String -> String -> String
 get_regexLine line regex = strip $ unwords $ map (head.tail) (line =~ regex :: [[String]])
 
-get_regexLine_all :: String -> String -> [String]
-get_regexLine_all line regex = map strip ((tail.head) (line =~ regex :: [[String]]))
+get_regexLine_all :: String -> String -> Maybe [String]
+get_regexLine_all line regex = do
+  let tmp = (line =~~ regex :: Maybe [[String]])
+  if (isNothing tmp)
+    then Nothing
+    else Just $ map strip $ (tail.head) (fromJust tmp)
 
+-- Assembly Code
+getAddressName line = get_regexLine_all line regex_asm
+
+-- Handle Function / Block Statement
+getFunctionAddr line = (get_regexLine line regexLine_fn)
 getFunctionName line = str_fn ++ (get_regexLine line regexLine_fn)
 getBlockName line = str_bb ++ (get_regexLine line regexLine_bb)
+getBlockLabel line = (get_regexLine line regexLine_label)
 getBlockPreds line = map strip $ splitOn "," (get_regexLine line regex_bb_pred)
 
 getRHS_state line

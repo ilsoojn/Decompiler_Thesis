@@ -184,7 +184,7 @@ bitwiseStatement line
 -- return (cond symbole vType v1 v2)
 compareIntStatement :: String -> VAR
 compareIntStatement line = Cmpi "other" op cond (toSym cond) ty [vOne, vTwo]
-  where (op:cond:ty:vOne:vTwo:_) = words $ rmChar "," line
+  where (op:cond:ty:vOne:vTwo:_) = words $ filter (/= ',') line
 
 -- v = fcmp [flag] <condition> <value type> <value 1>, <value 2>
 -- return (condition flags symbole vType v1 v2)
@@ -229,22 +229,6 @@ va_argStatement line = VaArg "other" "va_arg" va_list arg_list arg_ty
   where (list, arg_ty) = strSplit' "," ((unwords.tail.words) line)
         (va_list, arg_list) = strSplit "*" list
 
--- getClauses :: String -> [Clause] -> [Clause]
--- getClauses [] list = list
--- getClauses line list = do
---   let (ctype, cline) = popFront line
---   case ctype of
---     "catch" -> do
---       let (ty, tmp) = popFront cline
---           (cv, cline) = popFront tmp
---           cty = rmChar ",;*" ty
---       getClauses cline (list ++ [Catch cty cv])
---     "filter" -> do
---       let tmp = get_regexLine_all cline regex_array
---           (cty: cv: _) = map ("["++) (map (++"]") tmp)
---       getClauses cline (list ++ [Filter cty cv])
---     _ -> list
-
 -- <clause> := catch <type> <value>
 -- <clause> := filter <array constant type> <array constant>
 getClauses :: [String] -> [Clause]
@@ -270,21 +254,19 @@ landingpadStatement line = do
       split_catch = map (split (startsWith "catch")) split_filter
       clause = getClauses (concat split_catch)
   LandingPad "other" "landingpad" resultty cleanup clause
-  --       (resultty:tmpLine:_) = get_regexLine_all line regex_landpad
-  --       cleanup = isInfixOf "cleanup" tmpLine
-  --       new_tmpLine = bool tmpLine (rmStr "cleanup" tmpLine) cleanup
-  --       clause = getClauses new_tmpLine []
 
 catchpadStatement :: String -> VAR
 catchpadStatement line = do
   let tmp = unwords $ tail $ tail $ words $ line
-      (catchswitch: arg: _) = get_regexLine_all tmp regex_pad
+      regTmp = get_regexLine_all tmp regex_pad
+      (catchswitch: arg: _) = bool (fromJust regTmp) ("" : "" : []) (isNothing regTmp)
   CatchPad "other" "catchpad" catchswitch arg
 
 cleanuppadStatement :: String -> VAR
 cleanuppadStatement line = do
   let tmp = unwords $ tail $ tail $ words $ line
-      (parent: arg: _) = get_regexLine_all tmp regex_pad
+      regTmp = get_regexLine_all tmp regex_pad
+      (parent: arg: _) = bool (fromJust regTmp) ("" : "" : []) (isNothing regTmp)
   CleanUpPad "other" "cleanuppad" parent arg
 
 conversionStatement :: String -> VAR
@@ -391,11 +373,15 @@ parseStatement line
       --terminator
       "ret" -> do
         let s = retStatement line
-        if (isVoidRet s) then (s, []) else (s, [value s])
+        if (isVoidRet s)
+          then (s, [])
+          else (s, [value s])
 
       "br" -> do
         let s = brStatement line
-        if (isBranch s) then (s, [label s]) else (s, [cond s, trueLabel s, falseLabel s])
+        if (isBranch s)
+          then (s, [label s])
+          else (s, [cond s, trueLabel s, falseLabel s])
 
       "indirectbr" -> do
         let s = indirectbrStatement line

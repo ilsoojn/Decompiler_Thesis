@@ -32,13 +32,14 @@ br label %exit_fn_4003D0
 }
 
 define void @fn_4004D0(%regset* noalias nocapture) {
-%ae = alloca i32, align 4
-%ad = alloca i64, align 8
-%ac = alloca i32, align 4
-%ab = alloca i64, align 8
-%k = alloca i32, align 4
-%j = alloca i64, align 8
-%i = alloca double, align 8
+%af = alloca i32, align 4
+%ae = alloca i64, align 8
+%ad = alloca i32, align 4
+%ac = alloca i64, align 8
+%ab = alloca i32, align 4
+%k = alloca i64, align 8
+%j = alloca double, align 8
+%i = alloca i32, align 4
 %h = alloca i32, align 4
 %g = alloca i32, align 4
 %f = alloca i64, align 8
@@ -69,6 +70,10 @@ store i32 %ESP_init, i32* %ESP
 %EBP_init = %RBP_ptr
 %EBP = alloca i32
 store i32 %EBP_init, i32* %EBP
+%EFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 3
+%EFLAGS_init = %EFLAGS_ptr
+%EFLAGS = alloca i32
+store i32 %EFLAGS_init, i32* %EFLAGS
 %RDI_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 12
 %RDI_init = %RDI_ptr
 %RDI = alloca i64
@@ -104,6 +109,10 @@ store i64 %RAX_init, i64* %RAX
 %EAX_init = %RAX_ptr
 %EAX = alloca i32
 store i32 %EAX_init, i32* %EAX
+%CtlSysEFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 1
+%CtlSysEFLAGS_init = load i32, i32* %CtlSysEFLAGS_ptr
+%g = alloca i32
+store i32 %CtlSysEFLAGS_init, i32* %g
 %5 = lshr i64 %RAX_init, 8
 %ZMM1_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 86
 %ZMM1_init = %ZMM1_ptr
@@ -129,6 +138,10 @@ store i32 %ECX_init, i32* %ECX
 %10 = lshr i64 %RCX_init, 8
 br label %bb_4004D0
 exit_fn_4004D0: ; preds = %bb_4005EB
+%11 = load i32, i32* %g
+store i32 %11, i32* %CtlSysEFLAGS_ptr
+%12 = load i32, i32* %EFLAGS
+store i32 %12, i32* %EFLAGS_ptr
 %13 = load i64, i64* %RAX
 store i64 %13, i64* %RAX_ptr
 %14 = load i64, i64* %RBP
@@ -162,8 +175,9 @@ store i64 %RBP, i64* %a, align 1
 %EBP_0 = %a
 %RIP_3 = 4195544
 %EIP_2 = 4195544
-%RSP_2 = %ae
-%ESP_1 = %ae
+%RSP_2 = %af
+%ESP_1 = %af
+%EFLAGS_0 = %EFLAGS
 %RIP_4 = 4195554
 %EIP_3 = 4195554
 %RIP_5 = 4195562
@@ -229,28 +243,36 @@ store i64 4195603, i64* %f
 store i32 %EAX_1, i32* %EAX
 store i32 %a, i32* %EBP
 store i32 4196000, i32* %EDI
-%ZF_0 = icmp eq i64 %ae, 0
-%SF_0 = icmp slt i64 %ae, 0
+%ZF_0 = icmp eq i64 %af, 0
+%SF_0 = icmp slt i64 %af, 0
 %63 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %a, i64 48)
 %OF_0 = extractvalue { i64, i1 } %63, 1
 %64 = call { i64, i1 } @llvm.usub.with.overflow.i64(i64 %a, i64 48)
 %CF_0 = extractvalue { i64, i1 } %64, 1
-%65 = %ae
-%66 = call i8 @llvm.ctpop.i8(i8 %ae)
+%65 = %af
+%66 = call i8 @llvm.ctpop.i8(i8 %af)
 %67 = %66
 %PF_0 = icmp eq i1 %66, false
+%CtlSysEFLAGS_0 = load i32, i32* %g
 %68 = %64
 %69 = shl i32 %64, 0
+%70 = or i32 %69, %CtlSysEFLAGS_0
 %71 = %PF_0
 %72 = shl i32 %PF_0, 2
+%73 = or i32 %72, %70
 %74 = false
 %75 = shl i32 false, 4
+%76 = or i32 %75, %73
 %77 = %ZF_0
 %78 = shl i32 %ZF_0, 6
+%79 = or i32 %78, %76
 %80 = %SF_0
 %81 = shl i32 %SF_0, 7
+%82 = or i32 %81, %79
 %83 = %63
 %84 = shl i32 %63, 11
+%EFLAGS_1 = or i32 %82, %84
+store i32 %EFLAGS_1, i32* %EFLAGS
 store i32 4195603, i32* %EIP
 store i32 %e, i32* %ESI
 store i32 %f, i32* %ESP
@@ -266,6 +288,10 @@ store <4 x float> %51, <4 x float>* %XMM0
 store <8 x float> %51, <8 x float>* %YMM0
 %87 = %51
 store <16 x float> %51, <16 x float>* %ZMM0
+%88 = load i32, i32* %g
+store i32 %88, i32* %CtlSysEFLAGS_ptr
+%89 = load i32, i32* %EFLAGS
+store i32 %89, i32* %EFLAGS_ptr
 %90 = load i64, i64* %RAX
 store i64 %90, i64* %RAX_ptr
 %91 = load i64, i64* %RBP
@@ -285,6 +311,10 @@ store <16 x float> %97, <16 x float>* %ZMM0_ptr
 %98 = load <16 x float>, <16 x float>* %ZMM1
 store <16 x float> %98, <16 x float>* %ZMM1_ptr
 call void @fn_4003D0(%regset* %0)
+%99 = load i32, i32* %CtlSysEFLAGS_ptr
+store i32 %99, i32* %g
+%100 = load i32, i32* %EFLAGS_ptr
+store i32 %100, i32* %EFLAGS
 %101 = load i64, i64* %RAX_ptr
 store i64 %101, i64* %RAX
 %102 = load i64, i64* %RBP_ptr
@@ -307,14 +337,15 @@ store <16 x float> %109, <16 x float>* %ZMM1
 %RIP_15 = 4195610
 %EIP_13 = 4195610
 %RBP_1 = %a
-%111 = %g
-store i32 0, i32* %g, align 1
+%111 = %h
+store i32 0, i32* %h, align 1
 %RIP_16 = 4195613
 %EIP_14 = 4195613
 %RAX_2 = %RAX_1
 %EAX_2 = %RAX_1
-%113 = %h
-store i32 %RAX_1, i32* %h, align 1
+%113 = %i
+store i32 %RAX_1, i32* %i, align 1
+store i32 %CtlSysEFLAGS_0, i32* %g
 store i32 %RAX_1, i32* %EAX
 store i32 4195613, i32* %EIP
 store i64 %RAX_1, i64* %RAX
@@ -325,53 +356,62 @@ bb_40051D: ; preds = %bb_4005DD, %bb_4004D0
 %RIP_85 = 4195616
 %EIP_73 = 4195616
 %RBP_10 = %a
-%115 = %g
-%EAX_18 = %g
+%115 = %h
+%EAX_18 = %h
 %RAX_22 = %RAX_1
-%RAX_23 = %g
-%116 = lshr i32 %g, 8
+%RAX_23 = %h
+%116 = lshr i32 %h, 8
 %RIP_86 = 4195619
 %EIP_74 = 4195619
 %118 = %c
 %119 = load i32, i32* %c, align 1
-%CC_A_0 = icmp ugt i32 %g, %119
-%CC_AE_0 = icmp uge i32 %g, %119
-%CC_B_0 = icmp ult i32 %g, %119
-%CC_BE_014 = icmp ule i32 %g, %119
-%CC_L_0 = icmp slt i32 %g, %119
-%CC_LE_0 = icmp sle i32 %g, %119
-%CC_G_0 = icmp sgt i32 %g, %119
-%CC_GE_0 = icmp sge i32 %g, %119
-%CC_E_0 = icmp eq i32 %g, %119
-%CC_NE_0 = icmp ne i32 %g, %119
-%120 = %119-%g
-%ZF_015 = icmp eq i32 %119-%g, 0
-%SF_016 = icmp slt i32 %119-%g, 0
-%121 = call { i32, i1 } @llvm.ssub.with.overflow.i32(i32 %g, i32 %119)
+%CC_A_0 = icmp ugt i32 %h, %119
+%CC_AE_0 = icmp uge i32 %h, %119
+%CC_B_0 = icmp ult i32 %h, %119
+%CC_BE_014 = icmp ule i32 %h, %119
+%CC_L_0 = icmp slt i32 %h, %119
+%CC_LE_0 = icmp sle i32 %h, %119
+%CC_G_0 = icmp sgt i32 %h, %119
+%CC_GE_0 = icmp sge i32 %h, %119
+%CC_E_0 = icmp eq i32 %h, %119
+%CC_NE_0 = icmp ne i32 %h, %119
+%120 = %119-%h
+%ZF_015 = icmp eq i32 %119-%h, 0
+%SF_016 = icmp slt i32 %119-%h, 0
+%121 = call { i32, i1 } @llvm.ssub.with.overflow.i32(i32 %h, i32 %119)
 %OF_017 = extractvalue { i32, i1 } %121, 1
-%122 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %g, i32 %119)
+%122 = call { i32, i1 } @llvm.usub.with.overflow.i32(i32 %h, i32 %119)
 %CF_018 = extractvalue { i32, i1 } %122, 1
-%123 = %119-%g
-%124 = call i8 @llvm.ctpop.i8(i8 %119-%g)
+%123 = %119-%h
+%124 = call i8 @llvm.ctpop.i8(i8 %119-%h)
 %125 = %124
 %PF_019 = icmp eq i1 %124, false
+%CtlSysEFLAGS_4 = load i32, i32* %g
 %126 = %122
 %127 = shl i32 %122, 0
+%128 = or i32 %127, %CtlSysEFLAGS_4
 %129 = %PF_019
 %130 = shl i32 %PF_019, 2
+%131 = or i32 %130, %128
 %132 = false
 %133 = shl i32 false, 4
+%134 = or i32 %133, %131
 %135 = %ZF_015
 %136 = shl i32 %ZF_015, 6
+%137 = or i32 %136, %134
 %138 = %SF_016
 %139 = shl i32 %SF_016, 7
+%140 = or i32 %139, %137
 %141 = %121
 %142 = shl i32 %121, 11
+%EFLAGS_7 = or i32 %140, %142
 %RIP_87 = 4195625
 %EIP_75 = 4195625
-store i32 %g, i32* %EAX
+store i32 %CtlSysEFLAGS_4, i32* %g
+store i32 %h, i32* %EAX
+store i32 %EFLAGS_7, i32* %EFLAGS
 store i32 4195819, i32* %EIP
-store i64 %g, i64* %RAX
+store i64 %h, i64* %RAX
 store i64 %a, i64* %RBP
 store i64 4195819, i64* %RIP
 br i1 %CC_GE_0, label %bb_4005EB, label %bb_400529
@@ -395,7 +435,7 @@ bb_400529: ; preds = %bb_40051D
 %EIP_16 = 4195633
 %157 = %c
 %EAX_3 = %c
-%RAX_3 = %g
+%RAX_3 = %h
 %RAX_4 = %c
 %158 = lshr i32 %c, 8
 %RIP_20 = 4195637
@@ -426,12 +466,12 @@ bb_400529: ; preds = %bb_40051D
 %EIP_19 = 4195646
 %182 = %174
 %183 = %174
-%185 = %i
-store double %174, double* %i, align 1
+%185 = %j
+store double %174, double* %j, align 1
 %RIP_23 = 4195651
 %EIP_20 = 4195651
-%187 = %i
-%188 = load double, double* %i, align 1
+%187 = %j
+%188 = load double, double* %j, align 1
 %189 = %188
 %XMM0_6 = %188
 %YMM0_6 = %188
@@ -458,22 +498,31 @@ store double %174, double* %i, align 1
 %ZF_01 = fcmp ueq double %e, %188
 %PF_02 = fcmp uno double %e, %188
 %CF_03 = fcmp ult double %e, %188
+%CtlSysEFLAGS_1 = load i32, i32* %g
 %211 = %CF_03
 %212 = shl i32 %CF_03, 0
+%213 = or i32 %212, %CtlSysEFLAGS_1
 %214 = %PF_02
 %215 = shl i32 %PF_02, 2
+%216 = or i32 %215, %213
 %217 = false
 %218 = shl i32 false, 4
+%219 = or i32 %218, %216
 %220 = %ZF_01
 %221 = shl i32 %ZF_01, 6
+%222 = or i32 %221, %219
 %223 = false
 %224 = shl i32 false, 7
+%225 = or i32 %224, %222
 %226 = false
 %227 = shl i32 false, 11
+%EFLAGS_2 = or i32 %225, %227
 %RIP_27 = 4195668
 %EIP_24 = 4195668
 %CC_BE_0 = or i1 %CF_03, %ZF_01
+store i32 %CtlSysEFLAGS_1, i32* %g
 store i32 %e, i32* %EAX
+store i32 %EFLAGS_2, i32* %EFLAGS
 store i32 4195721, i32* %EIP
 store i64 %e, i64* %RAX
 store i64 %a, i64* %RBP
@@ -497,8 +546,8 @@ bb_400554: ; preds = %bb_400529
 %RIP_43 = 4195683
 %EIP_37 = 4195683
 %RBP_5 = %a
-%235 = %i
-%236 = load double, double* %i, align 1
+%235 = %j
+%236 = load double, double* %j, align 1
 %237 = %236
 %ZMM0_7 = %ZMM0_6
 %238 = %ZMM0_6
@@ -528,8 +577,8 @@ bb_400554: ; preds = %bb_400529
 store double %252, double* %d, align 1
 %RIP_46 = 4195698
 %EIP_40 = 4195698
-%265 = %i
-%266 = load double, double* %i, align 1
+%265 = %j
+%266 = load double, double* %j, align 1
 %267 = %266
 %XMM0_10 = %266
 %YMM0_10 = %266
@@ -565,21 +614,21 @@ store double %252, double* %d, align 1
 %RIP_50 = 4195713
 %EIP_44 = 4195713
 %RSP_10 = %f
-%RSP_11 = %j
-%292 = %j
-store i64 4195713, i64* %j
-%ESP_7 = %j
+%RSP_11 = %k
+%292 = %k
+store i64 4195713, i64* %k
+%ESP_7 = %k
 store i32 %EAX_9, i32* %EAX
 store i32 4196027, i32* %EDI
 store i32 4195713, i32* %EIP
 store i32 %e, i32* %ESI
-store i32 %j, i32* %ESP
+store i32 %k, i32* %ESP
 store i64 %RAX_11, i64* %RAX
 store i64 %a, i64* %RBP
 store i64 4196027, i64* %RDI
 store i64 4195713, i64* %RIP
 store i64 %e, i64* %RSI
-store i64 %j, i64* %RSP
+store i64 %k, i64* %RSP
 %293 = %266
 store <4 x float> %266, <4 x float>* %XMM0
 %294 = %278
@@ -592,6 +641,10 @@ store <8 x float> %278, <8 x float>* %YMM1
 store <16 x float> %266, <16 x float>* %ZMM0
 %298 = %278
 store <16 x float> %278, <16 x float>* %ZMM1
+%299 = load i32, i32* %g
+store i32 %299, i32* %CtlSysEFLAGS_ptr
+%300 = load i32, i32* %EFLAGS
+store i32 %300, i32* %EFLAGS_ptr
 %301 = load i64, i64* %RAX
 store i64 %301, i64* %RAX_ptr
 %302 = load i64, i64* %RBP
@@ -611,6 +664,10 @@ store <16 x float> %308, <16 x float>* %ZMM0_ptr
 %309 = load <16 x float>, <16 x float>* %ZMM1
 store <16 x float> %309, <16 x float>* %ZMM1_ptr
 call void @fn_4003D0(%regset* %0)
+%310 = load i32, i32* %CtlSysEFLAGS_ptr
+store i32 %310, i32* %g
+%311 = load i32, i32* %EFLAGS_ptr
+store i32 %311, i32* %EFLAGS
 %312 = load i64, i64* %RAX_ptr
 store i64 %312, i64* %RAX
 %313 = load i64, i64* %RBP_ptr
@@ -635,8 +692,8 @@ store <16 x float> %320, <16 x float>* %ZMM1
 %RAX_12 = %RAX_11
 %EAX_10 = %RAX_11
 %RBP_6 = %a
-%322 = %k
-store i32 %RAX_11, i32* %k, align 1
+%322 = %ab
+store i32 %RAX_11, i32* %ab, align 1
 %RIP_53 = 4195721
 %EIP_46 = 4195721
 store i32 %RAX_11, i32* %EAX
@@ -651,8 +708,8 @@ bb_400589: ; preds = %bb_400529
 %RIP_57 = 4195736
 %EIP_49 = 4195736
 %RBP_7 = %a
-%324 = %i
-%325 = load double, double* %i, align 1
+%324 = %j
+%325 = load double, double* %j, align 1
 %326 = %325
 %ZMM0_11 = %ZMM0_10
 %327 = %ZMM0_10
@@ -707,18 +764,18 @@ bb_400589: ; preds = %bb_400529
 store i32 %XMM1_7, i32* %e, align 1
 %RIP_63 = 4195759
 %EIP_55 = 4195759
-%368 = %i
-%369 = load double, double* %i, align 1
-%EAX_13 = %i
-%RAX_16 = %i
-%370 = lshr i32 %i, 8
+%368 = %j
+%369 = load double, double* %j, align 1
+%EAX_13 = %j
+%RAX_16 = %j
+%370 = lshr i32 %j, 8
 %RIP_64 = 4195763
 %EIP_56 = 4195763
-%371 = %i
-%372 = %i
-%XMM0_13 = %i
-%YMM0_13 = %i
-%ZMM0_13 = %i
+%371 = %j
+%372 = %j
+%XMM0_13 = %j
+%YMM0_13 = %j
+%ZMM0_13 = %j
 %RIP_65 = 4195768
 %EIP_57 = 4195768
 %380 = %d
@@ -731,9 +788,9 @@ store i32 %XMM1_7, i32* %e, align 1
 %EIP_58 = 4195772
 %389 = %381
 %390 = %381
-%391 = %i
-%392 = %i
-%393 = fsub double %381, %i
+%391 = %j
+%392 = %j
+%393 = fsub double %381, %j
 %394 = %393
 %XMM1_9 = %393
 %YMM1_9 = %393
@@ -746,8 +803,8 @@ store i32 %XMM1_7, i32* %e, align 1
 store double %393, double* %d, align 1
 %RIP_68 = 4195782
 %EIP_60 = 4195782
-%406 = %i
-%407 = load double, double* %i, align 1
+%406 = %j
+%407 = load double, double* %j, align 1
 %408 = %407
 %XMM0_14 = %407
 %YMM0_14 = %407
@@ -768,28 +825,28 @@ store double %393, double* %d, align 1
 %ZMM1_10 = %419
 %RIP_71 = 4195792
 %EIP_63 = 4195792
-%428 = and i32 %i, -256
+%428 = and i32 %j, -256
 %EAX_14 = or i32 %428, 2
-%429 = and i64 %i, -256
+%429 = and i64 %j, -256
 %RAX_17 = or i64 %429, 2
 %RIP_72 = 4195797
 %EIP_64 = 4195797
-%RSP_12 = %j
-%RSP_13 = %ab
-%430 = %ab
-store i64 4195797, i64* %ab
-%ESP_8 = %ab
+%RSP_12 = %k
+%RSP_13 = %ac
+%430 = %ac
+store i64 4195797, i64* %ac
+%ESP_8 = %ac
 store i32 %EAX_14, i32* %EAX
 store i32 4196027, i32* %EDI
 store i32 4195797, i32* %EIP
 store i32 %e, i32* %ESI
-store i32 %ab, i32* %ESP
+store i32 %ac, i32* %ESP
 store i64 %RAX_17, i64* %RAX
 store i64 %a, i64* %RBP
 store i64 4196027, i64* %RDI
 store i64 4195797, i64* %RIP
 store i64 %e, i64* %RSI
-store i64 %ab, i64* %RSP
+store i64 %ac, i64* %RSP
 %431 = %407
 store <4 x float> %407, <4 x float>* %XMM0
 %432 = %419
@@ -802,6 +859,10 @@ store <8 x float> %419, <8 x float>* %YMM1
 store <16 x float> %407, <16 x float>* %ZMM0
 %436 = %419
 store <16 x float> %419, <16 x float>* %ZMM1
+%437 = load i32, i32* %g
+store i32 %437, i32* %CtlSysEFLAGS_ptr
+%438 = load i32, i32* %EFLAGS
+store i32 %438, i32* %EFLAGS_ptr
 %439 = load i64, i64* %RAX
 store i64 %439, i64* %RAX_ptr
 %440 = load i64, i64* %RBP
@@ -821,6 +882,10 @@ store <16 x float> %446, <16 x float>* %ZMM0_ptr
 %447 = load <16 x float>, <16 x float>* %ZMM1
 store <16 x float> %447, <16 x float>* %ZMM1_ptr
 call void @fn_4003D0(%regset* %0)
+%448 = load i32, i32* %CtlSysEFLAGS_ptr
+store i32 %448, i32* %g
+%449 = load i32, i32* %EFLAGS_ptr
+store i32 %449, i32* %EFLAGS
 %450 = load i64, i64* %RAX_ptr
 store i64 %450, i64* %RAX
 %451 = load i64, i64* %RBP_ptr
@@ -845,8 +910,8 @@ store <16 x float> %458, <16 x float>* %ZMM1
 %RAX_18 = %RAX_17
 %EAX_15 = %RAX_17
 %RBP_8 = %a
-%460 = %ac
-store i32 %RAX_17, i32* %ac, align 1
+%460 = %ad
+store i32 %RAX_17, i32* %ad, align 1
 store i32 %RAX_17, i32* %EAX
 store i32 4195800, i32* %EIP
 store i64 %RAX_17, i64* %RAX
@@ -863,45 +928,55 @@ bb_4005DD: ; preds = %bb_4005D8
 %RIP_79 = 4195808
 %EIP_68 = 4195808
 %RBP_9 = %a
-%462 = %g
-%EAX_16 = %g
+%462 = %h
+%EAX_16 = %h
 %RAX_19 = %RAX_17
-%RAX_20 = %g
-%463 = lshr i32 %g, 8
+%RAX_20 = %h
+%463 = lshr i32 %h, 8
 %RIP_80 = 4195811
 %EIP_69 = 4195811
 %EAX_17 = %RSP-31
 %RAX_21 = %RSP-31
 %464 = lshr i32 %RSP-31, 8
+%EFLAGS_5 = %EFLAGS_2
 %RIP_81 = 4195814
 %EIP_70 = 4195814
-%466 = %g
-store i32 %RSP-31, i32* %g, align 1
+%466 = %h
+store i32 %RSP-31, i32* %h, align 1
 %RIP_82 = 4195819
 %EIP_71 = 4195819
 %ZF_09 = icmp eq i32 %RSP-31, 0
 %SF_010 = icmp slt i32 %RSP-31, 0
-%467 = call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %g, i32 1)
+%467 = call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %h, i32 1)
 %OF_011 = extractvalue { i32, i1 } %467, 1
-%468 = call { i32, i1 } @llvm.uadd.with.overflow.i32(i32 %g, i32 1)
+%468 = call { i32, i1 } @llvm.uadd.with.overflow.i32(i32 %h, i32 1)
 %CF_012 = extractvalue { i32, i1 } %468, 1
 %469 = %RSP-31
 %470 = call i8 @llvm.ctpop.i8(i8 %RSP-31)
 %471 = %470
 %PF_013 = icmp eq i1 %470, false
+%CtlSysEFLAGS_3 = load i32, i32* %g
 %472 = %468
 %473 = shl i32 %468, 0
+%474 = or i32 %473, %CtlSysEFLAGS_3
 %475 = %PF_013
 %476 = shl i32 %PF_013, 2
+%477 = or i32 %476, %474
 %478 = false
 %479 = shl i32 false, 4
+%480 = or i32 %479, %477
 %481 = %ZF_09
 %482 = shl i32 %ZF_09, 6
+%483 = or i32 %482, %480
 %484 = %SF_010
 %485 = shl i32 %SF_010, 7
+%486 = or i32 %485, %483
 %487 = %467
 %488 = shl i32 %467, 11
+%EFLAGS_6 = or i32 %486, %488
+store i32 %CtlSysEFLAGS_3, i32* %g
 store i32 %RSP-31, i32* %EAX
+store i32 %EFLAGS_6, i32* %EFLAGS
 store i32 4195613, i32* %EIP
 store i64 %RSP-31, i64* %RAX
 store i64 %a, i64* %RBP
@@ -920,19 +995,23 @@ bb_4005EB: ; preds = %bb_40051D
 %RAX_7 = or i64 %491, 0
 %RIP_32 = 4195836
 %EIP_28 = 4195836
-%RSP_4 = %ab
-%RSP_5 = %ad
-%492 = %ad
-store i64 4195836, i64* %ad
-%ESP_3 = %ad
+%RSP_4 = %ac
+%RSP_5 = %ae
+%492 = %ae
+store i64 4195836, i64* %ae
+%ESP_3 = %ae
 store i32 %EAX_6, i32* %EAX
 store i32 4196049, i32* %EDI
 store i32 4195836, i32* %EIP
-store i32 %ad, i32* %ESP
+store i32 %ae, i32* %ESP
 store i64 %RAX_7, i64* %RAX
 store i64 4196049, i64* %RDI
 store i64 4195836, i64* %RIP
-store i64 %ad, i64* %RSP
+store i64 %ae, i64* %RSP
+%493 = load i32, i32* %g
+store i32 %493, i32* %CtlSysEFLAGS_ptr
+%494 = load i32, i32* %EFLAGS
+store i32 %494, i32* %EFLAGS_ptr
 %495 = load i64, i64* %RAX
 store i64 %495, i64* %RAX_ptr
 %496 = load i64, i64* %RBP
@@ -952,6 +1031,10 @@ store <16 x float> %502, <16 x float>* %ZMM0_ptr
 %503 = load <16 x float>, <16 x float>* %ZMM1
 store <16 x float> %503, <16 x float>* %ZMM1_ptr
 call void @fn_4003D0(%regset* %0)
+%504 = load i32, i32* %CtlSysEFLAGS_ptr
+store i32 %504, i32* %g
+%505 = load i32, i32* %EFLAGS_ptr
+store i32 %505, i32* %EFLAGS
 %506 = load i64, i64* %RAX_ptr
 store i64 %506, i64* %RAX
 %507 = load i64, i64* %RBP_ptr
@@ -978,67 +1061,77 @@ store <16 x float> %514, <16 x float>* %ZMM1
 %ECX_1 = xor i32 %ECX_0, %ECX_0
 %RCX_1 = %ECX_1
 %515 = lshr i32 %ECX_1, 8
+%EFLAGS_3 = %EFLAGS_6
 %RIP_35 = 4195841
 %EIP_30 = 4195841
 %RAX_8 = %RAX_7
 %EAX_7 = %RAX_7
 %RBP_3 = %a
-%517 = %ae
-store i32 %RAX_7, i32* %ae, align 1
+%517 = %af
+store i32 %RAX_7, i32* %af, align 1
 %RIP_36 = 4195843
 %EIP_31 = 4195843
 %RAX_9 = %ECX_1
 %518 = lshr i32 %ECX_1, 8
 %RIP_37 = 4195847
 %EIP_32 = 4195847
-%RSP_6 = %ad
-%RSP_7 = %i
-%ESP_4 = %i
+%RSP_6 = %ae
+%RSP_7 = %j
+%ESP_4 = %j
 %RIP_38 = 4195848
 %EIP_33 = 4195848
-%RSP_8 = %g
-%ESP_5 = %g
-%520 = %i
-%RBP_4 = %i
-%EBP_1 = %i
+%RSP_8 = %h
+%ESP_5 = %h
+%520 = %j
+%RBP_4 = %j
+%EBP_1 = %j
 %RIP_39 = 4195849
 %EIP_34 = 4195849
 %RSP_9 = %d
-%521 = %g
-%RIP_40 = %g
+%521 = %h
+%RIP_40 = %h
 %ESP_6 = %d
-%EIP_35 = %g
-%ZF_04 = icmp eq i64 %i, 0
-%SF_05 = icmp slt i64 %i, 0
-%522 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %ad, i64 48)
+%EIP_35 = %h
+%ZF_04 = icmp eq i64 %j, 0
+%SF_05 = icmp slt i64 %j, 0
+%522 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %ae, i64 48)
 %OF_06 = extractvalue { i64, i1 } %522, 1
-%523 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %ad, i64 48)
+%523 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %ae, i64 48)
 %CF_07 = extractvalue { i64, i1 } %523, 1
-%524 = %i
-%525 = call i8 @llvm.ctpop.i8(i8 %i)
+%524 = %j
+%525 = call i8 @llvm.ctpop.i8(i8 %j)
 %526 = %525
 %PF_08 = icmp eq i1 %525, false
+%CtlSysEFLAGS_2 = load i32, i32* %g
 %527 = %523
 %528 = shl i32 %523, 0
+%529 = or i32 %528, %CtlSysEFLAGS_2
 %530 = %PF_08
 %531 = shl i32 %PF_08, 2
+%532 = or i32 %531, %529
 %533 = false
 %534 = shl i32 false, 4
+%535 = or i32 %534, %532
 %536 = %ZF_04
 %537 = shl i32 %ZF_04, 6
+%538 = or i32 %537, %535
 %539 = %SF_05
 %540 = shl i32 %SF_05, 7
+%541 = or i32 %540, %538
 %542 = %522
 %543 = shl i32 %522, 11
+%EFLAGS_4 = or i32 %541, %543
+store i32 %CtlSysEFLAGS_2, i32* %g
 store i32 %ECX_1, i32* %EAX
-store i32 %i, i32* %EBP
+store i32 %j, i32* %EBP
 store i32 %ECX_1, i32* %ECX
-store i32 %g, i32* %EIP
+store i32 %EFLAGS_4, i32* %EFLAGS
+store i32 %h, i32* %EIP
 store i32 %d, i32* %ESP
 store i64 %ECX_1, i64* %RAX
-store i64 %i, i64* %RBP
+store i64 %j, i64* %RBP
 store i64 %ECX_1, i64* %RCX
-store i64 %g, i64* %RIP
+store i64 %h, i64* %RIP
 store i64 %d, i64* %RSP
 br label %exit_fn_4004D0
 }
