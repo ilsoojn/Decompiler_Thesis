@@ -70,6 +70,12 @@ splitByLength n x = do
   let (s, xs) = splitAt n x
   s : (splitByLength n xs)
 
+getAfter dlm str = do
+  let (x, xs) = strSplit dlm str
+  if null xs
+    then strip x
+    else strip xs
+
 {-************** Modifing Functions **************-}
 strSplit' dlm str = (strip x, strip xs) where (x, xs) = strSplit dlm str
 sBreak' dlm str = (strip x, strip xs) where (x, xs) = sBreak dlm str
@@ -107,6 +113,13 @@ replaceLine old new tyStr line
         r = tyStr ++ get_regexLine line regex_fb
     unwords $ replaceWord old new s r
   | otherwise = line
+
+addElement n x lst = take n lst ++ [x] ++ drop (n+1) lst
+
+addElements :: [Int] -> [String] -> [String] -> [String]
+addElements [] _ lst = lst
+addElements (n:ns) (x:xs) lst = addElements ns xs newList
+  where newList = take n lst ++ [x] ++ drop (n+1) lst
 
 {-************************************************************************
                             Type conversions
@@ -234,6 +247,10 @@ removeVariable vInfo [] px = px
 removeVariable vInfo (x:xs) px
   | (variable vInfo == variable x) = (px ++ xs) -- found matching info
   | otherwise = removeVariable vInfo xs (px ++ [x])
+
+removeVariables :: [LeftVar] -> [LeftVar] -> [LeftVar]
+removeVariables [] list = list
+removeVariables (x:xs) list = removeVariables xs (removeVariable x list [])
 
 lookupList :: String -> [LeftVar] -> Maybe LeftVar
 lookupList v [] = Nothing

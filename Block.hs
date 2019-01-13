@@ -108,6 +108,7 @@ orderingContent content = do
   (fnEntry ++ c ++ [fnExit])
 
 -- content block is in ORD
+ssaLLVM :: [String] -> [String] -> Integer -> [String]
 ssaLLVM [] preContent _ = preContent
 ssaLLVM (line : nextContent) preContent count
   | (isFunction line || isFunctionEnd line) = ssaLLVM nextContent (preContent ++ [line]) count
@@ -128,93 +129,3 @@ ssaLLVM (line : nextContent) preContent count
         ssaLLVM newNext (newPre ++ [newline]) (count + 1)
       else ssaLLVM nextContent (preContent ++ [line]) count
     where newV = ("%" ++ show count)
-
-
-
-
--- switchInfoC :: [(String, String)] -> [String]
--- switchInfoC [] = []
--- switchInfoC ((v, dest): cases) = do
---   let caseline = unwords ["case", v, ":"]
---       doline = "br label " ++ dest
---       endline = "break;"
---   (unlines [caseline, doline, endline]) : switchInfoC cases
-
--- lineconversion (line : nextContent) blocklist =
---   | (isFunction line) = (line : "bb_0") : (lineconversion nextContent)
---   | (isPrefixOf "entry_fn" line) = (lineconversion nextContent)
---   | (isPrefixOf "br label %exit_fn_" line) = "ret void" : (lineconversion nextContent)
---   | (isFunctionEnd line) = []
---   | (isBasicBlock line || isBlockLabel line) = line : (lineconversion nextContent)
---   | otherwise = do
---     let (x, (var, reg)) = statement line
---         operator = op var
---         itype = instrType var
---
---     case itype of
---       "binary" -> do
---         let v = fromJust x
---             symbol = sym var
---             state = intercalate " " ["(", head reg, symbol, last reg ,")"]
---             newContent = replace' v state nextContent
---         lineconversion newContent
---
---       "bitwise" -> do
---         let v = fromJust x
---             symbol = sym var
---             state = unwords ["(", head reg, symbol, last reg ,")"]
---             newContent = replace' v state nextContent
---         lineconversion newContent
---
---       "conversion" ->
---         let v = fromJust x
---             (from, to) = (ty1 var, ty var)
---             state = unwords ["(", to, ")", v]
---             newContent = replace' v state nextContent
---         lineconversion newContent
---
---       "memory" ->
---         case operator of
---           "alloca" -> do
---             let v = fromJust x
---                 vtype = ty var
---                 state = unwords [vtype, v, ";"]
---             state : (lineconversion nextContet)
---           -- "load" -> state : (lineconversion nextContet)
---           "store" ->
---             let ptr = at var
---                 v = value var
---                 state = unwords [ptr, "=", v, ";"]
---             state : (lineconversion nextContet)
---           -- "fence" ->
---           -- "getelementptr" ->
---           _ -> --atomicrmw , cmpxchg (atomic)
---             line : (lineconversion nextContet)
---
---       "terminator" ->
---         case operator of
---           "ret void" -> "return;" : (lineconversion nextContet)
---           "ret" -> do
---             let retv = value var
---                 state = unwords ["return", retv]
---             state : (lineconversion nextContet)
---           -- "br" ->
---           -- "indirectbr" ->
---           -- "switch" ->
---           --   let v = value var
---           --       defaultB = label var
---           --       caseB =
---           --       beginline = unwords ["switch(", v, ") {"]
---           --       endline = "}"
---           -- "invoke" ->
---           -- "resume" ->
---           -- "catchswitch" ->
---           -- "catchret" ->
---           -- "cleanupret" ->
---           -- "unreachable" ->
---       "other" ->
---       "aggregate" ->
---       -> --vector
---
--- type Block = (String, [String])
--- data Vertex = Vertex {bb::Block, bIn::[Block], bOut::[Block]}

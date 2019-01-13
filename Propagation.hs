@@ -138,7 +138,7 @@ propagation fname (line: nextCont) vList pList preCont
             let rp = fromJust $ lookupList_p v pList
                 lv = fromJust $ lookupList v vList
 
-            if (op xvar == "colon")
+            if (instrType xvar == "colon")
               then do
                 -- %REG = a : b
                 let rp' = rp{ rstate=(low xvar), permit=True } --rp' = rp{ rstate=(getState lv), permit=True }

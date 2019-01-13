@@ -21,6 +21,59 @@ import OtherFunction
 import RegexFunction
 import Lists
 
+{-******************************************************
+            FLAG Statements Elimination
+******************************************************-}
+
+-- filter' _ [] [] = []
+-- filter' eqCmp (c:condLst) (x:dataLst)
+--   | (eqCmp == c) = x : filter' eqCmp condLst dataLst
+--   | otherwise filter' eqCmp condLst dataLst
+
+flagElimination :: [String] -> [String] -> [LeftVar] -> ([String], [LeftVar])
+flagElimination settings precontent list = do
+  let shl_statements = map head $ chunksOf 2 settings
+      or_statements = map last $ chunksOf 2 settings
+
+      s = map statement shl_statements
+      o = map statement or_statements
+
+      -- shls = trace("here")map head $ chunksOf 2 s  --[(sx, (svar, [sreg]))...]
+      sx = map (fromJust.fst) (s ++ o)
+      sreg = map (snd.snd) s
+
+      idxf = [ strToInt x | x <- (concat sreg), isNum x ]
+      valf = [ x | x <- (concat sreg), not (isNum x) ]
+
+  if (idxf /= [0, 2, 4, 6, 7, 11])
+    then (settings, list)
+    else do
+      let line = (last sx) ++ " = " ++ (join "." valf)
+          tmpVar = map fromJust $ map (`lookupList` list) (init sx) --trace(" >>" ++ (last settings) ++ "\n >>" ++ line)
+          newList = removeVariables tmpVar list
+      ([line], newList)
+
+cleanCode :: [String] -> [String] -> [LeftVar] -> ([String], [LeftVar])
+cleanCode [] preContent vList = (preContent, vList)
+cleanCode (line : nextContent) preContent vList
+  | (isInfixOf "=" line) = do
+    let (x, (s, r)) = statement line
+    if (op s == "load" && ptr s == "%CtlSysEFLAGS")
+      then do
+        let nextLines = take 12 nextContent               -- get next 12 statements
+            nextStatement = map (getAfter "=") nextLines
+            nextInstrList = map (head.words) nextStatement  -- collect instructions of next 12 statement
+            tmpInstrList = concat $ replicate 6 ["shl", "or"] -- bit setting
+
+        if (nextInstrList /= tmpInstrList)
+          then cleanCode nextContent (preContent ++ [line]) vList --trace("  x:\n\t" ++ (join " " nextInstrList) ++ "\n\t" ++ (join " " tmpInstrList))
+          else do
+            let (newLine, newList) = flagElimination nextLines [] vList
+            cleanCode (newLine ++ (drop 12 nextContent)) (preContent ++ [line]) newList --trace("  v:\n\t" ++ (join " " nextInstrList) ++ "\n\t" ++ (join " " tmpInstrList))
+
+      else cleanCode nextContent (preContent ++ [line]) vList
+  | otherwise = cleanCode nextContent (preContent ++ [line]) vList
+
 -- Def(ops) > 0 := True / False
 hasNoDef [] vList = False
 hasNoDef (v:vs) vList
@@ -70,29 +123,30 @@ variableElim change (line : nextCont) vList pList preCont
 
   | otherwise= do
     -- No LHS
-    let (x, (var, ops)) = statement (strip line)
-        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
+    let (na, (var, reg)) = statement (strip line)
+        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) reg)
 
     if (op var == "store")
       then do
-        let (x, y) = (value var, at var)
         if (isInfixOf "_init" line || isInfixOf "_ptr" line)-- || elem y reg_base)
           then variableElim True nextCont vList pList preCont
 
-          else if (hasNoDef [x, y] vList)
-            then -- NoDef(ops)
+          else if (hasNoDef operands vList)
+            then -- NoDef(reg)
               variableElim True nextCont vList pList preCont --trace("def( - ) = 0 : " ++ line)
-            else -- Def(ops)
+            else -- Def(reg)
               variableElim change nextCont vList pList (preCont ++ [line])
 
       else if (hasNoDef operands vList)
-        then -- NoDef(ops)
+        then -- NoDef(reg)
           variableElim True nextCont vList pList preCont --trace("def( - ) = 0 : " ++ line)
-        else -- Def(ops)
+        else -- Def(reg)
           variableElim change nextCont vList pList (preCont ++ [line]) --trace("good\t" ++ line)
 
 elimination :: [String] -> [LeftVar] -> [RP] -> ([String], [LeftVar])
 elimination content vList pList = do
 
-  let (newContent, newVarList) = variableElim False content vList pList []
+  let (eContent, eVarList) = variableElim False content vList pList []
+      (cContent, cVarList) = cleanCode eContent [] eVarList
+      (newContent, newVarList) = variableElim False cContent cVarList pList []
   (newContent, newVarList)

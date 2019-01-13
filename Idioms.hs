@@ -47,6 +47,7 @@ binaryOP v new_state nextline vList
 
     where (nv, (nvar, nreg)) = statement nextline
           c = fromJust $ lookupList v vList
+          
 {-
   INPUT
     %v1 = zext i128 %a to i256      ( v1 <- 00000.....0 : a_128 )
@@ -86,38 +87,24 @@ bitwiseOP pre curr next content vList
           (cv, (cvar, creg)) = statement curr
           (nv, (nvar, nreg)) = statement next
 
-{-
-  %CtlSysEFLAGS_1 = load i32, i32* %CtlSysEFLAGS
-  %132 = shl i32 %127, 0
-  %133 = or i32 %132, %CtlSysEFLAGS_1
-  %135 = shl i32 %PF_1, 2
-  %136 = or i32 %135, %133
-  %138 = shl i32 false, 4
-  %139 = or i32 %138, %136
-  %141 = shl i32 %ZF_1, 6
-  %142 = or i32 %141, %139
-  %144 = shl i32 %SF_1, 7
-  %145 = or i32 %144, %142
-  %147 = shl i32 %126, 11
-  %EFLAGS_3 = or i32 %145, %147
--}
-detectIdiom :: [String] -> String -> [String] -> [LeftVar] -> (String, ([String], [LeftVar]))
-detectIdiom [] fn pre vList = (fn,(pre, vList))
-detectIdiom (line: next) fn pre vList
-  | (next == [""]) = (fn,(pre, vList))
-  | (isFunction line) = detectIdiom next (getFunctionName line) (pre ++ [line]) vList
+detectIdiom :: [String] -> String -> [String] -> [LeftVar] -> Integer -> Integer -> (String, ([String], [LeftVar]))
+detectIdiom [] fn pre vList num1 num2 = trace("Detected Idioms\n - Idiom 1 (binaryOP): " ++ show num1 ++ "\n - Idiom 2 (bitwiseOP): "++ show num2) (fn,(pre, vList))
+detectIdiom (line: next) fn pre vList num1 num2
+  | (next == [""]) = trace("Detected Idioms\n - Idiom 1 (binaryOP): " ++ show num1 ++ "\n - Idiom 2 (bitwiseOP): "++ show num2)(fn,(pre, vList))
+  | (isFunction line) = detectIdiom next (getFunctionName line) (pre ++ [line]) vList num1 num2
   | (isLHS line fn) = do
 
     let (v, (rhs, reg)) = statement (strip line)
         v_type = variableType rhs
     {-
       Idiom 1:
-        case 1: %v1 = And/Sub int_type %register_ptr, n
-        case 2: %v1 = And/Sub int_type %register_ptr, n
+        case 1: %v1 = Add/Sub int_type %register_ptr, n
+        case 2: %v1 = Add/Sub int_type %register_ptr, n
                 %v2 = inttoptr int_type %register_ptr to ptr_type
     -}
-    if (instrType rhs == "binary")
-      then if (or $ map isNum reg)
+    case (instrType rhs) of
+      "binary" -> do
+        if (or $ map isNum reg)
           then do
             let ptr = bool (last reg) (head reg) (isNum $ last reg)
                 idx = bool (read (head reg) :: Integer) (read (last reg) :: Integer) (isNum $ last reg)
@@ -129,8 +116,8 @@ detectIdiom (line: next) fn pre vList
 
                     (cline, nline, newList) = binaryOP (fromJust v) new_state (head next) vList
                     newNext = filter (not.null) $ nline:(tail next)
-                detectIdiom newNext fn (pre ++ cline) newList
-              else detectIdiom next fn (pre ++ [line]) vList
+                detectIdiom newNext fn (pre ++ cline) newList (num1 + 1) num2
+              else detectIdiom next fn (pre ++ [line]) vList num1 num2
 
           else if ((op rhs) == "add" || (op rhs) == "sub" && hasRegPointer (last $ splitOn " = " line))
             then do
@@ -138,28 +125,28 @@ detectIdiom (line: next) fn pre vList
                     new_state = concat [head reg, sym, last reg]
                     (cline, nline, newList) = binaryOP (fromJust v) new_state (head next) vList
                     newNext = filter (not.null) $ nline:(tail next)
-                detectIdiom newNext fn (pre ++ cline) newList
+                detectIdiom newNext fn (pre ++ cline) newList (num1 + 1) num2
 
-              else detectIdiom next fn (pre ++ [line]) vList
+              else detectIdiom next fn (pre ++ [line]) vList num1 num2
         {-
         Idiom 2:
           %v1 = zext i128 %a to i256      ( v1 <- 00000.....0 : a_128 )
           %v2 = and i256 %b, -340282366920938463463374607431768211456 ( v2 <- b_128 : 00000...0 )
           %v = or i256 %v1, %v2           (v <- v2 : v1 <- b_128 : a_128)
       -}
-      else if (instrType rhs == "bitwise")
-        then do
-          let instr = op rhs
-              [a, b] = reg
+      "bitwise" -> do
+        let instr = op rhs
+            [a, b] = reg
 
-          if ((instr == "and") && (isNum b || isNum' b) && (isInt $ strToFloat b) && (is0s $ strToInt b))
-            then do
-              let (pline, cline, nline, newList) = bitwiseOP (last pre) (line) (head next) (line : next) vList
-                  newNext = filter (not.null) $ nline:(tail next)
-                  newPre = filter (not.null) $ init pre ++ [pline] ++ cline
-              detectIdiom newNext fn newPre newList
+        if ((instr == "and") && (isNum b || isNum' b) && (isInt $ strToFloat b) && (is0s $ strToInt b))
+          then do
+            let (pline, cline, nline, newList) = bitwiseOP (last pre) (line) (head next) (line : next) vList
+                newNext = filter (not.null) $ nline:(tail next)
+                newPre = filter (not.null) $ init pre ++ [pline] ++ cline
+            detectIdiom newNext fn newPre newList num1 (num2 + 1)
 
-            else detectIdiom next fn (pre ++ [line]) vList
+          else detectIdiom next fn (pre ++ [line]) vList num1 num2
 
+      _ -> detectIdiom next fn (pre ++ [line]) vList num1 num2
 
-  | otherwise = detectIdiom next fn (pre ++ [line]) vList
+  | otherwise = detectIdiom next fn (pre ++ [line]) vList num1 num2

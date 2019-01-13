@@ -21,10 +21,10 @@ import OtherFunction
 import RegexFunction
 import Lists
 
-variableName :: [String] -> [(String, String)] -> [LeftVar] -> [String] -> ( [String], ([LeftVar], [(String, String)]) )
-variableName [] nameList vList content = (content, (vList, nameList))
-variableName (line : next) nameList vList content
-  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) = variableName next nameList vList (content ++ [line])
+variableName :: [String] -> [(String, String)] -> [LeftVar] -> [String] -> Integer -> ( [String], ([LeftVar], [(String, String)]) )
+variableName [] nameList vList content num = trace("Detected Variables: " ++ show num) (content, (vList, nameList))
+variableName (line : next) nameList vList content num
+  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) = variableName next nameList vList (content ++ [line]) num
   | (isPrefixOf "store" line && (not $ or $ map (`elem` reg_base) (words line)) && (not $ hasInitialPointer line)) = do
     let s = storeStatement line
         (vtype, v, addr) = (ty s, value s, at s)
@@ -39,20 +39,21 @@ variableName (line : next) nameList vList content
         tmp4 = bool tmp3 "2" (vtype == "half")
         align_sz = bool (show $ round $ fromInteger(strToInt tmpSz)/8) tmp4 (null tmpSz)
 
+        -- Create an allocating statement for the variable
         -- align_sz = bool (show $ round $ fromInteger(strToInt tmpSz)/8) ("8") (vtype == "double")
         state = "alloca " ++ vtype ++ ", align " ++ align_sz
         v' = LeftVar vname vtype "alloca" state
         newState = vname ++ " = " ++ state
 
     if (isNothing str)
-      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line])
-      else variableName next nameList vList (content ++ [line])
+      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line]) (num + 1)
+      else variableName next nameList vList (content ++ [line]) num
 
-  | otherwise = variableName next nameList vList (content ++ [line])
+  | otherwise = variableName next nameList vList (content ++ [line]) num
 
 propagateName :: [String] -> [(String, String)] -> [String]
 propagateName content [] = content
-propagateName content ((location, str) : nameList) = trace(location ++ " :: " ++ str) propagateName (replace' location str content) nameList
+propagateName content ((location, str) : nameList) = propagateName (replace' location str content) nameList --trace(location ++ " :: " ++ str)
 
 functionName :: [String] -> [(String, String)] -> [String]
 functionName content [] = content
