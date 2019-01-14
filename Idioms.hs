@@ -47,7 +47,7 @@ binaryOP v new_state nextline vList
 
     where (nv, (nvar, nreg)) = statement nextline
           c = fromJust $ lookupList v vList
-          
+
 {-
   INPUT
     %v1 = zext i128 %a to i256      ( v1 <- 00000.....0 : a_128 )
@@ -88,10 +88,10 @@ bitwiseOP pre curr next content vList
           (nv, (nvar, nreg)) = statement next
 
 detectIdiom :: [String] -> String -> [String] -> [LeftVar] -> Integer -> Integer -> (String, ([String], [LeftVar]))
-detectIdiom [] fn pre vList num1 num2 = trace("Detected Idioms\n - Idiom 1 (binaryOP): " ++ show num1 ++ "\n - Idiom 2 (bitwiseOP): "++ show num2) (fn,(pre, vList))
+detectIdiom [] fn pre vList num1 num2 = trace("\nDetected Idioms\n - Idiom 1 (binaryOP): " ++ show num1 ++ "\n - Idiom 2 (bitwiseOP): "++ show num2) (fn,(pre, vList))
 detectIdiom (line: next) fn pre vList num1 num2
-  | (next == [""]) = trace("Detected Idioms\n - Idiom 1 (binaryOP): " ++ show num1 ++ "\n - Idiom 2 (bitwiseOP): "++ show num2)(fn,(pre, vList))
-  | (isFunction line) = detectIdiom next (getFunctionName line) (pre ++ [line]) vList num1 num2
+  | (next == [""]) = trace("\nDetected Idioms\n - Idiom 1 (binaryOP): " ++ show num1 ++ "\n - Idiom 2 (bitwiseOP): "++ show num2)(fn,(pre, vList))
+  | (isFunction line) = trace("\n----------------------\n" ++ (getFunctionName line) ++ "\n----------------------") detectIdiom next (getFunctionName line) (pre ++ [line]) vList num1 num2
   | (isLHS line fn) = do
 
     let (v, (rhs, reg)) = statement (strip line)

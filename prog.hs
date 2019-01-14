@@ -116,27 +116,35 @@ splitFn (line: content) fn cList vList pList set
 forFunction :: String -> [ ([String] , ([LeftVar],[RP])) ] -> Int -> String -> [(String, String)] -> [( [String], ([LeftVar], [RP]) )]
 forFunction _ [] _ _ _ = []
 forFunction run (f : fs) addr val asmT = do
-  let (fnName, (iContent, vIdiom)) = detectIdiom content "" [] vlist 0 0
+  let count = 0
+
+      -- IDIOM
+  let (fnName, (iContent, vIdiom)) = detectIdiom content "" [] vlist count count
+
+      -- PROPAGATION
       (pContent, (vProp, pProp)) = propagation fnName iContent vIdiom plist []
-
-      (vnContent, (vName, nameList)) = variableName pContent [] vProp [] 0
+      -- Variable Name
+      (vnContent, (vName, nameList)) = variableName pContent [] vProp [] count
       ncContent = propagateName vnContent (sort nameList)
+      -- Percision
       pcContent = precisionConversion ncContent addr val []
-      -- pcContent = precisionConversion ncContent addr val []
 
+      -- ELIMINATION
       (eContent, vElim) = elimination pcContent vName pProp
+      -- SSA Format
       ssaContent = (ssaLLVM (orderingContent eContent) [] 1)
+      -- Function Name
       fnContent = functionName ssaContent asmT
 
-  case trace("-----" ++ fnName ++ "----") run of
+  case run of
     -- let (content, (vlist, plist)) = f
     "idiom"     -> (iContent, (vIdiom, plist)) : (forFunction run fs addr val asmT)
-    "prop"      -> (pContent, (vProp, pProp)) : (forFunction run fs addr val asmT)
-    "vname"     -> (ncContent, (vName, pProp)) : (forFunction run fs addr val asmT)
+    "propagation"      -> (pContent, (vProp, pProp)) : (forFunction run fs addr val asmT)
+    "variable_name"     -> (ncContent, (vName, pProp)) : (forFunction run fs addr val asmT)
     "precision" -> (pcContent, (vName, pProp)) : (forFunction run fs addr val asmT)
-    "elim"      -> (eContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
-    "SSAform"   -> (ssaContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
-    "fname"     -> (fnContent, (vName, pProp)) : (forFunction run fs addr val asmT)
+    "elimination"-> (eContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
+    "SSA_format"   -> (ssaContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
+    "func_name"     -> (fnContent, (vName, pProp)) : (forFunction run fs addr val asmT)
     -- _ -> (ncContent, (vName, pProp)) : (forFunction run fs addr val asmT)
     _-> (content, (vlist, plist)) : (forFunction run fs addr val asmT)
 
@@ -181,6 +189,11 @@ main = do
       handleAsm <- openFile disas ReadMode -- get .data & .rodata
       handleRodata <- openFile asmRodata ReadMode
 
+      -- FILE SIZE
+      szBinary <- withFile prog_file ReadMode hFileSize
+      szAsm <- hFileSize handleAsm
+      szDaggerIR <- hFileSize handleIr
+
       -- READ FILES
       contentIr <- hGetContents handleIr
       contentAsm <- hGetContents handleAsm
@@ -194,7 +207,6 @@ main = do
           {-********************
               PRE-PROCESSING
           *********************-}
-
           -- Disassembly
           let asmTable = collectAddressname (filter (not.null) $ lines $ contentAsm)
 
@@ -214,12 +226,12 @@ main = do
                 MAJOR METHODS
             *********************-}
           -- let runOption = "idiom"
-              -- runOption = "prop"
-              -- runOption = "vname"
+              -- runOption = "propagation"
+              -- runOption = "variable_name"
               -- runOption = "precision"
-              -- runOption = "elim"
-              -- runOption = "SSAform"
-              runOption = "fname"
+              runOption = "elimination"
+              -- runOption = "SSA_format"
+              -- runOption = "func_name"
 
               trimS = forFunction runOption functionIR address values asmTable
               trimContent = map fst trimS -- [(content)]
@@ -229,6 +241,8 @@ main = do
           -- WRITE A FILE
           hPutStr handleTmp $ unlines (map unlines trimContent)
 
+          szFinal <- hFileSize handleTmp
+
           -- CLOSE FILES & TERMINATE
           hClose handleIr
           hClose handleAsm
@@ -236,12 +250,18 @@ main = do
           hClose handleTmp
 
           system $ "rm " ++ decir ++ " " ++ disas ++ " " ++ asmRodata
-          renameFile tmpFile (prog_file ++ "Output_" ++ runOption ++ ".ll")
+          renameFile tmpFile (prog_file ++ "_" ++ runOption ++ ".ll")
 
           -- mapM_ print (printRP plist)
           -- mapM_ print (printLV vlist)
           -- mapM_ print (printPair asmTable)
-          print "ok"
+
+
+          let infoAssembly = "Assembly: " ++ show szAsm ++ " bytes (" ++ (show $ length $ lines contentAsm) ++ ")"
+              infoDaggerIR = "Dagger-IR: " ++ show szDaggerIR ++ " bytes (" ++ (show $ length $ lines contentIr) ++ ")"
+              infoFinal = (map toUpper runOption) ++ ": " ++ show szFinal ++" bytes (" ++ (show $ length $ lines $ unlines $ map unlines trimContent) ++ ")"
+
+          mapM_ print [infoAssembly, infoDaggerIR, infoFinal]
         else do
 
           -- CLOSE FILES & TERMINATE

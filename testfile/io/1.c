@@ -4,7 +4,7 @@
 
 int main(){
 
-  char buff[32];
-  printf("HELLO WORLD!");
-  puts("hello world!");
+  char buff[32]="Hello World!";
+  printf();
+  puts();
 }

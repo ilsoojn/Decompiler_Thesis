@@ -22,15 +22,16 @@ import RegexFunction
 import Lists
 
 variableName :: [String] -> [(String, String)] -> [LeftVar] -> [String] -> Integer -> ( [String], ([LeftVar], [(String, String)]) )
-variableName [] nameList vList content num = trace("Detected Variables: " ++ show num) (content, (vList, nameList))
-variableName (line : next) nameList vList content num
-  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) = variableName next nameList vList (content ++ [line]) num
+variableName [] nameList vList content count = trace("\nDetected Variables: " ++ show count) (content, (vList, nameList))
+variableName (line : next) nameList vList content count
+  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) =
+    variableName next nameList vList (content ++ [line]) count
   | (isPrefixOf "store" line && (not $ or $ map (`elem` reg_base) (words line)) && (not $ hasInitialPointer line)) = do
     let s = storeStatement line
         (vtype, v, addr) = (ty s, value s, at s)
         str = lookup addr nameList
         vname = bool (fromJust str) (str_var ++ (names !! length nameList)) (isNothing str)
-        pair = (addr, vname) --trace("(" ++ addr ++ ", " ++ vname ++ ")")
+        pair = (addr, vname)
 
         tmpSz = filter (isDigit) vtype
         tmp1 = bool "10" "16" (vtype == "fp128" || vtype == "ppc_fp128") -- x86_fp80
@@ -40,20 +41,19 @@ variableName (line : next) nameList vList content num
         align_sz = bool (show $ round $ fromInteger(strToInt tmpSz)/8) tmp4 (null tmpSz)
 
         -- Create an allocating statement for the variable
-        -- align_sz = bool (show $ round $ fromInteger(strToInt tmpSz)/8) ("8") (vtype == "double")
         state = "alloca " ++ vtype ++ ", align " ++ align_sz
         v' = LeftVar vname vtype "alloca" state
         newState = vname ++ " = " ++ state
 
     if (isNothing str)
-      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line]) (num + 1)
-      else variableName next nameList vList (content ++ [line]) num
+      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line]) (count + 1)
+      else variableName next nameList vList (content ++ [line]) count
 
-  | otherwise = variableName next nameList vList (content ++ [line]) num
+  | otherwise = variableName next nameList vList (content ++ [line]) count
 
 propagateName :: [String] -> [(String, String)] -> [String]
 propagateName content [] = content
-propagateName content ((location, str) : nameList) = propagateName (replace' location str content) nameList --trace(location ++ " :: " ++ str)
+propagateName content ((location, str) : nameList) = trace(" - " ++ str ++ " <- " ++ location)propagateName (replace' location str content) nameList --
 
 functionName :: [String] -> [(String, String)] -> [String]
 functionName content [] = content
@@ -68,8 +68,8 @@ precisionConversion (line : next) addr val preCont
   | (isInfixOf " = " line) = do
     let [v, state] = splitOn " = " line
         (lhs, (x, r)) = statement line
-    --if (isEqualState state && isDoubleRHS state)
-    if ((op x == "load") && isNum(ptr x)) -- && "double" == (ty x)
+
+    if ((op x == "load") && isNum(ptr x))
       then do
         let b1 = bool 80 128 (ty x == "ppc_fp128" || ty x == "fp128")
             b2 = bool b1 64 (ty x == "double")
