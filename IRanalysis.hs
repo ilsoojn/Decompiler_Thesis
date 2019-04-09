@@ -19,17 +19,18 @@ import Data.Typeable
 import Debug.Trace
 import Text.Regex.Posix
 
+import Block
+import Lists
+import RegexFunction
 import OtherFunction
 import StatementInstr
 import StatementParse
-import Elimination
-import Propagation
-import Block
-import NamingPrecision
-import RegisterPointer
-import RegexFunction
 import Idioms
-import Lists
+import RegisterPointer
+import NamingPrecision
+import Propagation
+import Elimination
+import HLLgenerator
 
 {-************************************************************************
                   Remove Unnecessary Line Before Process
@@ -136,8 +137,12 @@ forFunction run (f : fs) addr val asmT = do
       -- Function Name
       fnContent = functionName ssaContent asmT
 
+      -- HLL Generation
+      hllContent = generateHLL eContent
+
   case run of
     -- let (content, (vlist, plist)) = f
+    "preprocess" ->  f : (forFunction run fs addr val asmT)
     "idiom"     -> (iContent, (vIdiom, plist)) : (forFunction run fs addr val asmT)
     "propagation"      -> (pContent, (vProp, pProp)) : (forFunction run fs addr val asmT)
     "variable_name"     -> (ncContent, (vName, pProp)) : (forFunction run fs addr val asmT)
@@ -145,23 +150,28 @@ forFunction run (f : fs) addr val asmT = do
     "elimination"-> (eContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
     "SSA_format"   -> (ssaContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
     "func_name"     -> (fnContent, (vName, pProp)) : (forFunction run fs addr val asmT)
+    "HLL" -> (hllContent, (vElim, pProp)) : (forFunction run fs addr val asmT)
     -- _ -> (ncContent, (vName, pProp)) : (forFunction run fs addr val asmT)
     _-> (content, (vlist, plist)) : (forFunction run fs addr val asmT)
 
   where (content, (vlist, plist)) = f
 
-{-
-printRP [] = []
-printRP (p:ps) =
-  (show (length ps) ++ " > " ++ rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") " ++ getRstate p) : (printRP ps)
 
-printLV [] = []
+printRP [] = [ "", "--- REGISTER ---", ""]
+printRP (p:ps) =
+  (printRP ps) ++ [(rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") : " ++ getRstate p)]
+  -- (rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") : " ++ getRstate p) : (printRP ps)
+  -- (show (length ps) ++ " > " ++ rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") " ++ getRstate p) : (printRP ps)
+
+printLV [] = [ "", "--- VARIABLE ---", ""]
 printLV (p:ps) =
-  (show (length ps) ++ " > " ++ variable p ++ " ("++ getType p ++ ", " ++ show (getInstr p) ++ ") " ++ getState p) : (printLV ps)
+  (printLV ps) ++ [(variable p ++ " ("++ getType p ++ ") : " ++ getState p)]
+  -- (variable p ++ " ("++ getType p ++ ") : " ++ getState p) : (printLV ps)
+  --(show (length ps) ++ " > " ++ variable p ++ " ("++ getType p ++ ", " ++ show (getInstr p) ++ ") " ++ getState p) : (printLV ps)
 
 printPair [] = []
 printPair ((a, b):xs) = (a ++ " -> " ++ b) : (printPair xs)
--}
+
 
 {-************************************************************************
             arguments: executable or binary/object fileE
@@ -225,13 +235,15 @@ main = do
             {-********************
                 MAJOR METHODS
             *********************-}
-          -- let runOption = "idiom"
+          -- let runOption = "preprocess"
+              -- runOption = "idiom"
               -- runOption = "propagation"
               -- runOption = "variable_name"
               -- runOption = "precision"
-              runOption = "elimination"
+              -- runOption = "elimination"
               -- runOption = "SSA_format"
               -- runOption = "func_name"
+              runOption = "HLL"
 
               trimS = forFunction runOption functionIR address values asmTable
               trimContent = map fst trimS -- [(content)]
@@ -239,6 +251,7 @@ main = do
               trimListP = map snd $ map snd trimS -- map snd trimS
 
           -- WRITE A FILE
+          -- hPutStr handleTmp $ unlines (map unlines $ map fst functionIR)
           hPutStr handleTmp $ unlines (map unlines trimContent)
 
           szFinal <- hFileSize handleTmp
@@ -252,8 +265,10 @@ main = do
           system $ "rm " ++ decir ++ " " ++ disas ++ " " ++ asmRodata
           renameFile tmpFile (prog_file ++ "_" ++ runOption ++ ".ll")
 
-          -- mapM_ print (printRP plist)
-          -- mapM_ print (printLV vlist)
+          -- mapM_ print (printRP $ head trimListP)-- $ map snd $ map snd functionIR) --(printRP plist)
+          -- mapM_ print (printLV $ head trimListV)-- $ map fst $ map snd functionIR)-- (printLV vlist)
+          -- mapM_ print $ printRP $ head (map snd $ map snd functionIR)
+          -- mapM_ print $ printLV $ head (map fst $ map snd functionIR)
           -- mapM_ print (printPair asmTable)
 
 

@@ -53,6 +53,7 @@ flagElimination settings precontent list = do
           newList = removeVariables tmpVar list
       ([line], newList)
 
+-- Handle CtlSysEFLAGS Idioms ()
 cleanCode :: [String] -> [String] -> [LeftVar] -> ([String], [LeftVar])
 cleanCode [] preContent vList = (preContent, vList)
 cleanCode (line : nextContent) preContent vList
@@ -95,7 +96,7 @@ variableElim change (line : nextCont) vList pList preCont
         use = filter (not.null) (findUse v nextCont [])
         operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
 
-    case (isInfixOf "_init" line || isInfixOf "_ptr" line) of
+    case (isInfixOf "_init" line || isInfixOf "_ptr" line|| elem v reg_base) of -- || elem v reg_base
       True -> do
         let v' = fromJust $ lookupList v vList
             newList = removeVariable v' vList []
@@ -128,7 +129,7 @@ variableElim change (line : nextCont) vList pList preCont
 
     if (op var == "store")
       then do
-        if (isInfixOf "_init" line || isInfixOf "_ptr" line)-- || elem y reg_base)
+        if (isInfixOf "_init" line || isInfixOf "_ptr" line)
           then variableElim True nextCont vList pList preCont
 
           else if (hasNoDef operands vList)

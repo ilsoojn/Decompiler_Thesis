@@ -274,6 +274,17 @@ getType x = vtype x
 getInstr x = instruction x
 getState x = state x
 
+printList :: [LeftVar] -> [String]
+printList [] = []
+printList (e : list) = do
+  let v = variable e
+      ty = vtype e
+      instr = instruction e
+      st = state e
+
+  let line = ty ++ " " ++ v ++ " ( " ++ instr ++ " ) <- " ++ st
+
+  line:(printList list)
 
 {-************************************************************************
                       RP : REGISTER FILE VARIABLES
