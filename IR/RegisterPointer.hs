@@ -99,7 +99,7 @@ pointerInfo ptr state pList vList content
         if (isRegPointer rbase1 && isRegPointer rbase2)
           then do
             let sym = trace("> " ++ ptr ++ " ("++head reg ++ ", " ++ last reg++")") bool "+" "-" (isSub)
-            (RP ptr "" 0 (a++sym++b) True)
+            (RP ptr "" 0 (unwords [a, sym, b]) True)
           else do
             let rbase = bool rbase1 rbase2 (isRegPointer rbase2)
                 rindex = bool (rindex1 + rindex2) (rindex1 - rindex2) isSub

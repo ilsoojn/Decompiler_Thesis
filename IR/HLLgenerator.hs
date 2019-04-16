@@ -85,7 +85,7 @@ irConversion x xInfo xReg line
   | (isStore xInfo) = (at xInfo) ++ " = " ++ (value xInfo)
   | (isBinary xInfo || isBitwise xInfo) = unwords [(fromJust x),"=", (head xReg), (sym xInfo), (last xReg)]
   | (isRet xInfo) = "return " ++ (value xInfo)
-  | (isVoidRet xInfo) = "return void;"
+  | (isVoidRet xInfo) = "return void"
   | (isCmpi xInfo || isCmpf xInfo) = do
     case (cond xInfo) of
       "ord"   -> (fromJust x) ++ " = " ++ (bool "false" "true" (not ("QNAN" `elem` xReg)))
@@ -109,9 +109,9 @@ removeSSA_variables (line : nextContents) = do
   let (x, (xInfo, xReg)) = statement line
   if (isJust x && (not.null) (filter isDigit $ fromJust x))
     then do
-      let v = fromJust x
+      let v = strip $ fromJust x
           rhs = strip $ snd $ strSplit "=" line
-      (removeSSA_variables (replace' v rhs nextContents))
+      trace(v ++ " -> " ++ rhs)(removeSSA_variables (replace' v rhs nextContents))
     else line : (removeSSA_variables nextContents)
 
 fromIRtoHLL :: Function -> [String] -> [String] -> Function
@@ -141,7 +141,7 @@ generateHLL f funcName= do
       f' = fromIRtoHLL f tmpIR []
 
       (cfg, blockTable) = createCFG f'
-      tmp = map ("\t" ++) (blockToStr f' cfg blockTable)
+      tmp = removeSSA_variables$ map ("\t" ++) (blockToStr f' cfg blockTable)
   -- let (cfg, blockTable) =  createCFG f
   --     tmp = removeSSA_variables $ fromIRtoHLL $ propagateLoad $ blockToText cfg blockTable
       new_fname = bool (fromJust funcName) (fname f) (isNothing funcName)

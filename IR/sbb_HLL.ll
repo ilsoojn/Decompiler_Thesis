@@ -8,9 +8,7 @@ void main ( %regset* noalias nocapture ) {
 	%c = 10
 	%d = 313.24
 	%e = 10.0
-	%77 = %c * %e
-	%90 = %77 + %d
-	%f = %90
-	return void;
+%f = %c * %e + %d
+return void
 }
 

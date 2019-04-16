@@ -352,7 +352,7 @@ main = do
           system $ "rm " ++ decir ++ " " ++ disas ++ " " ++ asmRodata
           renameFile tmpFile (prog_file ++ "_" ++ runOption ++ ".ll")
 
-          mapM_ print (printRP $ head trimListP)-- $ map snd $ map snd functionIR) --(printRP plist)
+          -- mapM_ print (printRP $ head trimListP)-- $ map snd $ map snd functionIR) --(printRP plist)
           -- mapM_ print (printLV $ head trimListV)-- $ map fst $ map snd functionIR)-- (printLV vlist)
           -- mapM_ print $ printRP $ head (map registers functionS_new)
           -- mapM_ print $ printLV $ head (map fst $ map snd functionIR)

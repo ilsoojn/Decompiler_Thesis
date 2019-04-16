@@ -97,7 +97,7 @@ variableElim change f (line : nextCont) preCont
         operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
         vList = variables f
 
-    case (isInfixOf "_init" line || isInfixOf "_ptr" line || elem v reg_base) of 
+    case (isInfixOf "_init" line || isInfixOf "_ptr" line || elem v reg_base) of
       True -> do
         let v' =  fromJust $ lookupList v vList
             newList = removeVariable v' vList []
@@ -109,19 +109,19 @@ variableElim change f (line : nextCont) preCont
             -- DEAD Variable
             if (isNothing $ lookupList v vList)
               then do
-                 variableElim True f nextCont preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
+                 trace("use(" ++ v ++ ") = 0 : " ++ line) variableElim True f nextCont preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
               else do
                 let v' = fromJust $ lookupList v vList
                     newList = removeVariable v' vList []
-                variableElim True (f{ variables = newList }) nextCont preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
+                trace("use(" ++ v ++ ") = 0 : " ++ line) variableElim True (f{ variables = newList }) nextCont preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
 
           else if (hasNoDef operands vList)
             then do-- LIVE Variable but NoDef(ops)
               let v' = fromJust $ lookupList v vList
                   newList = removeVariable v' vList []
-              variableElim True (f{ variables = newList }) nextCont preCont --trace("def(" ++ v ++ ") = 0 : " ++ line)
+              trace("def(" ++ v ++ ") = 0 : " ++ line) variableElim True (f{ variables = newList }) nextCont preCont --trace("def(" ++ v ++ ") = 0 : " ++ line)
             else -- LIVE Variable and Def(ops)
-              variableElim change f nextCont (preCont ++ [line]) --trace("good\t" ++ line)
+              trace("good\t" ++ line)variableElim change f nextCont (preCont ++ [line]) --trace("good\t" ++ line)
 
   | otherwise= do
     -- No LHS
@@ -136,15 +136,15 @@ variableElim change f (line : nextCont) preCont
 
           else if (hasNoDef operands vList)
             then -- NoDef(reg)
-              variableElim True f nextCont preCont --trace("def( - ) = 0 : " ++ line)
+              trace("def( - ) = 0 : " ++ line) variableElim True f nextCont preCont --trace("def( - ) = 0 : " ++ line)
             else -- Def(reg)
               variableElim change f nextCont (preCont ++ [line])
 
       else if (hasNoDef operands vList)
         then -- NoDef(reg)
-          variableElim True f nextCont preCont --trace("def( - ) = 0 : " ++ line)
+          trace("def( - ) = 0 : " ++ line) variableElim True f nextCont preCont --trace("def( - ) = 0 : " ++ line)
         else -- Def(reg)
-          variableElim change f nextCont (preCont ++ [line]) --trace("good\t" ++ line)
+        trace("good\t" ++ line)  variableElim change f nextCont (preCont ++ [line]) --trace("good\t" ++ line)
 
 elimination :: Function -> Function
 elimination f = do

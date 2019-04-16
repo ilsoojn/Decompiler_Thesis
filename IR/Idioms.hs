@@ -91,7 +91,7 @@ bitwiseOP pre curr next content vList
   INPUT: content preContent Function count_1 count_2
 -}
 detectIdiom :: [String] -> [String] -> Function -> Integer -> Integer -> Function
-detectIdiom [] txt f bin bit = trace("\nDetected Idioms\n - Idiom 1 (binaryOP): " ++ show bin ++ "\n - Idiom 2 (bitwiseOP): "++ show bit) (f {code = txt})
+detectIdiom [] txt f bin bit = trace("\nDetected Idioms\n - Idiom 1 (binaryOP): " ++ show ((fromInteger bin) / 3) ++ "\n - Idiom 2 (bitwiseOP): "++ show ((fromIntegral bit) / 3)) (f {code = txt})
 detectIdiom (line: content) oldTxt f binaryN bitwiseN
   | (isLHS line (fname f)) = do
 
@@ -116,7 +116,7 @@ detectIdiom (line: content) oldTxt f binaryN bitwiseN
                     (cline, nline, newList) = binaryOP (fromJust v) new_state (head content) vList
                     newContent = filter (not.null) $ nline:(tail content)
 
-                detectIdiom newContent (oldTxt ++ cline) (f {variables = newList}) (binaryN + 1) bitwiseN
+                trace("binary: " ++ (fromJust v)) detectIdiom newContent (oldTxt ++ cline) (f {variables = newList}) (binaryN + 1) bitwiseN
 
               else detectIdiom content (oldTxt ++ [line]) f binaryN bitwiseN
 
@@ -126,7 +126,7 @@ detectIdiom (line: content) oldTxt f binaryN bitwiseN
                     new_state = concat [head reg, sym, last reg]
                     (cline, nline, newList) = binaryOP (fromJust v) new_state (head content) vList
                     newContent = filter (not.null) $ nline:(tail content)
-                detectIdiom newContent (oldTxt ++ cline) (f {variables = newList}) (binaryN + 1) bitwiseN
+                trace("binary: " ++ (fromJust v)) detectIdiom newContent (oldTxt ++ cline) (f {variables = newList}) (binaryN + 1) bitwiseN
 
               else detectIdiom content (oldTxt ++ [line]) f binaryN bitwiseN
         {-
@@ -146,7 +146,7 @@ detectIdiom (line: content) oldTxt f binaryN bitwiseN
                 newContent = filter (not.null) $ nline:(tail content)
                 newPre = filter (not.null) $ init oldTxt ++ [pline] ++ cline
 
-            detectIdiom newContent newPre (f {variables = newList}) binaryN (bitwiseN + 1)
+            trace("bitwise: " ++ (fromJust v)) detectIdiom newContent newPre (f {variables = newList}) binaryN (bitwiseN + 1)
 
           else detectIdiom content (oldTxt ++ [line]) f binaryN bitwiseN
 
