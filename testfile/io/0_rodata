@@ -1,0 +1,6 @@
+
+/home/ilsoo/dec/testfile/io/0:     file format elf64-x86-64
+
+Contents of section .rodata:
+ 0760 01000200 48454c4c 4f20574f 524c4421  ....HELLO WORLD!
+ 0770 0068656c 6c6f2077 6f726c64 2100      .hello world!.  

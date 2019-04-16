@@ -3,6 +3,7 @@ import System.Environment
 import System.IO
 import System.Process
 
+import Data.Array
 import Data.Bool
 import Data.Char
 import Data.DeriveTH
@@ -16,7 +17,6 @@ import Data.Strings
 import Data.Tuple
 import Data.Typeable
 
-import Debug.Trace
 import Text.Regex.Posix
 
 import Block
@@ -133,7 +133,7 @@ forFunction run (f : fs) addr val asmT = do
       -- ELIMINATION
       (eContent, vElim) = elimination pcContent vName pProp
       -- SSA Format
-      ssaContent = (ssaLLVM (orderingContent eContent) [] 1)
+      ssaContent = (ssaLLVM (generateHLL eContent) [] 1)
       -- Function Name
       fnContent = functionName ssaContent asmT
 
@@ -235,7 +235,7 @@ main = do
             {-********************
                 MAJOR METHODS
             *********************-}
-          -- let runOption = "preprocess"
+          let runOption = "preprocess"
               -- runOption = "idiom"
               -- runOption = "propagation"
               -- runOption = "variable_name"
@@ -243,7 +243,7 @@ main = do
               -- runOption = "elimination"
               -- runOption = "SSA_format"
               -- runOption = "func_name"
-              runOption = "HLL"
+              -- runOption = "HLL"
 
               trimS = forFunction runOption functionIR address values asmTable
               trimContent = map fst trimS -- [(content)]
@@ -267,7 +267,7 @@ main = do
 
           -- mapM_ print (printRP $ head trimListP)-- $ map snd $ map snd functionIR) --(printRP plist)
           -- mapM_ print (printLV $ head trimListV)-- $ map fst $ map snd functionIR)-- (printLV vlist)
-          -- mapM_ print $ printRP $ head (map snd $ map snd functionIR)
+          mapM_ print $ printRP $ head (map snd $ map snd functionIR)
           -- mapM_ print $ printLV $ head (map fst $ map snd functionIR)
           -- mapM_ print (printPair asmTable)
 

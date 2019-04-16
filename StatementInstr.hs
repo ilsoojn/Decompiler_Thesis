@@ -5,21 +5,20 @@ import Data.Tuple
 
 import Debug.Trace
 
--- data BasicBlock = BasicBlock{blockName::String, preds::[String], bcontent::[String]}
--- data Block = Block{bLabel::String, blockContent::[String]}
--- data Vertex = Vertex {bb::Block, bIn::[Block], bOut::[Block]}
+data Function = Function{fname::String, retType::String, blocks::[BasicBlock], registers::[RP], variables::[LeftVar], code::[String]}
+data BasicBlock = BasicBlock{blockName::String, preds::[String], txt::[String], succs::[String]} deriving (Ord, Eq, Show, Read)
 
-{-************** Format and Regex **************-}
-
+{- DEF ( VARIABLE ) -}
 data RP = RP{rname::String, rbase::String, ridx::Integer, rstate:: String, permit::Bool} deriving (Ord, Eq, Show, Read)
 data LeftVar = LeftVar{variable::String, vtype::String, instruction::String, state::String} deriving (Show, Read, Eq, Ord)
 isLeftVar (LeftVar _ _ _ _) = True
 isRP (RP _ _ _ _ _) = True
 
+{- STATEMENT -}
+
 data Clause = Catch {cty::String, cvalue::String} | Filter {cty::String, cvalue::String} | CleanUp deriving (Show)-- Catch <= single val, Filter <= Array
 data Chain = Chain {v::String, def::(Integer, VAR), use::[(Integer, VAR)]} deriving (Show)
 
--- data LOAD = LOAD {ld_ty::String, rsp::String, index::Integer}
 data VAR = Undef {instrType::String, op::String, value::String}
           | Const {instrType::String, op::String, value::String}
           | Colon {instrType::String, op::String, high::String, low::String}
@@ -81,10 +80,10 @@ isBranch (Branch _ _ _) = True
 isBranch _ = False
 isCondBranch (CondBranch _ _ _ _ _) = True
 isCondBranch _ = False
--- isIndirBranch (IndirBranch _ _ _ _ _) = True
--- isIndirBranch _ = False
--- isSwitch (Switch _ _ _ _ _ _) = True
--- isSwitch _ = False
+isIndirBranch (IndirBranch _ _ _ _ _) = True
+isIndirBranch _ = False
+isSwitch (Switch _ _ _ _ _ _) = True
+isSwitch _ = False
 -- isInvoke (Invoke _ _ _ _ _ _ _ _ _) = True
 -- isInvoke _ = False
 -- isResume (Resume _ _ _ _) = True

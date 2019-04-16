@@ -44,37 +44,37 @@ blockToContent :: [BasicBlock] -> [String]
 blockToContent [] = []
 blockToContent (b : bs) = (bcontent b) ++ blockToContent bs
 -}
-controlFlowConversion :: [BasicBlock] -> String -> [String] -> [String]
-controlFlowConversion [] function_starting_Address code = code
-controlFlowConversion (b : bs) addr code = do
-  let block_label = blockName b
-      predecessor = preds b
-      successorLine = last (bcontent b)
-      content = trace(block_label ++ " >> " ++ (snd $ strSplit str_bb block_label) ++ " & " ++ addr) init (tail (bcontent b))
-
-  if (isInfixOf "entry_fn_" block_label || isInfixOf "exit_fn_" block_label) -- entry or exit Block
-    then (controlFlowConversion bs addr (code ++ content))
-  else if ((snd $ strSplit str_bb block_label) == addr)  -- initial Block
-    then (controlFlowConversion bs addr (code ++ content))
-  else do
-    let loopBlock = filter (> block_label) predecessor
-    if (length loopBlock > 0) -- LOOP
-      then (controlFlowConversion bs addr (code ++ content))-----
-    else (controlFlowConversion bs addr (code ++ content))----
-
-cfgContent :: [String] -> [String]
-cfgContent content = do
-  let fnEntry = filter (isFunction) content
-      fnExit = "}"
-      b = contentToBlock content "" [] []
-      b' = orderingBlock b
-      c = controlFlowConversion b' (getFunctionAddr $ head fnEntry) []
-  (fnEntry ++ c ++ [fnExit])
+-- controlFlowConversion :: [BasicBlock] -> String -> [String] -> [String]
+-- controlFlowConversion [] function_starting_Address code = code
+-- controlFlowConversion (b : bs) addr code = do
+--   let block_label = blockName b
+--       predecessor = preds b
+--       successorLine = last (txt b)
+--       content = trace(block_label ++ " >> " ++ (snd $ strSplit str_bb block_label) ++ " & " ++ addr) init (tail (txt b))
+--
+--   if (isInfixOf "entry_fn_" block_label || isInfixOf "exit_fn_" block_label) -- entry or exit Block
+--     then (controlFlowConversion bs addr (code ++ content))
+--   else if ((snd $ strSplit str_bb block_label) == addr)  -- initial Block
+--     then (controlFlowConversion bs addr (code ++ content))
+--   else do
+--     let loopBlock = filter (> block_label) predecessor
+--     if (length loopBlock > 0) -- LOOP
+--       then (controlFlowConversion bs addr (code ++ content))-----
+--     else (controlFlowConversion bs addr (code ++ content))----
+--
+-- cfgContent :: [String] -> [String]
+-- cfgContent content = do
+--   let fnEntry = filter (isFunction) content
+--       fnExit = "}"
+--       b = contentToBlock content "" [] []
+--       b' = orderingBlock b
+--       c = controlFlowConversion b' (getFunctionAddr $ head fnEntry) []
+--   (fnEntry ++ c ++ [fnExit])
 
 irConversion :: Maybe String -> VAR -> [String] -> String -> String
 irConversion x xInfo xReg line
   | (isAlloca xInfo) = do
-    let variableName = (fromJust x) ++ ";"
+    let variableName = (fromJust x)
 
     case (ty xInfo) of
       "i16" -> "short " ++ variableName
@@ -82,9 +82,9 @@ irConversion x xInfo xReg line
       "i64" -> "long " ++ variableName
       _ -> (ty xInfo) ++ " " ++ variableName
 
-  | (isStore xInfo) = (at xInfo) ++ " = " ++ (value xInfo) ++ ";"
-  | (isBinary xInfo || isBitwise xInfo) = (fromJust x) ++ " = " ++ (head xReg) ++ " " ++ (sym xInfo) ++ " " ++ (last xReg) ++ ";"
-  | (isRet xInfo) = "return " ++ (value xInfo) ++ ";"
+  | (isStore xInfo) = (at xInfo) ++ " = " ++ (value xInfo)
+  | (isBinary xInfo || isBitwise xInfo) = (fromJust x) ++ " = " ++ (head xReg) ++ " " ++ (sym xInfo) ++ " " ++ (last xReg)
+  | (isRet xInfo) = "return " ++ (value xInfo)
   | (isVoidRet xInfo) = "return void;"
   | otherwise = line
 
@@ -115,4 +115,6 @@ forIR (line : nextContents) = do
   newLine : (forIR nextContents)
 
 generateHLL :: [String] -> [String] -- contents -> newContents
-generateHLL content = removeSSA_variables $ forIR (propagateLoad (orderingContent content))
+generateHLL content =do
+  let (cfg, blockTable) = createCFG content
+  removeSSA_variables $ forIR $ propagateLoad $ blockToText cfg blockTable
