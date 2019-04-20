@@ -21,16 +21,17 @@ import OtherFunction
 import RegexFunction
 import Lists
 
-propagateRegister :: [String] -> String -> RP -> [LeftVar] -> [String] -> ([String], [LeftVar])
-propagateRegister [] ptr p vList content = (content, vList)
-propagateRegister (line : nextCont) ptr p vList content
-  | (isFunction line || isBasicBlock line || isBlockLabel line) = propagateRegister nextCont ptr p vList (content ++ [line])
+propagateRegister :: Function -> [String] -> String -> RP -> [String] -> ([String], Function)
+propagateRegister f [] ptr rptr content = (content, f)
+propagateRegister f (line : nextCont) ptr rptr content
+  | (isFunction line || isBasicBlock line || isBlockLabel line) = propagateRegister f nextCont ptr rptr (content ++ [line])
   | (isInfixOf " = " line) = do
     let [v, state] = splitOn' " = " line
 
-    if (isUsePtr ptr state) --trace(ptr ++ ": (" ++ (bool "x" "v" (isUsePtr ptr state) )++ ") " ++ line)
+    if (hasPtr ptr state) --trace(ptr ++ ": (" ++ (bool "x" "v" (hasPtr ptr state) )++ ") " ++ line)
       then do
         let (x, (var, reg)) = statement line
+            vList = variables f
             v' = fromJust $ lookupList v vList
 
         case (instrType var) of
@@ -39,49 +40,71 @@ propagateRegister (line : nextCont) ptr p vList content
 
             case (sym var) of
               "+" -> do
-                let newState = concat[(getBase p), " +", show (getIndex p + n)]
+                let newState = concat[(getBase rptr), "+", show (getIndex rptr + n)]
                     newList = updateList (setState newState v') vList []
-                propagateRegister nextCont ptr p newList (content ++ [v ++ " = " ++ newState])--trace(" (" ++ ptr ++ " -> " ++ newState ++") " ++ line)
+                propagateRegister (f{variables = newList}) nextCont ptr rptr (content ++ [v ++ " = " ++ newState])--trace(" (" ++ ptr ++ " -> " ++ newState ++") " ++ line)
               "-" -> do
-                let newState = concat[(getBase p), " -", show (getIndex p - n)]
+                let newState = concat[(getBase rptr), "-", show (getIndex rptr - n)]
                     newList = updateList (setState newState v') vList []
-                propagateRegister nextCont ptr p newList (content ++ [v ++ " = " ++ newState]) --trace(" (" ++ ptr ++ " -> " ++ newState ++") " ++ line)
-              _ -> propagateRegister nextCont ptr p vList (content ++ [v ++ " = " ++ (replace ptr (getRstate p) state)])
+                propagateRegister (f{variables = newList}) nextCont ptr rptr (content ++ [v ++ " = " ++ newState]) --trace(" (" ++ ptr ++ " -> " ++ newState ++") " ++ line)
+              _ -> propagateRegister f nextCont ptr rptr(content ++ [v ++ " = " ++ (replace ptr (getRstate rptr) state)])
 
-          "conversion" ->
-            propagateRegister nextCont ptr p (updateList (setState (getRstate p) v') vList []) (content ++ [v ++ " = " ++ (getRstate p)]) --trace(" (" ++ ptr ++ " -> " ++ (getRstate p) ++") " ++ line)
+          "conversion" -> do
+            let newList = updateList (setState (getRstate rptr) v') vList []
+            propagateRegister (f{variables = newList}) nextCont ptr rptr(content ++ [v ++ " = " ++ (getRstate rptr)]) --trace(" (" ++ ptr ++ " -> " ++ (getRstate rptr) ++") " ++ line)
 
           "none" -> do
-
-            if (isInfixOf "+" state || isInfixOf "-" state)
+            if (isInfixOf " + " state || isInfixOf " - " state)
               then do
-                let sym = bool "+" "-" (isInfixOf "-" state)
-                    (pos, neg) = (sym == "+", sym == "-")
-
-                    (a, b) = bool (strSplit' "+" state) (strSplit' "-" state) neg
-                if (isNum a || isNum b)
+                let rv = fromJust $ lookupList_p v (registers f) -- v in registerList
+                    sym = bool " + " " - " (isInfixOf " - " state)
+                    (pos, neg) = (sym == " + ", sym == " - ")
+                    (a, b) = bool (strSplit' " + " state) (strSplit' " - " state) neg
+                --
+                -- let front = bool
+                if trace("(" ++ a ++ ", " ++ b ++")")(hasPtr ptr a)
+                  -- a = ptr [+/- n]
                   then do
-                    let n = read (bool a b (isMatchPointer ptr [a])) :: Integer
-                        idx = getIndex p
-                        idxSum = bool (idx + n) (idx - n) neg
-                        sym = bool "+" "" (idxSum < 0)
-                        baseStr = bool (getBase p ++ sym) "" (getBase p == "")
-                        newState = baseStr ++ show idxSum
-                        newList = updateList (setState newState v') vList []
-                    propagateRegister nextCont ptr p newList (content ++ [v ++ " = " ++ newState])
-                  else
-                    propagateRegister nextCont ptr p vList (content ++ [v ++ " = " ++ (replace ptr (getRstate p) state)])
+                    let tmpStr = (unwords $ map strip $ replace' ptr (getRstate rptr) [a]) ++ sym ++ b
+                        newList_p = updateList_p (setRstate tmpStr rv) (registers f) []
+                        newList_v = updateList (setState tmpStr v') vList []
+                    trace("A: " ++ ptr ++ " -> "++ (getRstate rptr) ++ " > " ++ line ++ " -> "++ tmpStr) propagateRegister (f{registers = newList_p, variables = newList_v}) nextCont ptr rptr(content ++ [v ++ " = " ++ tmpStr])
+                  -- b = ptr [+/- n]
+                  else do
+                    let tmpStr = a ++ sym ++ (unwords $ map strip $ replace' ptr (getRstate rptr) [b])
+                        newList_p = updateList_p (setRstate tmpStr rv) (registers f) []
+                        newList_v = updateList (setState tmpStr v') vList []
+                    trace("B: " ++ ptr ++ " -> "++ (getRstate rptr) ++ " > " ++ line ++ " -> "++ tmpStr) propagateRegister (f{registers = newList_p, variables = newList_v}) nextCont ptr rptr(content ++ [v ++ " = " ++ tmpStr])
 
-                else propagateRegister nextCont ptr p vList (content ++ [v ++ " = " ++ (replace ptr (getRstate p) state)])
+              else if (isInfixOf "+" state || isInfixOf "-" state)
+                then do
+                  let sym = bool "+" "-" (isInfixOf "-" state)
+                      (pos, neg) = (sym == "+", sym == "-")
 
-          _ -> propagateRegister nextCont ptr p vList (content ++ [v ++ " = " ++ (replace ptr (getRstate p) state)]) --
+                      (a, b) = bool (strSplit' "+" state) (strSplit' "-" state) neg
+                  if (isNum a || isNum b)
+                    then do
+                      let n = read (bool a b (isMatchPointer ptr [a])) :: Integer
+                          idx = getIndex rptr
+                          idxSum = bool (idx + n) (idx - n) neg
+                          sym = bool "+" "" (idxSum < 0)
+                          baseStr = bool (getBase rptr++ sym) "" (getBase rptr== "")
+                          newState = baseStr ++ show idxSum
+                          newList = updateList (setState newState v') vList []
+                      propagateRegister (f{variables = newList}) nextCont ptr rptr(content ++ [v ++ " = " ++ newState])
+                    else
+                      propagateRegister f nextCont ptr rptr(content ++ [v ++ " = " ++ (replace ptr (getRstate rptr) state)])
 
-    else propagateRegister nextCont ptr p vList (content ++ [line])
+              else propagateRegister f nextCont ptr rptr(content ++ [v ++ " = " ++ (replace ptr (getRstate rptr) state)])
+
+          _ -> propagateRegister f nextCont ptr rptr(content ++ [v ++ " = " ++ (replace ptr (getRstate rptr) state)]) --
+
+    else propagateRegister f nextCont ptr rptr(content ++ [line])
 
   | otherwise = do
-    if (isUsePtr ptr line) --trace(ptr ++ ": (" ++ (bool "x" "v" (isUsePtr ptr line) )++ ") " ++ line)
-      then propagateRegister nextCont ptr p vList (content ++ [replace ptr (getRstate p) line]) --trace(" (" ++ ptr ++ " -> " ++ (getRstate p) ++") " ++ line)
-      else propagateRegister nextCont ptr p vList (content ++ [line])
+    if (hasPtr ptr line) --trace(ptr ++ ": (" ++ (bool "x" "v" (hasPtr ptr line) )++ ") " ++ line)
+      then propagateRegister f nextCont ptr rptr(content ++ [replace ptr (getRstate rptr) line]) --trace(" (" ++ ptr ++ " -> " ++ (getRstate rptr) ++") " ++ line)
+      else propagateRegister f nextCont ptr rptr(content ++ [line])
 
 propagateVariable :: [String] -> String -> String -> [LeftVar] -> [String] -> ([String], [LeftVar])
 propagateVariable [] old new vList preCont = (preCont, vList)
@@ -127,8 +150,9 @@ propagation f (line: nextCont) preCont
   | (isLHS line (fname f)) = do
     let (x, (xvar, xreg)) = statement (strip line)
         v = fromJust x
+
         vList = variables f
-        pList = registers f
+        lv = fromJust $ lookupList v vList
 
     if (isRegPointer line)
       then do
@@ -137,8 +161,8 @@ propagation f (line: nextCont) preCont
           then -- REGISTER: initial or ptr --
             propagation f nextCont (preCont ++ [line])
           else do
-            let rp = fromJust $ lookupList_p v pList
-                lv = fromJust $ lookupList v vList
+            let pList = registers f
+                rp = fromJust $ lookupList_p v pList
 
             if (instrType xvar == "colon")
               then do
@@ -146,13 +170,13 @@ propagation f (line: nextCont) preCont
                 let rp' = rp{ rstate=(low xvar), permit=True } --rp' = rp{ rstate=(getState lv), permit=True }
                     newLine = concat[v, " = ", getRstate rp'] --trace(" " ++v ++ " (" ++ low xvar ++ ")")
                     newList = updateList_p rp' pList []
-                    (new_nextCont, new_vList) = propagateRegister nextCont v rp' vList []
-                propagation (f {registers = newList}) new_nextCont (preCont ++ [newLine])
+                    (new_nextCont, fnew) = propagateRegister (f {registers = newList}) nextCont v rp' []
+                propagation fnew new_nextCont (preCont ++ [newLine])
 
               else do
                 let newLine = concat[v, " = ", getRstate rp] --trace(v ++ ": " ++ getRstate rp) c
-                    (new_nextCont, new_vList) = bool (nextCont, vList) (propagateRegister nextCont v rp vList []) (getPermit rp)
-                propagation (f { variables = new_vList}) new_nextCont (preCont ++ [newLine])
+                    (new_nextCont, fnew) = bool (nextCont, f) (propagateRegister f nextCont v rp []) (getPermit rp)
+                propagation fnew new_nextCont (preCont ++ [newLine])
 
       else do
         -- VARIABLE --

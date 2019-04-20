@@ -95,24 +95,24 @@ replaceline old new (x:xs)
 
 replace' :: String -> String -> [String] -> [String]
 replace' old new [] = []
-replace' old new (x:xs) = unwords (replaceline old new (words x)) : replace' old new xs
+replace' old new (x:xs) = unwords (replaceline (strip old) (strip new) (words x)) : replace' old new xs
 
-replaceWord :: String -> String -> [String] -> String -> [String]
-replaceWord old new [] regex = []
-replaceWord old new (str:ss) regex
-  | (old == str) = new : (replaceWord old new ss regex)
-  | otherwise = do
-    let after_pad = unwords $ map (head.tail) (str =~ regex :: [[String]])
-        tmp_word = head $ endBy after_pad str
-    (bool str (new ++ after_pad) (old == tmp_word)) : (replaceWord old new ss regex)
-
-replaceLine :: String -> String -> String -> String -> String
-replaceLine old new tyStr line
-  | (isInfixOf old line) = do
-    let s = split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
-        r = tyStr ++ get_regexLine line regex_fb
-    unwords $ replaceWord old new s r
-  | otherwise = line
+-- replaceWord :: String -> String -> [String] -> String -> [String]
+-- replaceWord old new [] regex = []
+-- replaceWord old new (str:ss) regex
+--   | (old == str) = new : (replaceWord old new ss regex)
+--   | otherwise = do
+--     let after_pad = unwords $ map (head.tail) (str =~ regex :: [[String]])
+--         tmp_word = head $ endBy after_pad str
+--     (bool str (new ++ after_pad) (old == tmp_word)) : (replaceWord old new ss regex)
+--
+-- replaceLine :: String -> String -> String -> String -> String
+-- replaceLine old new tyStr line
+--   | (isInfixOf old line) = do
+--     let s = split (startsWith old) line--no strip!!! ["front", "old...", "old..."]
+--         r = tyStr ++ get_regexLine line regex_fb
+--     unwords $ replaceWord old new s r
+--   | otherwise = line
 
 addElement n x lst = take n lst ++ [x] ++ drop (n+1) lst
 
@@ -127,10 +127,10 @@ addElements (n:ns) (x:xs) lst = addElements ns xs newList
 
 -- STR to
 strToInt :: String -> Integer
-strToInt x = round (read x :: Double)
+strToInt x = bool (round (read x :: Double)) 0 (null x)
 
 strToFloat :: String -> Double
-strToFloat x = read x :: Double
+strToFloat x = bool (read x :: Double) 0 (null x)
 
 -- Unsigned / non-negative Int
 showBin :: Int -> String
@@ -365,7 +365,7 @@ isMatchPointer u (v:vs)
   | otherwise = isMatchPointer u vs
     where p = str_var ++ get_regexLine v regex_fb
 
-isUsePtr p line
+hasPtr p line
   | (isInfixOf p line) = do
     let tmpList = map (str_var ++) $ splitOn "%" line
     isMatchPointer p tmpList
@@ -393,10 +393,10 @@ findDef v vList
 
 -- value content fname line_number recursive_list
 -- -> (line_number, (used variable info))
-findUse :: String -> [String] -> [String] -> [String]
-findUse v [] uselist = uselist
-findUse v (line:nextCont) uselist
-  | (isFunctionEnd line) = uselist
-  | (isUse v state) =  findUse v nextCont (uselist ++ [line])
-  | otherwise = findUse v nextCont uselist
+findUse :: String -> [String] -> [String]
+findUse v [] = []
+findUse v (line:nextCont)
+  | (isFunctionEnd line) = []
+  | (isUse v state) =  line : (findUse v nextCont)
+  | otherwise = findUse v nextCont
     where state = last $ splitOn' " = " line

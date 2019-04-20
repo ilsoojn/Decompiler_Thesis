@@ -80,6 +80,7 @@ baseIndex base idx pList vList (line : content)
 
   | otherwise = baseIndex base idx pList vList content
 
+pointerInfo :: String -> String -> [RP] -> [LeftVar] -> [String] -> RP
 pointerInfo ptr state pList vList content
   | (isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state False)
   | (instrType var == "binary") = do
@@ -95,11 +96,11 @@ pointerInfo ptr state pList vList content
       [False, False] -> do
         let (rbase1, rindex1) = trace(ptr ++ " ("++head reg ++ ", " ++ last reg++")") baseIndex (head reg) 0 pList vList content
             (rbase2, rindex2) = baseIndex (last reg) 0 pList vList content
-
+          
         if (isRegPointer rbase1 && isRegPointer rbase2)
           then do
-            let sym = trace("> " ++ ptr ++ " ("++head reg ++ ", " ++ last reg++")") bool "+" "-" (isSub)
-            (RP ptr "" 0 (unwords [a, sym, b]) True)
+            let symbol = sym var
+            (RP ptr ptr 0 (unwords [a, symbol, b]) True)
           else do
             let rbase = bool rbase1 rbase2 (isRegPointer rbase2)
                 rindex = bool (rindex1 + rindex2) (rindex1 - rindex2) isSub

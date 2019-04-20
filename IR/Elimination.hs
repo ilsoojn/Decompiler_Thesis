@@ -93,8 +93,8 @@ variableElim change f (line : nextCont) preCont
     -- LHS
     let (x, (var, ops)) = statement (strip line)
         v = fromJust x
-        use = filter (not.null) (findUse v nextCont [])
-        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
+        use = filter (not.null) (findUse v nextCont)
+        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) (words $ unwords ops))
         vList = variables f
 
     case (isInfixOf "_init" line || isInfixOf "_ptr" line || elem v reg_base) of
@@ -126,11 +126,12 @@ variableElim change f (line : nextCont) preCont
   | otherwise= do
     -- No LHS
     let (na, (var, reg)) = statement (strip line)
-        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) reg)
+        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) (words $ unwords reg))
         vList = variables f
 
     if (op var == "store")
       then do
+
         if (isInfixOf "_init" line || isInfixOf "_ptr" line)
           then variableElim True f nextCont preCont
 

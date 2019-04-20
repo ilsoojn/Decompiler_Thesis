@@ -269,4 +269,3 @@ store <16 x float> %129, <16 x float>* %ZMM0
 store <16 x float> %130, <16 x float>* %ZMM1
 br label %exit_fn_400480
 }
-

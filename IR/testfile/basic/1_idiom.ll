@@ -87,7 +87,7 @@ store i64 43210, i64* %15, align 1
 %EIP_6 = 1563
 %21 = %RSP_1-12
 %22 = load i32, i32* %21, align 1
-%EAX_1 = %22+%EAX_0
+%EAX_1 = %22 + %EAX_0
 %RAX_2 = %EAX_1
 %23 = lshr i32 %EAX_1, 8
 %EFLAGS_0 = %EFLAGS

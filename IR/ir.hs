@@ -82,80 +82,6 @@ collectAddressname (line : content) = do
           name = takeWhile (/= '@') $ last (fromJust temp)
       (address, name) : (collectAddressname content)
 
-{-************************************************************************
-      Split Up Contents by Function and Create a list of Varaibles
-  ************************************************************************-}
---
--- {- functionContents
---     INPUT: Lines Function previousText generalVars registerVars
--- -}
--- createFn :: [String] -> Function -> [String] -> [LeftVar] -> [RP] -> ([String], Function)
--- createFn [] f txt v p = ( [], f { registers = p, variables = v, code = txt } )
--- createFn (line : nextLines) f preLines vList pList
---   | (isFunctionEnd line) = do
---     let trimTxt = filter (not.null) (map strip preLines)
---         function = f { registers = pList, variables = vList, code = trimTxt }
---     (nextLines, function)
---   | (isBasicBlock line || isBlockLabel line || isEntryExit line) = createFn nextLines f (line : preLines) vList pList
---   | (isLHS line "temporary") = do
---     let (x, (des, reg)) = statement line
---         (v, state) = strSplit' "=" line
---
---         variable = fromJust x
---         vtype = variableType des
---         instr = head $ words state
---
---     case (isRegPointer v) of
---       True -> do
---         let rp = pointerInfo variable state pList vList nextLines
---             newList_ptr = pList ++ [rp]
---             newList_var = addVariable variable vtype instr state vList
---             newLine = concat[v, " = ", getRstate rp]--trace(v ++ ": (" ++ getBase rp ++ ", " ++ show (getIndex rp) ++ ") : " ++ getRstate rp)
---         createFn nextLines f (newLine : preLines) newList_var newList_ptr
---
---       _ -> do
---         let newList = addVariable variable vtype instr state vList
---         createFn nextLines f (line : preLines) newList pList
---
---   | otherwise = createFn nextLines f (line : preLines) vList pList
---
--- splitFn :: [String] -> [String] -> [LeftVar] -> [RP] -> [Function] -> [Function]
--- splitFn [] c v p functions = functions
--- splitFn (line: content) codeTxt vList pList fnSet
---   | (isFunction line) = do
---     let tmpFunc = getFunctionInfo line
---     if (isNothing tmpFunc)
---       then splitFn content (line:codeTxt) vList pList fnSet
---       else do
---         let (fnInfo: functionName: args: others: _) = fromJust tmpFunc
---             returnType = last $ words fnInfo
---             currentF = Function functionName returnType [] [] [] [] -- blocks regs vars txt
---             (otherContent, cFunction) = createFn (content) currentF [] [] []
---         splitFn otherContent [] [] [] (cFunction : fnSet)
---   -- | (isFunctionEnd line) = splitFn content func_name [line] [] [] functions
---   -- | (isBasicBlock line || isBlockLabel line || isEntryExit line) = splitFn content func_name (line:codeTxt) vList pList functions
---   -- | (isLHS line "temporary") = do
---   --   let (x, (des, reg)) = statement line
---   --       (v, state) = strSplit' "=" line
---   --
---   --       variable = fromJust x
---   --       vtype = variableType des
---   --       instr = head $ words state
---   --
---   --   case (isRegPointer v) of
---   --     True -> do
---   --       let rp = pointerInfo variable state pList vList content
---   --           newList_ptr = pList ++ [rp]
---   --           newList_var = addVariable variable vtype instr state vList
---   --           newLine = concat[v, " = ", getRstate rp]--trace(v ++ ": (" ++ getBase rp ++ ", " ++ show (getIndex rp) ++ ") : " ++ getRstate rp)
---   --       splitFn content func_name (newLine:codeTxt) newList_var newList_ptr functions
---   --
---   --     _ -> do
---   --       let newList = addVariable variable vtype instr state vList
---   --       splitFn content func_name (line:codeTxt) newList pList functions
---   --
---   | otherwise = splitFn content (line:codeTxt) vList pList fnSet
-
 splitFn :: [String] -> [String] -> [LeftVar] -> [RP] -> [Function]
 splitFn [] codTxt v p = []
 splitFn (line: content) codeTxt vList pList
@@ -210,10 +136,10 @@ forFunction run (f : fs) addr val asmT = do
       --
       -- -- PROPAGATION
       f_prop = propagation f_idiom (code f_idiom) emptyTxt
+
       -- -- Variable Name
       (f_tmp, nameList) = variableName f_prop (code f_prop) emptyTxt [] count
       f_name = propagateName f_tmp (sort nameList)
-
       -- -- Percision
       fpTxt = precisionConversion (code f_name) addr val []
       f_fp = f_name { code = fpTxt }
@@ -353,7 +279,7 @@ main = do
           renameFile tmpFile (prog_file ++ "_" ++ runOption ++ ".ll")
 
           -- mapM_ print (printRP $ head trimListP)-- $ map snd $ map snd functionIR) --(printRP plist)
-          -- mapM_ print (printLV $ head trimListV)-- $ map fst $ map snd functionIR)-- (printLV vlist)
+          mapM_ print (printLV $ head trimListV)-- $ map fst $ map snd functionIR)-- (printLV vlist)
           -- mapM_ print $ printRP $ head (map registers functionS_new)
           -- mapM_ print $ printLV $ head (map fst $ map snd functionIR)
           -- mapM_ print (printPair asmTable)

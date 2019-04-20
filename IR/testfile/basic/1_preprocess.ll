@@ -93,7 +93,7 @@ store i64 43210, i64* %15, align 1
 %20 = add i64 %RSP_1, -12
 %21 = inttoptr i64 %20 to i32*
 %22 = load i32, i32* %21, align 1
-%EAX_1 = %22+%EAX_0
+%EAX_1 = %22 + %EAX_0
 %RAX_2 = %EAX_1
 %23 = lshr i32 %EAX_1, 8
 %EFLAGS_0 = %EFLAGS

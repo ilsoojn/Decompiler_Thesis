@@ -123,6 +123,7 @@ regex_colon2 = "([0-9A-Z\\%\\+\\_\\-]*) : ([0-9A-Z\\%\\+\\_\\-]*)"
 regex_array, regex_sync, regex_pad, regex_landpad :: String
 regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)" -- syncscope
+regex_type = ".*[(.*)].*"
 regex_pad = "(.*)[(.*)]"
 regex_landpad = ".*?\\{(.*)\\}(.*)"
 
