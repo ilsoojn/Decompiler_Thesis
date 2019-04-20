@@ -91,7 +91,7 @@ bitwiseOP pre curr next content vList
   INPUT: content preContent Function count_1 count_2
 -}
 detectIdiom :: [String] -> [String] -> Function -> Integer -> Integer -> Function
-detectIdiom [] txt f bin bit = trace("\nDetected Idioms\n - Idiom 1 (binaryOP): " ++ show ((fromInteger bin) / 3) ++ "\n - Idiom 2 (bitwiseOP): "++ show ((fromIntegral bit) / 3)) (f {code = txt})
+detectIdiom [] txt f bin bit = trace("\nDetected Idioms\n - Idiom 1 (binaryOP): " ++ show bin ++ "\n - Idiom 2 (bitwiseOP): "++ show bit) (f {code = txt})
 detectIdiom (line: content) oldTxt f binaryN bitwiseN
   | (isLHS line (fname f)) = do
 
@@ -122,7 +122,7 @@ detectIdiom (line: content) oldTxt f binaryN bitwiseN
 
           else if (instr == "add" || instr == "sub" && hasRegPointer (last $ splitOn " = " line))
             then do
-                let sym = bool "+" "-" (instr /= "add")
+                let sym = bool " + " " - " (instr /= "add")
                     new_state = concat [head reg, sym, last reg]
                     (cline, nline, newList) = binaryOP (fromJust v) new_state (head content) vList
                     newContent = filter (not.null) $ nline:(tail content)

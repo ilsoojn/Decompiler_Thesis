@@ -1,8 +1,4 @@
 entry_fn_5FA:
-%d = alloca i64, align 8
-%c = alloca i32, align 4
-%b = alloca i16, align 2
-%a = alloca i64, align 8
 %RIP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 14
 %RIP_init = %RIP_ptr
 %RIP = alloca i64
@@ -41,7 +37,7 @@ store i32 %EFLAGS_init, i32* %EFLAGS
 %CtlSysEFLAGS = alloca i32
 store i32 %CtlSysEFLAGS_init, i32* %CtlSysEFLAGS
 br label %bb_5FA
-exit_fn_5FA: ; preds = %bb_5FA
+exit_fn_5FA:                                      ; preds = %bb_5FA
 %2 = load i32, i32* %CtlSysEFLAGS
 store i32 %2, i32* %CtlSysEFLAGS_ptr
 %3 = load i32, i32* %EFLAGS
@@ -55,80 +51,80 @@ store i64 %6, i64* %RIP_ptr
 %7 = load i64, i64* %RSP
 store i64 %7, i64* %RSP_ptr
 ret void
-bb_5FA: ; preds = %entry_fn_5FA
+bb_5FA:                                           ; preds = %entry_fn_5FA
 %RIP_1 = 1531
 %EIP_0 = 1531
 %RBP_0 = %RBP
 %RSP_0 = %RSP
-%9 = %a
-store i64 %RBP, i64* %a, align 1
-%RSP_1 = %a
-%ESP_0 = %a
+%9 = %RSP-8
+store i64 %RBP, i64* %RSP-8, align 1
+%RSP_1 = %RSP+8
+%ESP_0 = %RSP-8
 %RIP_2 = 1534
 %EIP_1 = 1534
-%EBP_0 = %a
+%EBP_0 = %RSP-8
 %RIP_3 = 1540
 %EIP_2 = 1540
-%11 = %b
-store i16 5, i16* %b, align 1
+%11 = %RSP-22
+store i16 5, i16* %RSP-22, align 1
 %RIP_4 = 1547
 %EIP_3 = 1547
-%13 = %c
-store i32 123, i32* %c, align 1
+%13 = %RSP-20
+store i32 123, i32* %RSP-20, align 1
 %RIP_5 = 1555
 %EIP_4 = 1555
-%15 = %d
-store i64 43210, i64* %d, align 1
+%15 = %RSP-16
+store i64 43210, i64* %RSP-16, align 1
 %RIP_6 = 1559
 %EIP_5 = 1559
-%17 = %b
-%18 = load i16, i16* %b, align 1
-%EAX_0 = %b
+%17 = %RSP-22
+%18 = load i16, i16* %RSP-22, align 1
+%EAX_0 = %RSP-22
 %RAX_0 = %RAX
-%RAX_1 = %b
-%19 = lshr i32 %b, 8
+%RAX_1 = %RSP-22
+%19 = lshr i32 %EAX_0, 8
 %RIP_7 = 1563
 %EIP_6 = 1563
-%21 = %c
-%22 = load i32, i32* %c, align 1
-%EAX_1 = %22 + %EAX_0
+%21 = %RSP-20
+%22 = load i32, i32* %RSP-20, align 1
+%EAX_1 = %22 * %EAX_0
 %RAX_2 = %EAX_1
-%23 = lshr i32 %22 + %EAX_0, 8
+%23 = lshr i32 %EAX_1, 8
 %EFLAGS_0 = %EFLAGS
 %RIP_8 = 1565
 %EIP_7 = 1565
 %RAX_3 = %EAX_1
-%24 = lshr i32 %22 + %EAX_0, 8
+%24 = lshr i32 %EAX_1, 8
 %RIP_9 = 1569
 %EIP_8 = 1569
-%26 = %d
-%27 = load i64, i64* %d, align 1
-%28 = %27-%EAX_1
-store i64 %27-%EAX_1, i64* %d, align 1
+%26 = %RSP-16
+%27 = load i64, i64* %RSP-16, align 1
+%28 = %27 - %EAX_1
+store i64 %27 EAX_1, i64* %RSP-16, align 1
 %RIP_10 = 1574
 %EIP_9 = 1574
 %RIP_11 = 1575
 %EIP_10 = 1575
-%RSP_2 = %RSP
+%RSP_2 = %RSP+0
 %ESP_1 = %RSP
-%30 = %a
-%RBP_1 = %a
-%EBP_1 = %a
+%30 = %RSP-8
+%RBP_1 = %RSP-8
+%EBP_1 = %RSP-8
 %RIP_12 = 1576
 %EIP_11 = 1576
 %RSP_3 = %RSP+8
-%31 = %RSP
+%31 = %RSP+0
 %RIP_13 = %RSP
 %ESP_2 = %RSP+8
 %EIP_12 = %RSP
-%ZF_0 = icmp eq i64 %27-%EAX_1, 0
-%SF_0 = icmp slt i64 %27-%EAX_1, 0
-%32 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %27, i64 %EAX_1)
+%ZF_0 = icmp eq i64 %27 EAX_1, 0
+%SF_0 = icmp slt i64 %27 EAX_1, 0
+%32 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %27, i64 %RAX_3)
 %OF_0 = extractvalue { i64, i1 } %32, 1
-%33 = call { i64, i1 } @llvm.usub.with.overflow.i64(i64 %27, i64 %EAX_1)
+%33 = call { i64, i1 } @llvm.usub.with.overflow.i64(i64 %27, i64 %RAX_3)
 %CF_0 = extractvalue { i64, i1 } %33, 1
-%34 = %27-%EAX_1
-%35 = call i8 @llvm.ctpop.i8(i8 %27-%EAX_1)
+%34 = EAX_1
+%35 = call i8 @llvm.ctpop.i8(i8 EAX_1)
 %36 = %35
 %PF_0 = icmp eq i1 %35, false
 %CtlSysEFLAGS_0 = load i32, i32* %CtlSysEFLAGS
@@ -152,12 +148,12 @@ store i64 %27-%EAX_1, i64* %d, align 1
 %EFLAGS_1 = or i32 %51, %53
 store i32 %CtlSysEFLAGS_0, i32* %CtlSysEFLAGS
 store i32 0, i32* %EAX
-store i32 %a, i32* %EBP
+store i32 %RSP-8, i32* %EBP
 store i32 %EFLAGS_1, i32* %EFLAGS
 store i32 %RSP, i32* %EIP
 store i32 %RSP+8, i32* %ESP
 store i64 0, i64* %RAX
-store i64 %a, i64* %RBP
+store i64 %RSP-8, i64* %RBP
 store i64 %RSP, i64* %RIP
 store i64 %RSP+8, i64* %RSP
 br label %exit_fn_5FA

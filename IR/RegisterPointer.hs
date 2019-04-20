@@ -84,37 +84,94 @@ pointerInfo :: String -> String -> [RP] -> [LeftVar] -> [String] -> RP
 pointerInfo ptr state pList vList content
   | (isInfixOf "_ptr" ptr) = (RP ptr ptr 0 state False)
   | (instrType var == "binary") = do
-    let isSub = (op var == "sub")
-        [a, b] = reg
+    let [a, b] = reg
     case (map isNum reg) of
+
       [True, True] -> do
-        let (x, y) = (strToInt a, strToInt b)
-            z = bool y (0-y) isSub
-            newState = show (x + y)
-        (RP ptr "" (x + y) newState True)
+        let [x, y] = map fromIntegral [strToInt a, strToInt b]
+        case (sym var) of
+          "+" -> (RP ptr "" (x + y) (show (x + y)) True)
+          "-" -> (RP ptr "" (x - y) (show (x - y)) True)
+          "*" -> (RP ptr "" (x * y) (show (x * y)) True)
+          "/" -> (RP ptr "" (div x  y) (show (div x y)) True)
+          _ -> (RP ptr "" (rem x y) (show (rem x y)) True)
+
 
       [False, False] -> do
-        let (rbase1, rindex1) = trace(ptr ++ " ("++head reg ++ ", " ++ last reg++")") baseIndex (head reg) 0 pList vList content
-            (rbase2, rindex2) = baseIndex (last reg) 0 pList vList content
-          
-        if (isRegPointer rbase1 && isRegPointer rbase2)
-          then do
-            let symbol = sym var
-            (RP ptr ptr 0 (unwords [a, symbol, b]) True)
-          else do
+        let (rbase1, rindex1) = baseIndex a 0 pList vList content
+            (rbase2, rindex2) = baseIndex b 0 pList vList content
+
+        case (isRegPointer rbase1 && isRegPointer rbase2) of
+          True -> (RP ptr ptr 0 (unwords [a, (sym var), b]) True) -- both operands are variables
+          _ -> do
             let rbase = bool rbase1 rbase2 (isRegPointer rbase2)
-                rindex = bool (rindex1 + rindex2) (rindex1 - rindex2) isSub
-                sym = bool "+" "" (rindex < 0)
-                newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
-            (RP ptr rbase rindex newState True)
+                rindex = bool rindex1 rindex2 (isRegPointer rbase2)
+                v = bool b a (isRegPointer rbase2)
+                rindexStr = bool (show rindex) "" (rindex == 0)
+                rsym = bool "+" "" (rindex < 0)
+            (RP ptr rbase rindex (rbase ++ rsym ++ rindexStr ++ " " ++ sym var ++ " " ++ v) True)
+            -- case (sym var) of
+            --   "+" -> (RP ptr rbase rindex (rbase ++ rsym ++ rindexStr ++ " + " ++ v) True)
+            --   "-" -> (RP ptr rbase rindex (rbase ++ rsym ++ rindexStr ++ " - " ++ v) True)
+            --   "*" -> (RP ptr rbase rindex (rbase ++ rsym ++ rindexStr ++ " * " ++ v) True)
+            --   "/" -> (RP ptr rbase rindex (rbase ++ rsym ++ rindexStr ++ " / " ++ v) True)
+            --   _ -> (RP ptr rbase rindex (rbase ++ rsym ++ rindexStr ++ " % " ++ v) True)
 
       _ -> do
         let idx = strToInt (bool a b (isNum b))
-            rdix = bool (idx) (0-idx) isSub
-            (rbase, rindex) = baseIndex (bool b a (isNum b)) rdix pList vList content
-            sym = bool "+" "" (rindex < 0)
-            newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
-        (RP ptr rbase rindex newState True)
+            (rbase, rindex) = baseIndex (bool b a (isNum b)) 0 pList vList content
+
+        case (sym var) of
+          "+" -> do
+            let s = rindex + idx
+                tmp = bool ("+" ++ show s) (show s) (s < 0)
+                sumStr = bool tmp (show s) (null rbase)
+            (RP ptr rbase (rindex + idx) (rbase ++ sumStr) True)
+          "-" -> do
+            let s = rindex - idx
+                tmp = bool (show s) ("+" ++ show (0-s)) (s < 0)
+                subStr = bool tmp (show s) (null rbase)
+            (RP ptr rbase (rindex - idx) (rbase ++ subStr) True)
+          "*" -> (RP ptr rbase rindex (rbase ++ " * " ++ show idx) True)
+          "/" -> (RP ptr rbase rindex (rbase ++ " / " ++ show idx) True)
+          _ -> (RP ptr rbase rindex (rbase ++ " % " ++ show idx) True)
+        --
+        --     sym = bool "+" "" (rindex < 0)
+        --     nullBase = bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)
+        --     newState = bool nullBase rbase (rindex == 0)
+        -- (RP ptr rbase rindex newState True)
+
+
+    -- case (map isNum reg) of
+    --   [True, True] -> do
+    --     let (x, y) = (strToInt a, strToInt b)
+    --         z = bool y (0-y) isSub
+    --         newState = show (x + y)
+    --     (RP ptr "" (x + y) newState True)
+
+      -- both A and B operands are variables
+      -- [False, False] -> do
+      --   let (rbase1, rindex1) = trace(ptr ++ " ("++head reg ++ ", " ++ last reg++")") baseIndex (head reg) 0 pList vList content
+      --       (rbase2, rindex2) = baseIndex (last reg) 0 pList vList content
+      --
+      --   if (isRegPointer rbase1 && isRegPointer rbase2)
+      --     then (RP ptr ptr 0 (unwords [a, (sym var), b]) True)
+      --
+      --     else do
+      --
+      --       let rbase = bool rbase1 rbase2 (isRegPointer rbase2)
+      --           rindex = bool (rindex1 + rindex2) (rindex1 - rindex2) isSub
+      --           sym = bool "+" "" (rindex < 0)
+      --           newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
+      --       (RP ptr rbase rindex newState True)
+      -- -- one of the operands is a variable
+      -- _ -> do
+      --   let idx = strToInt (bool a b (isNum b))
+      --       rdix = bool (idx) (0-idx) isSub
+      --       (rbase, rindex) = baseIndex (bool b a (isNum b)) rdix pList vList content
+      --       sym = bool "+" "" (rindex < 0)
+      --       newState = bool (bool (rbase ++ sym ++  show rindex) (show rindex) (null rbase)) rbase (rindex == 0)
+      --   (RP ptr rbase rindex newState True)
 
   --
   | (instrType var == "conversion") = do

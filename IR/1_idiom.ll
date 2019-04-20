@@ -56,33 +56,28 @@ bb_5FA:                                           ; preds = %entry_fn_5FA
 %EIP_0 = 1531
 %RBP_0 = %RBP
 %RSP_0 = %RSP
-%8 = sub i64 %RSP_0, 8
-%9 = inttoptr i64 %8 to i64*
+%9 = %RSP_0-8
 store i64 %RBP_0, i64* %9, align 1
-%RSP_1 = %RSP-8
+%RSP_1 = %RSP+8
 %ESP_0 = %RSP-8
 %RIP_2 = 1534
 %EIP_1 = 1534
 %EBP_0 = %RSP-8
 %RIP_3 = 1540
 %EIP_2 = 1540
-%10 = add i64 %RSP_1, -14
-%11 = inttoptr i64 %10 to i16*
+%11 = %RSP_1-14
 store i16 5, i16* %11, align 1
 %RIP_4 = 1547
 %EIP_3 = 1547
-%12 = add i64 %RSP_1, -12
-%13 = inttoptr i64 %12 to i32*
+%13 = %RSP_1-12
 store i32 123, i32* %13, align 1
 %RIP_5 = 1555
 %EIP_4 = 1555
-%14 = add i64 %RSP_1, -8
-%15 = inttoptr i64 %14 to i64*
+%15 = %RSP_1-8
 store i64 43210, i64* %15, align 1
 %RIP_6 = 1559
 %EIP_5 = 1559
-%16 = add i64 %RSP_1, -14
-%17 = inttoptr i64 %16 to i16*
+%17 = %RSP_1-14
 %18 = load i16, i16* %17, align 1
 %EAX_0 = %RSP-22
 %RAX_0 = %RAX
@@ -90,10 +85,9 @@ store i64 43210, i64* %15, align 1
 %19 = lshr i32 %EAX_0, 8
 %RIP_7 = 1563
 %EIP_6 = 1563
-%20 = add i64 %RSP_1, -12
-%21 = inttoptr i64 %20 to i32*
+%21 = %RSP_1-12
 %22 = load i32, i32* %21, align 1
-%EAX_1 = %22 + %EAX_0
+%EAX_1 = %22 * %EAX_0
 %RAX_2 = %EAX_1
 %23 = lshr i32 %EAX_1, 8
 %EFLAGS_0 = %EFLAGS
@@ -103,19 +97,17 @@ store i64 43210, i64* %15, align 1
 %24 = lshr i32 %EAX_1, 8
 %RIP_9 = 1569
 %EIP_8 = 1569
-%25 = add i64 %RSP_1, -8
-%26 = inttoptr i64 %25 to i64*
+%26 = %RSP_1-8
 %27 = load i64, i64* %26, align 1
-%28 = sub i64 %27, %RAX_3
+%28 = %27 - %RAX_3
 store i64 %28, i64* %26, align 1
 %RIP_10 = 1574
 %EIP_9 = 1574
 %RIP_11 = 1575
 %EIP_10 = 1575
-%RSP_2 = %RSP
+%RSP_2 = %RSP+0
 %ESP_1 = %RSP
-%29 = sub i64 %RSP_2, 8
-%30 = inttoptr i64 %29 to i64*
+%30 = %RSP_2-8
 %RBP_1 = %RSP-8
 %EBP_1 = %RSP-8
 %RIP_12 = 1576

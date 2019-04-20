@@ -41,6 +41,28 @@ entry_fn_5FA:
   %BPL_init = trunc i64 %RBP_init to i8
   %BPL = alloca i8
   store i8 %BPL_init, i8* %BPL
+  %ZMM0_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 85
+  %ZMM0_init = load <16 x float>, <16 x float>* %ZMM0_ptr
+  %ZMM0 = alloca <16 x float>
+  store <16 x float> %ZMM0_init, <16 x float>* %ZMM0
+  %1 = bitcast <16 x float> %ZMM0_init to i512
+  %2 = trunc i512 %1 to i128
+  %XMM0_init = bitcast i128 %2 to <4 x float>
+  %XMM0 = alloca <4 x float>
+  store <4 x float> %XMM0_init, <4 x float>* %XMM0
+  %3 = bitcast <16 x float> %ZMM0_init to i512
+  %4 = trunc i512 %3 to i256
+  %YMM0_init = bitcast i256 %4 to <8 x float>
+  %YMM0 = alloca <8 x float>
+  store <8 x float> %YMM0_init, <8 x float>* %YMM0
+  %CtlSysEFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 1
+  %CtlSysEFLAGS_init = load i32, i32* %CtlSysEFLAGS_ptr
+  %CtlSysEFLAGS = alloca i32
+  store i32 %CtlSysEFLAGS_init, i32* %CtlSysEFLAGS
+  %EFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 3
+  %EFLAGS_init = load i32, i32* %EFLAGS_ptr
+  %EFLAGS = alloca i32
+  store i32 %EFLAGS_init, i32* %EFLAGS
   %RAX_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 8
   %RAX_init = load i64, i64* %RAX_ptr
   %RAX = alloca i64
@@ -54,33 +76,27 @@ entry_fn_5FA:
   %AL_init = trunc i64 %RAX_init to i8
   %AL = alloca i8
   store i8 %AL_init, i8* %AL
-  %1 = lshr i64 %RAX_init, 8
-  %AH_init = trunc i64 %1 to i8
+  %5 = lshr i64 %RAX_init, 8
+  %AH_init = trunc i64 %5 to i8
   %AH = alloca i8
   store i8 %AH_init, i8* %AH
-  %EFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 3
-  %EFLAGS_init = load i32, i32* %EFLAGS_ptr
-  %EFLAGS = alloca i32
-  store i32 %EFLAGS_init, i32* %EFLAGS
-  %CtlSysEFLAGS_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 1
-  %CtlSysEFLAGS_init = load i32, i32* %CtlSysEFLAGS_ptr
-  %CtlSysEFLAGS = alloca i32
-  store i32 %CtlSysEFLAGS_init, i32* %CtlSysEFLAGS
   br label %bb_5FA
 
-exit_fn_5FA:                                      ; preds = %bb_5FA
-  %2 = load i32, i32* %CtlSysEFLAGS
-  store i32 %2, i32* %CtlSysEFLAGS_ptr
-  %3 = load i32, i32* %EFLAGS
-  store i32 %3, i32* %EFLAGS_ptr
-  %4 = load i64, i64* %RAX
-  store i64 %4, i64* %RAX_ptr
-  %5 = load i64, i64* %RBP
-  store i64 %5, i64* %RBP_ptr
-  %6 = load i64, i64* %RIP
-  store i64 %6, i64* %RIP_ptr
-  %7 = load i64, i64* %RSP
-  store i64 %7, i64* %RSP_ptr
+exit_fn_5FA:                                      ; preds = %bb_647
+  %6 = load i32, i32* %CtlSysEFLAGS
+  store i32 %6, i32* %CtlSysEFLAGS_ptr
+  %7 = load i32, i32* %EFLAGS
+  store i32 %7, i32* %EFLAGS_ptr
+  %8 = load i64, i64* %RAX
+  store i64 %8, i64* %RAX_ptr
+  %9 = load i64, i64* %RBP
+  store i64 %9, i64* %RBP_ptr
+  %10 = load i64, i64* %RIP
+  store i64 %10, i64* %RIP_ptr
+  %11 = load i64, i64* %RSP
+  store i64 %11, i64* %RSP_ptr
+  %12 = load <16 x float>, <16 x float>* %ZMM0
+  store <16 x float> %12, <16 x float>* %ZMM0_ptr
   ret void
 
 bb_5FA:                                           ; preds = %entry_fn_5FA
@@ -89,9 +105,9 @@ bb_5FA:                                           ; preds = %entry_fn_5FA
   %IP_0 = trunc i64 %RIP_1 to i16
   %RBP_0 = load i64, i64* %RBP
   %RSP_0 = load i64, i64* %RSP
-  %8 = sub i64 %RSP_0, 8
-  %9 = inttoptr i64 %8 to i64*
-  store i64 %RBP_0, i64* %9, align 1
+  %13 = sub i64 %RSP_0, 8
+  %14 = inttoptr i64 %13 to i64*
+  store i64 %RBP_0, i64* %14, align 1
   %RSP_1 = sub i64 %RSP_0, 8
   %ESP_0 = trunc i64 %RSP_1 to i32
   %SP_0 = trunc i64 %RSP_1 to i16
@@ -102,138 +118,283 @@ bb_5FA:                                           ; preds = %entry_fn_5FA
   %EBP_0 = trunc i64 %RSP_1 to i32
   %BP_0 = trunc i64 %RSP_1 to i16
   %BPL_0 = trunc i64 %RSP_1 to i8
-  %RIP_3 = add i64 %RIP_2, 6
+  %RIP_3 = add i64 %RIP_2, 8
   %EIP_2 = trunc i64 %RIP_3 to i32
   %IP_2 = trunc i64 %RIP_3 to i16
-  %10 = add i64 %RSP_1, -14
-  %11 = inttoptr i64 %10 to i16*
-  store i16 5, i16* %11, align 1
-  %RIP_4 = add i64 %RIP_3, 7
+  %15 = add i64 %RIP_3, 210
+  %16 = inttoptr i64 %15 to double*
+  %17 = load double, double* %16, align 1
+  %18 = bitcast double %17 to i64
+  %ZMM0_0 = load <16 x float>, <16 x float>* %ZMM0
+  %19 = bitcast <16 x float> %ZMM0_0 to i512
+  %XMM0_0 = trunc i512 %19 to i128
+  %20 = zext i64 %18 to i128
+  %21 = and i128 %XMM0_0, -18446744073709551616
+  %XMM0_1 = or i128 %20, %21
+  %22 = bitcast <16 x float> %ZMM0_0 to i512
+  %YMM0_0 = trunc i512 %22 to i256
+  %23 = zext i128 %XMM0_1 to i256
+  %24 = and i256 %YMM0_0, -340282366920938463463374607431768211456
+  %YMM0_1 = or i256 %23, %24
+  %25 = bitcast <16 x float> %ZMM0_0 to i512
+  %26 = zext i128 %XMM0_1 to i512
+  %27 = and i512 %25, -340282366920938463463374607431768211456
+  %ZMM0_1 = or i512 %26, %27
+  %RIP_4 = add i64 %RIP_3, 5
   %EIP_3 = trunc i64 %RIP_4 to i32
   %IP_3 = trunc i64 %RIP_4 to i16
-  %12 = add i64 %RSP_1, -12
-  %13 = inttoptr i64 %12 to i32*
-  store i32 123, i32* %13, align 1
+  %28 = trunc i128 %XMM0_1 to i64
+  %29 = bitcast i64 %28 to double
+  %30 = add i64 %RSP_1, -16
+  %31 = inttoptr i64 %30 to double*
+  store double %29, double* %31, align 1
   %RIP_5 = add i64 %RIP_4, 8
   %EIP_4 = trunc i64 %RIP_5 to i32
   %IP_4 = trunc i64 %RIP_5 to i16
-  %14 = add i64 %RSP_1, -8
-  %15 = inttoptr i64 %14 to i64*
-  store i64 43210, i64* %15, align 1
-  %RIP_6 = add i64 %RIP_5, 4
+  %32 = add i64 %RIP_5, 197
+  %33 = inttoptr i64 %32 to double*
+  %34 = load double, double* %33, align 1
+  %35 = bitcast double %34 to i64
+  %36 = zext i64 %35 to i128
+  %37 = and i128 %XMM0_1, -18446744073709551616
+  %XMM0_2 = or i128 %36, %37
+  %38 = zext i128 %XMM0_2 to i256
+  %39 = and i256 %YMM0_1, -340282366920938463463374607431768211456
+  %YMM0_2 = or i256 %38, %39
+  %40 = zext i128 %XMM0_2 to i512
+  %41 = and i512 %ZMM0_1, -340282366920938463463374607431768211456
+  %ZMM0_2 = or i512 %40, %41
+  %RIP_6 = add i64 %RIP_5, 5
   %EIP_5 = trunc i64 %RIP_6 to i32
   %IP_5 = trunc i64 %RIP_6 to i16
-  %16 = add i64 %RSP_1, -14
-  %17 = inttoptr i64 %16 to i16*
-  %18 = load i16, i16* %17, align 1
-  %EAX_0 = zext i16 %18 to i32
-  %RAX_0 = load i64, i64* %RAX
-  %RAX_1 = zext i32 %EAX_0 to i64
-  %AX_0 = trunc i32 %EAX_0 to i16
-  %AL_0 = trunc i32 %EAX_0 to i8
-  %19 = lshr i32 %EAX_0, 8
-  %AH_0 = trunc i32 %19 to i8
-  %RIP_7 = add i64 %RIP_6, 4
+  %42 = trunc i128 %XMM0_2 to i64
+  %43 = bitcast i64 %42 to double
+  %44 = add i64 %RSP_1, -8
+  %45 = inttoptr i64 %44 to double*
+  store double %43, double* %45, align 1
+  %RIP_7 = add i64 %RIP_6, 7
   %EIP_6 = trunc i64 %RIP_7 to i32
   %IP_6 = trunc i64 %RIP_7 to i16
-  %20 = add i64 %RSP_1, -12
-  %21 = inttoptr i64 %20 to i32*
-  %22 = load i32, i32* %21, align 1
-  %EAX_1 = mul i32 %EAX_0, %22
-  %RAX_2 = zext i32 %EAX_1 to i64
-  %AX_1 = trunc i32 %EAX_1 to i16
-  %AL_1 = trunc i32 %EAX_1 to i8
-  %23 = lshr i32 %EAX_1, 8
-  %AH_1 = trunc i32 %23 to i8
-  %EFLAGS_0 = load i32, i32* %EFLAGS
-  %RIP_8 = add i64 %RIP_7, 2
+  %46 = add i64 %RSP_1, -20
+  %47 = inttoptr i64 %46 to i32*
+  store i32 0, i32* %47, align 1
+  %RIP_8 = add i64 %RIP_7, 5
   %EIP_7 = trunc i64 %RIP_8 to i32
   %IP_7 = trunc i64 %RIP_8 to i16
-  %RAX_3 = zext i32 %EAX_1 to i64
-  %AX_2 = trunc i32 %EAX_1 to i16
-  %AL_2 = trunc i32 %EAX_1 to i8
-  %24 = lshr i32 %EAX_1, 8
-  %AH_2 = trunc i32 %24 to i8
-  %RIP_9 = add i64 %RIP_8, 4
+  %48 = add i64 %RSP_1, -16
+  %49 = inttoptr i64 %48 to double*
+  %50 = load double, double* %49, align 1
+  %51 = bitcast double %50 to i64
+  %52 = zext i64 %51 to i128
+  %53 = and i128 %XMM0_2, -18446744073709551616
+  %XMM0_3 = or i128 %52, %53
+  %54 = zext i128 %XMM0_3 to i256
+  %55 = and i256 %YMM0_2, -340282366920938463463374607431768211456
+  %YMM0_3 = or i256 %54, %55
+  %56 = zext i128 %XMM0_3 to i512
+  %57 = and i512 %ZMM0_2, -340282366920938463463374607431768211456
+  %ZMM0_3 = or i512 %56, %57
+  %RIP_9 = add i64 %RIP_8, 5
   %EIP_8 = trunc i64 %RIP_9 to i32
   %IP_8 = trunc i64 %RIP_9 to i16
-  %25 = add i64 %RSP_1, -8
-  %26 = inttoptr i64 %25 to i64*
-  %27 = load i64, i64* %26, align 1
-  %28 = sub i64 %27, %RAX_3
-  store i64 %28, i64* %26, align 1
-  %RIP_10 = add i64 %RIP_9, 5
+  %58 = trunc i128 %XMM0_3 to i64
+  %59 = bitcast i64 %58 to double
+  %60 = add i64 %RSP_1, -8
+  %61 = inttoptr i64 %60 to double*
+  %62 = load double, double* %61, align 1
+  %ZF_0 = fcmp ueq double %59, %62
+  %PF_0 = fcmp uno double %59, %62
+  %CF_0 = fcmp ult double %59, %62
+  %CtlSysEFLAGS_0 = load i32, i32* %CtlSysEFLAGS
+  %63 = zext i1 %CF_0 to i32
+  %64 = shl i32 %63, 0
+  %65 = or i32 %64, %CtlSysEFLAGS_0
+  %66 = zext i1 %PF_0 to i32
+  %67 = shl i32 %66, 2
+  %68 = or i32 %67, %65
+  %69 = zext i1 false to i32
+  %70 = shl i32 %69, 4
+  %71 = or i32 %70, %68
+  %72 = zext i1 %ZF_0 to i32
+  %73 = shl i32 %72, 6
+  %74 = or i32 %73, %71
+  %75 = zext i1 false to i32
+  %76 = shl i32 %75, 7
+  %77 = or i32 %76, %74
+  %78 = zext i1 false to i32
+  %79 = shl i32 %78, 11
+  %EFLAGS_0 = or i32 %79, %77
+  %RIP_10 = add i64 %RIP_9, 2
   %EIP_9 = trunc i64 %RIP_10 to i32
   %IP_9 = trunc i64 %RIP_10 to i16
-  %RIP_11 = add i64 %RIP_10, 1
-  %EIP_10 = trunc i64 %RIP_11 to i32
-  %IP_10 = trunc i64 %RIP_11 to i16
-  %RSP_2 = add i64 %RSP_1, 8
-  %ESP_1 = trunc i64 %RSP_2 to i32
-  %SP_1 = trunc i64 %RSP_2 to i16
-  %SPL_1 = trunc i64 %RSP_2 to i8
-  %29 = sub i64 %RSP_2, 8
-  %30 = inttoptr i64 %29 to i64*
-  %RBP_1 = load i64, i64* %30, align 1
-  %EBP_1 = trunc i64 %RBP_1 to i32
-  %BP_1 = trunc i64 %RBP_1 to i16
-  %BPL_1 = trunc i64 %RBP_1 to i8
-  %RIP_12 = add i64 %RIP_11, 1
-  %EIP_11 = trunc i64 %RIP_12 to i32
-  %IP_11 = trunc i64 %RIP_12 to i16
+  store i16 %BP_0, i16* %BP
+  store i8 %BPL_0, i8* %BPL
+  store i32 %CtlSysEFLAGS_0, i32* %CtlSysEFLAGS
+  store i32 %EBP_0, i32* %EBP
+  store i32 %EFLAGS_0, i32* %EFLAGS
+  store i32 1600, i32* %EIP
+  store i32 %ESP_0, i32* %ESP
+  store i16 1600, i16* %IP
+  store i64 %RSP_1, i64* %RBP
+  store i64 1600, i64* %RIP
+  store i64 %RSP_1, i64* %RSP
+  store i16 %SP_0, i16* %SP
+  store i8 %SPL_0, i8* %SPL
+  %80 = bitcast i128 %XMM0_3 to <4 x float>
+  store <4 x float> %80, <4 x float>* %XMM0
+  %81 = bitcast i256 %YMM0_3 to <8 x float>
+  store <8 x float> %81, <8 x float>* %YMM0
+  %82 = bitcast i512 %ZMM0_3 to <16 x float>
+  store <16 x float> %82, <16 x float>* %ZMM0
+  br i1 %PF_0, label %bb_640, label %bb_62B
+
+bb_62B:                                           ; preds = %bb_5FA
+  %RIP_13 = add i64 1579, 5
+  %EIP_11 = trunc i64 %RIP_13 to i32
+  %IP_11 = trunc i64 %RIP_13 to i16
+  %RBP_1 = load i64, i64* %RBP
+  %83 = add i64 %RBP_1, -16
+  %84 = inttoptr i64 %83 to double*
+  %85 = load double, double* %84, align 1
+  %86 = bitcast double %85 to i64
+  %ZMM0_4 = load <16 x float>, <16 x float>* %ZMM0
+  %87 = bitcast <16 x float> %ZMM0_4 to i512
+  %XMM0_4 = trunc i512 %87 to i128
+  %88 = zext i64 %86 to i128
+  %89 = and i128 %XMM0_4, -18446744073709551616
+  %XMM0_5 = or i128 %88, %89
+  %90 = bitcast <16 x float> %ZMM0_4 to i512
+  %YMM0_4 = trunc i512 %90 to i256
+  %91 = zext i128 %XMM0_5 to i256
+  %92 = and i256 %YMM0_4, -340282366920938463463374607431768211456
+  %YMM0_5 = or i256 %91, %92
+  %93 = bitcast <16 x float> %ZMM0_4 to i512
+  %94 = zext i128 %XMM0_5 to i512
+  %95 = and i512 %93, -340282366920938463463374607431768211456
+  %ZMM0_5 = or i512 %94, %95
+  %RIP_14 = add i64 %RIP_13, 5
+  %EIP_12 = trunc i64 %RIP_14 to i32
+  %IP_12 = trunc i64 %RIP_14 to i16
+  %96 = trunc i128 %XMM0_5 to i64
+  %97 = bitcast i64 %96 to double
+  %98 = add i64 %RBP_1, -8
+  %99 = inttoptr i64 %98 to double*
+  %100 = load double, double* %99, align 1
+  %ZF_01 = fcmp ueq double %97, %100
+  %PF_02 = fcmp uno double %97, %100
+  %CF_03 = fcmp ult double %97, %100
+  %CtlSysEFLAGS_1 = load i32, i32* %CtlSysEFLAGS
+  %101 = zext i1 %CF_03 to i32
+  %102 = shl i32 %101, 0
+  %103 = or i32 %102, %CtlSysEFLAGS_1
+  %104 = zext i1 %PF_02 to i32
+  %105 = shl i32 %104, 2
+  %106 = or i32 %105, %103
+  %107 = zext i1 false to i32
+  %108 = shl i32 %107, 4
+  %109 = or i32 %108, %106
+  %110 = zext i1 %ZF_01 to i32
+  %111 = shl i32 %110, 6
+  %112 = or i32 %111, %109
+  %113 = zext i1 false to i32
+  %114 = shl i32 %113, 7
+  %115 = or i32 %114, %112
+  %116 = zext i1 false to i32
+  %117 = shl i32 %116, 11
+  %EFLAGS_1 = or i32 %117, %115
+  %RIP_15 = add i64 %RIP_14, 2
+  %EIP_13 = trunc i64 %RIP_15 to i32
+  %IP_13 = trunc i64 %RIP_15 to i16
+  %CC_NE_0 = xor i1 %ZF_01, true
+  store i32 %CtlSysEFLAGS_1, i32* %CtlSysEFLAGS
+  store i32 %EFLAGS_1, i32* %EFLAGS
+  store i32 1600, i32* %EIP
+  store i16 1600, i16* %IP
+  store i64 %RBP_1, i64* %RBP
+  store i64 1600, i64* %RIP
+  %118 = bitcast i128 %XMM0_5 to <4 x float>
+  store <4 x float> %118, <4 x float>* %XMM0
+  %119 = bitcast i256 %YMM0_5 to <8 x float>
+  store <8 x float> %119, <8 x float>* %YMM0
+  %120 = bitcast i512 %ZMM0_5 to <16 x float>
+  store <16 x float> %120, <16 x float>* %ZMM0
+  br i1 %CC_NE_0, label %bb_640, label %bb_637
+
+bb_637:                                           ; preds = %bb_62B
+  %RIP_20 = add i64 1591, 7
+  %EIP_16 = trunc i64 %RIP_20 to i32
+  %IP_16 = trunc i64 %RIP_20 to i16
+  %RBP_3 = load i64, i64* %RBP
+  %121 = add i64 %RBP_3, -20
+  %122 = inttoptr i64 %121 to i32*
+  store i32 1, i32* %122, align 1
+  %RIP_21 = add i64 %RIP_20, 2
+  %EIP_17 = trunc i64 %RIP_21 to i32
+  %IP_17 = trunc i64 %RIP_21 to i16
+  store i32 1607, i32* %EIP
+  store i16 1607, i16* %IP
+  store i64 %RBP_3, i64* %RBP
+  store i64 1607, i64* %RIP
+  br label %bb_647
+
+bb_640:                                           ; preds = %bb_62B, %bb_5FA
+  %RIP_18 = add i64 1600, 7
+  %EIP_15 = trunc i64 %RIP_18 to i32
+  %IP_15 = trunc i64 %RIP_18 to i16
+  %RBP_2 = load i64, i64* %RBP
+  %123 = add i64 %RBP_2, -20
+  %124 = inttoptr i64 %123 to i32*
+  store i32 -1, i32* %124, align 1
+  store i32 %EIP_15, i32* %EIP
+  store i16 %IP_15, i16* %IP
+  store i64 %RBP_2, i64* %RBP
+  store i64 %RIP_18, i64* %RIP
+  br label %bb_647
+
+bb_647:                                           ; preds = %bb_637, %bb_640
+  %RIP_24 = add i64 1607, 5
+  %EIP_19 = trunc i64 %RIP_24 to i32
+  %IP_19 = trunc i64 %RIP_24 to i16
+  %RAX_0 = load i64, i64* %RAX
+  %RIP_25 = add i64 %RIP_24, 1
+  %EIP_20 = trunc i64 %RIP_25 to i32
+  %IP_20 = trunc i64 %RIP_25 to i16
+  %RSP_2 = load i64, i64* %RSP
   %RSP_3 = add i64 %RSP_2, 8
-  %31 = inttoptr i64 %RSP_2 to i64*
-  %RIP_13 = load i64, i64* %31
-  %ESP_2 = trunc i64 %RSP_3 to i32
-  %SP_2 = trunc i64 %RSP_3 to i16
-  %SPL_2 = trunc i64 %RSP_3 to i8
-  %EIP_12 = trunc i64 %RIP_13 to i32
-  %IP_12 = trunc i64 %RIP_13 to i16
-  %ZF_0 = icmp eq i64 %28, 0
-  %SF_0 = icmp slt i64 %28, 0
-  %32 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %27, i64 %RAX_3)
-  %OF_0 = extractvalue { i64, i1 } %32, 1
-  %33 = call { i64, i1 } @llvm.usub.with.overflow.i64(i64 %27, i64 %RAX_3)
-  %CF_0 = extractvalue { i64, i1 } %33, 1
-  %34 = trunc i64 %28 to i8
-  %35 = call i8 @llvm.ctpop.i8(i8 %34)
-  %36 = trunc i8 %35 to i1
-  %PF_0 = icmp eq i1 %36, false
-  %CtlSysEFLAGS_0 = load i32, i32* %CtlSysEFLAGS
-  %37 = zext i1 %CF_0 to i32
-  %38 = shl i32 %37, 0
-  %39 = or i32 %38, %CtlSysEFLAGS_0
-  %40 = zext i1 %PF_0 to i32
-  %41 = shl i32 %40, 2
-  %42 = or i32 %41, %39
-  %43 = zext i1 false to i32
-  %44 = shl i32 %43, 4
-  %45 = or i32 %44, %42
-  %46 = zext i1 %ZF_0 to i32
-  %47 = shl i32 %46, 6
-  %48 = or i32 %47, %45
-  %49 = zext i1 %SF_0 to i32
-  %50 = shl i32 %49, 7
-  %51 = or i32 %50, %48
-  %52 = zext i1 %OF_0 to i32
-  %53 = shl i32 %52, 11
-  %EFLAGS_1 = or i32 %53, %51
+  %ESP_1 = trunc i64 %RSP_3 to i32
+  %SP_1 = trunc i64 %RSP_3 to i16
+  %SPL_1 = trunc i64 %RSP_3 to i8
+  %125 = sub i64 %RSP_3, 8
+  %126 = inttoptr i64 %125 to i64*
+  %RBP_4 = load i64, i64* %126, align 1
+  %EBP_1 = trunc i64 %RBP_4 to i32
+  %BP_1 = trunc i64 %RBP_4 to i16
+  %BPL_1 = trunc i64 %RBP_4 to i8
+  %RIP_26 = add i64 %RIP_25, 1
+  %EIP_21 = trunc i64 %RIP_26 to i32
+  %IP_21 = trunc i64 %RIP_26 to i16
+  %RSP_4 = add i64 %RSP_3, 8
+  %127 = inttoptr i64 %RSP_3 to i64*
+  %RIP_27 = load i64, i64* %127
+  %ESP_2 = trunc i64 %RSP_4 to i32
+  %SP_2 = trunc i64 %RSP_4 to i16
+  %SPL_2 = trunc i64 %RSP_4 to i8
+  %EIP_22 = trunc i64 %RIP_27 to i32
+  %IP_22 = trunc i64 %RIP_27 to i16
   store i8 0, i8* %AH
   store i8 0, i8* %AL
   store i16 0, i16* %AX
   store i16 %BP_1, i16* %BP
   store i8 %BPL_1, i8* %BPL
-  store i32 %CtlSysEFLAGS_0, i32* %CtlSysEFLAGS
   store i32 0, i32* %EAX
   store i32 %EBP_1, i32* %EBP
-  store i32 %EFLAGS_1, i32* %EFLAGS
-  store i32 %EIP_12, i32* %EIP
+  store i32 %EIP_22, i32* %EIP
   store i32 %ESP_2, i32* %ESP
-  store i16 %IP_12, i16* %IP
+  store i16 %IP_22, i16* %IP
   store i64 0, i64* %RAX
-  store i64 %RBP_1, i64* %RBP
-  store i64 %RIP_13, i64* %RIP
-  store i64 %RSP_3, i64* %RSP
+  store i64 %RBP_4, i64* %RBP
+  store i64 %RIP_27, i64* %RIP
+  store i64 %RSP_4, i64* %RSP
   store i16 %SP_2, i16* %SP
   store i8 %SPL_2, i8* %SPL
   br label %exit_fn_5FA
@@ -241,15 +402,6 @@ bb_5FA:                                           ; preds = %entry_fn_5FA
 
 ; Function Attrs: noreturn nounwind
 declare void @llvm.trap() #0
-
-; Function Attrs: nounwind readnone speculatable
-declare { i64, i1 } @llvm.ssub.with.overflow.i64(i64, i64) #1
-
-; Function Attrs: nounwind readnone speculatable
-declare { i64, i1 } @llvm.usub.with.overflow.i64(i64, i64) #1
-
-; Function Attrs: nounwind readnone speculatable
-declare i8 @llvm.ctpop.i8(i8) #1
 
 define i32 @main(i32, i8**) {
   %3 = alloca %regset, align 64
@@ -667,6 +819,15 @@ bb_550:                                           ; preds = %bb_537, %bb_520
   store i8 %SPL_2, i8* %SPL
   br label %exit_fn_520
 }
+
+; Function Attrs: nounwind readnone speculatable
+declare { i64, i1 } @llvm.ssub.with.overflow.i64(i64, i64) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare { i64, i1 } @llvm.usub.with.overflow.i64(i64, i64) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare i8 @llvm.ctpop.i8(i8) #1
 
 ; Function Attrs: nounwind
 declare i8* @llvm.dc.translate.at(i8*) #2
@@ -2018,8 +2179,8 @@ bb_5A0:                                           ; preds = %bb_588, %bb_560
   br label %exit_fn_5F0
 }
 
-define void @fn_6A0(%regset* noalias nocapture) {
-entry_fn_6A0:
+define void @fn_6C0(%regset* noalias nocapture) {
+entry_fn_6C0:
   %RIP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 14
   %RIP_init = load i64, i64* %RIP_ptr
   %RIP = alloca i64
@@ -2043,17 +2204,17 @@ entry_fn_6A0:
   %SPL_init = trunc i64 %RSP_init to i8
   %SPL = alloca i8
   store i8 %SPL_init, i8* %SPL
-  br label %bb_6A0
+  br label %bb_6C0
 
-exit_fn_6A0:                                      ; preds = %bb_6A0
+exit_fn_6C0:                                      ; preds = %bb_6C0
   %1 = load i64, i64* %RIP
   store i64 %1, i64* %RIP_ptr
   %2 = load i64, i64* %RSP
   store i64 %2, i64* %RSP_ptr
   ret void
 
-bb_6A0:                                           ; preds = %entry_fn_6A0
-  %RIP_1 = add i64 1696, 1
+bb_6C0:                                           ; preds = %entry_fn_6C0
+  %RIP_1 = add i64 1728, 1
   %EIP_0 = trunc i64 %RIP_1 to i32
   %IP_0 = trunc i64 %RIP_1 to i16
   %RIP_2 = add i64 %RIP_1, 1
@@ -2075,11 +2236,11 @@ bb_6A0:                                           ; preds = %entry_fn_6A0
   store i64 %RSP_1, i64* %RSP
   store i16 %SP_0, i16* %SP
   store i8 %SPL_0, i8* %SPL
-  br label %exit_fn_6A0
+  br label %exit_fn_6C0
 }
 
-define void @fn_6A4(%regset* noalias nocapture) {
-entry_fn_6A4:
+define void @fn_6C4(%regset* noalias nocapture) {
+entry_fn_6C4:
   %RIP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 14
   %RIP_init = load i64, i64* %RIP_ptr
   %RIP = alloca i64
@@ -2111,9 +2272,9 @@ entry_fn_6A4:
   %CtlSysEFLAGS_init = load i32, i32* %CtlSysEFLAGS_ptr
   %CtlSysEFLAGS = alloca i32
   store i32 %CtlSysEFLAGS_init, i32* %CtlSysEFLAGS
-  br label %bb_6A4
+  br label %bb_6C4
 
-exit_fn_6A4:                                      ; preds = %bb_6A4
+exit_fn_6C4:                                      ; preds = %bb_6C4
   %1 = load i32, i32* %CtlSysEFLAGS
   store i32 %1, i32* %CtlSysEFLAGS_ptr
   %2 = load i32, i32* %EFLAGS
@@ -2124,8 +2285,8 @@ exit_fn_6A4:                                      ; preds = %bb_6A4
   store i64 %4, i64* %RSP_ptr
   ret void
 
-bb_6A4:                                           ; preds = %entry_fn_6A4
-  %RIP_1 = add i64 1700, 4
+bb_6C4:                                           ; preds = %entry_fn_6C4
+  %RIP_1 = add i64 1732, 4
   %EIP_0 = trunc i64 %RIP_1 to i32
   %IP_0 = trunc i64 %RIP_1 to i16
   %RSP_0 = load i64, i64* %RSP
@@ -2190,7 +2351,7 @@ bb_6A4:                                           ; preds = %entry_fn_6A4
   store i64 %RSP_3, i64* %RSP
   store i16 %SP_2, i16* %SP
   store i8 %SPL_2, i8* %SPL
-  br label %exit_fn_6A4
+  br label %exit_fn_6C4
 }
 
 ; Function Attrs: nounwind readnone speculatable
@@ -2199,8 +2360,8 @@ declare { i64, i1 } @llvm.sadd.with.overflow.i64(i64, i64) #1
 ; Function Attrs: nounwind readnone speculatable
 declare { i64, i1 } @llvm.uadd.with.overflow.i64(i64, i64) #1
 
-define void @fn_630(%regset* noalias nocapture) {
-entry_fn_630:
+define void @fn_650(%regset* noalias nocapture) {
+entry_fn_650:
   %RIP_ptr = getelementptr inbounds %regset, %regset* %0, i32 0, i32 14
   %RIP_init = load i64, i64* %RIP_ptr
   %RIP = alloca i64
@@ -2357,9 +2518,9 @@ entry_fn_630:
   %DIL_init = trunc i64 %RDI_init to i8
   %DIL = alloca i8
   store i8 %DIL_init, i8* %DIL
-  br label %bb_630
+  br label %bb_650
 
-exit_fn_630:                                      ; preds = %bb_686
+exit_fn_650:                                      ; preds = %bb_6A6
   %3 = load i32, i32* %CtlSysEFLAGS
   store i32 %3, i32* %CtlSysEFLAGS_ptr
   %4 = load i32, i32* %EFLAGS
@@ -2388,8 +2549,8 @@ exit_fn_630:                                      ; preds = %bb_686
   store i64 %15, i64* %R15_ptr
   ret void
 
-bb_630:                                           ; preds = %entry_fn_630
-  %RIP_1 = add i64 1584, 2
+bb_650:                                           ; preds = %entry_fn_650
+  %RIP_1 = add i64 1616, 2
   %EIP_0 = trunc i64 %RIP_1 to i32
   %IP_0 = trunc i64 %RIP_1 to i16
   %R15_0 = load i64, i64* %R15
@@ -2444,7 +2605,7 @@ bb_630:                                           ; preds = %entry_fn_630
   %RIP_6 = add i64 %RIP_5, 7
   %EIP_5 = trunc i64 %RIP_6 to i32
   %IP_5 = trunc i64 %RIP_6 to i16
-  %R12_1 = add i64 %RIP_6, 2099118
+  %R12_1 = add i64 %RIP_6, 2099086
   %R12D_0 = trunc i64 %R12_1 to i32
   %R12W_0 = trunc i64 %R12_1 to i16
   %R12B_0 = trunc i64 %R12_1 to i8
@@ -2462,7 +2623,7 @@ bb_630:                                           ; preds = %entry_fn_630
   %RIP_8 = add i64 %RIP_7, 7
   %EIP_7 = trunc i64 %RIP_8 to i32
   %IP_7 = trunc i64 %RIP_8 to i16
-  %RBP_1 = add i64 %RIP_8, 2099118
+  %RBP_1 = add i64 %RIP_8, 2099086
   %EBP_0 = trunc i64 %RBP_1 to i32
   %BP_0 = trunc i64 %RBP_1 to i16
   %BPL_0 = trunc i64 %RBP_1 to i8
@@ -2520,7 +2681,7 @@ bb_630:                                           ; preds = %entry_fn_630
   %IP_14 = trunc i64 %RIP_15 to i16
   %RSP_8 = sub i64 %RSP_7, 8
   %29 = inttoptr i64 %RSP_8 to i64*
-  store i64 1633, i64* %29
+  store i64 1665, i64* %29
   %ESP_7 = trunc i64 %RSP_8 to i32
   %SP_7 = trunc i64 %RSP_8 to i16
   %SPL_7 = trunc i64 %RSP_8 to i8
@@ -2685,14 +2846,14 @@ bb_630:                                           ; preds = %entry_fn_630
   %IP_16 = trunc i64 %RIP_18 to i16
   store i32 %CtlSysEFLAGS_0, i32* %CtlSysEFLAGS
   store i32 %EFLAGS_2, i32* %EFLAGS
-  store i32 1670, i32* %EIP
-  store i16 1670, i16* %IP
+  store i32 1702, i32* %EIP
+  store i16 1702, i16* %IP
   store i64 %RBP_4, i64* %RBP
-  store i64 1670, i64* %RIP
-  br i1 %CC_E_0, label %bb_686, label %bb_666
+  store i64 1702, i64* %RIP
+  br i1 %CC_E_0, label %bb_6A6, label %bb_686
 
-bb_666:                                           ; preds = %bb_630
-  %RIP_21 = add i64 1638, 2
+bb_686:                                           ; preds = %bb_650
+  %RIP_21 = add i64 1670, 2
   %EIP_18 = trunc i64 %RIP_21 to i32
   %IP_18 = trunc i64 %RIP_21 to i16
   %RBX_1 = load i64, i64* %RBX
@@ -2742,10 +2903,10 @@ bb_666:                                           ; preds = %bb_630
   store i16 %IP_19, i16* %IP
   store i64 %RBX_2, i64* %RBX
   store i64 %RIP_22, i64* %RIP
-  br label %bb_670
+  br label %bb_690
 
-bb_670:                                           ; preds = %bb_670, %bb_666
-  %RIP_34 = add i64 1648, 3
+bb_690:                                           ; preds = %bb_690, %bb_686
+  %RIP_34 = add i64 1680, 3
   %EIP_29 = trunc i64 %RIP_34 to i32
   %IP_29 = trunc i64 %RIP_34 to i16
   %R15_2 = load i64, i64* %R15
@@ -2782,7 +2943,7 @@ bb_670:                                           ; preds = %bb_670, %bb_666
   %RSP_18 = load i64, i64* %RSP
   %RSP_19 = sub i64 %RSP_18, 8
   %126 = inttoptr i64 %RSP_19 to i64*
-  store i64 1661, i64* %126
+  store i64 1693, i64* %126
   %ESP_16 = trunc i64 %RSP_19 to i32
   %SP_16 = trunc i64 %RSP_19 to i16
   %SPL_16 = trunc i64 %RSP_19 to i8
@@ -2933,15 +3094,15 @@ bb_670:                                           ; preds = %bb_670, %bb_666
   store i32 %CtlSysEFLAGS_3, i32* %CtlSysEFLAGS
   store i32 %EBX_3, i32* %EBX
   store i32 %EFLAGS_8, i32* %EFLAGS
-  store i32 1648, i32* %EIP
-  store i16 1648, i16* %IP
+  store i32 1680, i32* %EIP
+  store i16 1680, i16* %IP
   store i64 %RBP_6, i64* %RBP
   store i64 %RBX_6, i64* %RBX
-  store i64 1648, i64* %RIP
-  br i1 %CC_NE_016, label %bb_670, label %bb_686
+  store i64 1680, i64* %RIP
+  br i1 %CC_NE_016, label %bb_690, label %bb_6A6
 
-bb_686:                                           ; preds = %bb_670, %bb_630
-  %RIP_24 = add i64 1670, 4
+bb_6A6:                                           ; preds = %bb_690, %bb_650
+  %RIP_24 = add i64 1702, 4
   %EIP_20 = trunc i64 %RIP_24 to i32
   %IP_20 = trunc i64 %RIP_24 to i16
   %RSP_9 = load i64, i64* %RSP
@@ -3104,7 +3265,7 @@ bb_686:                                           ; preds = %bb_670, %bb_630
   store i16 %R13W_1, i16* %R13W
   store i16 %R14W_1, i16* %R14W
   store i16 %R15W_1, i16* %R15W
-  br label %exit_fn_630
+  br label %exit_fn_650
 }
 
 define void @fn_4B8(%regset* noalias nocapture) {
@@ -3613,14 +3774,14 @@ bb_4F0:                                           ; preds = %entry_fn_4F0
   %RIP_8 = add i64 %RIP_7, 7
   %EIP_7 = trunc i64 %RIP_8 to i32
   %IP_7 = trunc i64 %RIP_8 to i16
-  %R8_0 = add i64 %RIP_8, 410
+  %R8_0 = add i64 %RIP_8, 442
   %R8D_0 = trunc i64 %R8_0 to i32
   %R8W_0 = trunc i64 %R8_0 to i16
   %R8B_0 = trunc i64 %R8_0 to i8
   %RIP_9 = add i64 %RIP_8, 7
   %EIP_8 = trunc i64 %RIP_9 to i32
   %IP_8 = trunc i64 %RIP_9 to i16
-  %RCX_0 = add i64 %RIP_9, 291
+  %RCX_0 = add i64 %RIP_9, 323
   %ECX_0 = trunc i64 %RCX_0 to i32
   %CX_0 = trunc i64 %RCX_0 to i16
   %CL_0 = trunc i64 %RCX_0 to i8

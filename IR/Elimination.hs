@@ -79,7 +79,7 @@ cleanCode f (line : nextContent) preContent
 -- Def(ops) > 0 := True / False
 hasNoDef [] vList = False
 hasNoDef (v:vs) vList
-  | (isNothing vInfo) = True --trace("hasNoDef("++v++") x" )
+  | (isNothing vInfo) = trace("  undefined " ++ v)True --trace("hasNoDef("++v++") x" )
   | otherwise = False || (hasNoDef vs vList)
   where vInfo = lookupList v vList
 
