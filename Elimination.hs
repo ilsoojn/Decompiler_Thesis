@@ -54,9 +54,9 @@ flagElimination settings precontent list = do
       ([line], newList)
 
 -- Handle CtlSysEFLAGS Idioms ()
-cleanCode :: [String] -> [String] -> [LeftVar] -> ([String], [LeftVar])
-cleanCode [] preContent vList = (preContent, vList)
-cleanCode (line : nextContent) preContent vList
+cleanCode :: Function -> [String] -> [String] -> Function
+cleanCode f [] newCode = f{ code = newCode }
+cleanCode f (line : nextContent) preContent
   | (isInfixOf "=" line) = do
     let (x, (s, r)) = statement line
     if (op s == "load" && ptr s == "%CtlSysEFLAGS")
@@ -65,42 +65,43 @@ cleanCode (line : nextContent) preContent vList
             nextStatement = map (getAfter "=") nextLines
             nextInstrList = map (head.words) nextStatement  -- collect instructions of next 12 statement
             tmpInstrList = concat $ replicate 6 ["shl", "or"] -- bit setting
+            vList = variables f
 
         if (nextInstrList /= tmpInstrList)
-          then cleanCode nextContent (preContent ++ [line]) vList --trace("  x:\n\t" ++ (join " " nextInstrList) ++ "\n\t" ++ (join " " tmpInstrList))
+          then cleanCode f nextContent (preContent ++ [line]) --trace("  x:\n\t" ++ (join " " nextInstrList) ++ "\n\t" ++ (join " " tmpInstrList))
           else do
             let (newLine, newList) = flagElimination nextLines [] vList
-            cleanCode (newLine ++ (drop 12 nextContent)) (preContent ++ [line]) newList --trace("  v:\n\t" ++ (join " " nextInstrList) ++ "\n\t" ++ (join " " tmpInstrList))
+            cleanCode (f{ variables = newList }) (newLine ++ (drop 12 nextContent)) (preContent ++ [line]) --trace("  v:\n\t" ++ (join " " nextInstrList) ++ "\n\t" ++ (join " " tmpInstrList))
 
-      else cleanCode nextContent (preContent ++ [line]) vList
-  | otherwise = cleanCode nextContent (preContent ++ [line]) vList
+      else cleanCode f nextContent (preContent ++ [line])
+  | otherwise = cleanCode f nextContent (preContent ++ [line])
 
 -- Def(ops) > 0 := True / False
 hasNoDef [] vList = False
 hasNoDef (v:vs) vList
-  | (isNothing vInfo) = True --trace("hasNoDef("++v++") x" )
+  | (isNothing vInfo) = True --trace("  undefined " ++ v)
   | otherwise = False || (hasNoDef vs vList)
   where vInfo = lookupList v vList
 
-variableElim :: Bool -> [String] -> [LeftVar] -> [RP] -> [String] -> ([String], [LeftVar])
-variableElim False [] vList pList preCont = (preCont, vList)
-variableElim True [] vList pList preCont = variableElim False preCont vList pList [] --trace("\n-----------------\n")
-variableElim change (line : nextCont) vList pList preCont
+variableElim :: Bool -> Function -> [String] -> [String] -> Function-- [LeftVar] -> [RP] -> [String] -> ([String], [LeftVar])
+variableElim False f [] newCode = f {code = newCode }
+variableElim True f [] preCont = variableElim False f preCont [] --trace("\n-----------------\n")
+variableElim change f (line : nextCont) preCont
   -- | (isFunction line) = variableElim change nextCont (getFunctionName line) vList pList (preCont ++ [line])
-  | (isFunction line || isBlockLabel line || isBasicBlock line) = variableElim change nextCont vList pList (preCont ++ [line])
-  | (isEntryExit line) = variableElim change nextCont vList pList (preCont ++ [line])
-  | (isInfixOf " = " line) = do
+  | (isFunction line || isBlockLabel line || isBasicBlock line || isEntryExit line) = variableElim change f nextCont (preCont ++ [line])
+  | (isLHS line (fname f)) = do
     -- LHS
     let (x, (var, ops)) = statement (strip line)
         v = fromJust x
-        use = filter (not.null) (findUse v nextCont [])
-        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) ops)
+        use = filter (not.null) (findUse v nextCont) -- trace(join ":::" nextCont)
+        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) (words $ unwords ops))
+        vList = trace(v ++ " <- " ++ (join " & " operands))variables f
 
-    case (isInfixOf "_init" line || isInfixOf "_ptr" line|| elem v reg_base) of -- || elem v reg_base
+    case (isInfixOf "_init" line || isInfixOf "_ptr" line || elem v reg_base) of
       True -> do
-        let v' = fromJust $ lookupList v vList
+        let v' =  fromJust $ lookupList v vList
             newList = removeVariable v' vList []
-        variableElim True nextCont newList pList preCont
+        variableElim True (f{ variables = newList }) nextCont preCont
 
       _ -> do
         if (null use)
@@ -108,46 +109,47 @@ variableElim change (line : nextCont) vList pList preCont
             -- DEAD Variable
             if (isNothing $ lookupList v vList)
               then do
-                 variableElim True nextCont vList pList preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
+                 trace("\tuse0(" ++ v ++ ") = 0 : " ++ line) variableElim True f nextCont preCont --
               else do
                 let v' = fromJust $ lookupList v vList
                     newList = removeVariable v' vList []
-                variableElim True nextCont newList pList preCont --trace("use(" ++ v ++ ") = 0 : " ++ line)
+                trace("\tuse1(" ++ v ++ ") = 0 : " ++ line) variableElim True (f{ variables = newList }) nextCont preCont --
 
           else if (hasNoDef operands vList)
             then do-- LIVE Variable but NoDef(ops)
               let v' = fromJust $ lookupList v vList
                   newList = removeVariable v' vList []
-              variableElim True nextCont newList pList preCont --trace("def(" ++ v ++ ") = 0 : " ++ line)
+              trace("\tdef0(" ++ v ++ ") = 0 : " ++ line) variableElim True (f{ variables = newList }) nextCont preCont --
             else -- LIVE Variable and Def(ops)
-              variableElim change nextCont vList  pList (preCont ++ [line]) --trace("good\t" ++ line)
+              variableElim change f nextCont (preCont ++ [line]) --trace("good\t" ++ line)
 
   | otherwise= do
     -- No LHS
     let (na, (var, reg)) = statement (strip line)
-        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) reg)
+        operands = filter (not.isInfixOf "fn") (filter (not.isInfixOf "bb") $ filter (isPrefixOf str_var) (words $ unwords reg))
+        vList = variables f
 
     if (op var == "store")
       then do
+
         if (isInfixOf "_init" line || isInfixOf "_ptr" line)
-          then variableElim True nextCont vList pList preCont
+          then variableElim True f nextCont preCont
 
           else if (hasNoDef operands vList)
             then -- NoDef(reg)
-              variableElim True nextCont vList pList preCont --trace("def( - ) = 0 : " ++ line)
+              trace("\tdef1( - ) = 0 : " ++ line) variableElim True f nextCont preCont --
             else -- Def(reg)
-              variableElim change nextCont vList pList (preCont ++ [line])
+              variableElim change f nextCont (preCont ++ [line])
 
       else if (hasNoDef operands vList)
         then -- NoDef(reg)
-          variableElim True nextCont vList pList preCont --trace("def( - ) = 0 : " ++ line)
+          trace("\tdef2( - ) = 0 : " ++ line) variableElim True f nextCont preCont --
         else -- Def(reg)
-          variableElim change nextCont vList pList (preCont ++ [line]) --trace("good\t" ++ line)
+          variableElim change f nextCont (preCont ++ [line]) --trace("good\t" ++ line)
 
-elimination :: [String] -> [LeftVar] -> [RP] -> ([String], [LeftVar])
-elimination content vList pList = do
+elimination :: Function -> Function
+elimination f = do
 
-  let (eContent, eVarList) = variableElim False content vList pList []
-      (cContent, cVarList) = cleanCode eContent [] eVarList
-      (newContent, newVarList) = variableElim False cContent cVarList pList []
-  (newContent, newVarList)
+  let tmpFn = variableElim False f (code f) []
+      tmpFn2 = cleanCode tmpFn (code tmpFn) []
+  variableElim False tmpFn2 (code tmpFn2) []

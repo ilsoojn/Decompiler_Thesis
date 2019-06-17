@@ -1,5 +1,0 @@
-
-2:     file format elf64-x86-64
-
-Contents of section .rodata:
- 06d0 01000200 00000000 9a999999 99992840  ..............(@

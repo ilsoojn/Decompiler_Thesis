@@ -22,6 +22,8 @@ reg_base = reg_32 ++ reg_64 ++ reg_ip ++ reg_other ++ flags
 {-************************************************************************
                             LLVM INSTRUCTIONS
   *************************************************************************-}
+llvmInstructions :: [String]
+llvmInstructions = map snd instructions
 
 instructionList :: [(String, [String])] -> [(String, String)]
 instructionList [] = []
@@ -48,7 +50,7 @@ arithmetic = [("add", "+"), ("fadd", "+"),
               ("udiv", "/"), ("sdiv", "/"), ("fdiv", "/"),
               ("urem", "%"), ("srem", "%"), ("frem", "%"),
               ("and", "&"), ("or", "|"), ("xor", "^"),
-              ("shl","<<"), ("lshr",">>"), ("asha",">>")
+              ("shl","<<"), ("lshr",">>"), ("ashr",">>")
               ]
 
 condition :: [(String, String)]
@@ -63,7 +65,7 @@ condition= [("eq","=="), ("ne","!="),
             ("ueq","=="), ("une","!="),
             ("ugt",">"), ("uge",">="),
             ("ult","<"), ("ule","<="),
-            ("ord", ""), ("uno", ""),
+            ("ord", " != NaN && NaN != "), ("uno", " == NaN || NaN == "),
             ("true", ""), ("false", "")
             ]
 
@@ -123,6 +125,7 @@ regex_colon2 = "([0-9A-Z\\%\\+\\_\\-]*) : ([0-9A-Z\\%\\+\\_\\-]*)"
 regex_array, regex_sync, regex_pad, regex_landpad :: String
 regex_array = ".*?[(.*)] [(.*)](.*)"
 regex_sync = "\\((\".*\")\\)" -- syncscope
+regex_type = ".*[(.*)].*"
 regex_pad = "(.*)[(.*)]"
 regex_landpad = ".*?\\{(.*)\\}(.*)"
 

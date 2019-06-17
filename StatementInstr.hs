@@ -5,8 +5,9 @@ import Data.Tuple
 
 import Debug.Trace
 
-data Function = Function{fname::String, retType::String, blocks::[BasicBlock], registers::[RP], variables::[LeftVar], code::[String]}
-data BasicBlock = BasicBlock{blockName::String, preds::[String], txt::[String], succs::[String]} deriving (Ord, Eq, Show, Read)
+data Function = Function{address::String, fname::String, retType::String, args::[String], blocks::[BasicBlock], registers::[RP], variables::[LeftVar], code::[String]}
+data BasicBlock = BasicBlock{blockName::String, preds::[String], txt::[String], succs::[String], terminal::String} deriving (Ord, Eq, Show, Read)
+data BlockHLL = BlockHLL{basicblock::BasicBlock, frontStr::String, midStr:: String, endStr::String}
 
 {- DEF ( VARIABLE ) -}
 data RP = RP{rname::String, rbase::String, ridx::Integer, rstate:: String, permit::Bool} deriving (Ord, Eq, Show, Read)
@@ -120,10 +121,10 @@ isLoad _ = False
 -- isGetElemPtr _ = False
 -- isConv (Conv _ _ _ _ _) = True
 -- isConv _ = False
--- isCmpi (Cmpi _ _ _ _ _ _) = True
--- isCmpi _ = False
--- isCmpf (Cmpf _ _ _ _ _ _ _) = True
--- isCmpf _ = False
+isCmpi (Cmpi _ _ _ _ _ _) = True
+isCmpi _ = False
+isCmpf (Cmpf _ _ _ _ _ _ _) = True
+isCmpf _ = False
 -- isPhi (Phi _ _ _ _) = True
 -- isPhi _ = False
 -- isSelect (Select _ _ _ _ _ _) = True

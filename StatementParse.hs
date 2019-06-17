@@ -7,7 +7,7 @@ import Data.List
 import Data.List.Split
 import Data.List.Utils  hiding (split)
 import Data.Maybe
-import Data.String.Utils hiding (split)
+import Data.String.Utils
 import Data.Strings
 import Data.Tuple
 import Data.Typeable
@@ -29,13 +29,26 @@ storeStatement :: String -> VAR
 storeStatement s = STORE "memory" "store" atomic volatile t v at-- [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
   -- | s_type = STORE atomic volatile t [(v, Undef "none" "undef" v)] [(at, Undef "none" "undef" at)]
   -- | otherwise = STORE atomic volatile t [(v, Const "none" "const" v)] [(at, Undef "none" "undef" at)]
+  -- where (vInfo: vpInfo: _) = splitOn' "," s
+  --       (v, tmp) = popBack vInfo
+  --       (t, options) = popBack tmp
+  --       atomic = isInfixOf "atomic" options
+  --       volatile = isInfixOf "volatile" options
+  --       at = fst $ popBack vpInfo
+  --       -- s_type = isInfixOf "%" v
+
   where (vInfo: vpInfo: _) = splitOn' "," s
-        (v, tmp) = popBack vInfo
-        (t, options) = popBack tmp
-        atomic = isInfixOf "atomic" options
-        volatile = isInfixOf "volatile" options
-        at = fst $ popBack vpInfo
-        -- s_type = isInfixOf "%" v
+        (op, vInfo_1) = popFront vInfo
+        ptrty = fst $ popFront vpInfo
+        at = replace ptrty "" vpInfo
+        t = replace "*" "" ptrty
+
+        atomic = isInfixOf "atomic" s
+        volatile = isInfixOf "volatile" s
+
+        vInfo_2 = filter (not.null) (map strip $ Data.String.Utils.split t vInfo_1)
+        v = last vInfo_2
+
 
 -- <result> = <ty>, <ty>* <pointer>
 -- <result> = <ty>, <ty>* <pointer> [syncscope("<target-scope>")] <ordering>
@@ -250,8 +263,8 @@ landingpadStatement line = do
       cleanup = isInfixOf "cleanup" info
       (resultty, clause_line) = popFront (unwords $ filter (/="cleanup") $ words info)
 
-      split_filter =  split (startsWith "filter") clause_line
-      split_catch = map (split (startsWith "catch")) split_filter
+      split_filter =  Data.List.Split.split (startsWith "filter") clause_line
+      split_catch = map (Data.List.Split.split (startsWith "catch")) split_filter
       clause = getClauses (concat split_catch)
   LandingPad "other" "landingpad" resultty cleanup clause
 
@@ -280,7 +293,7 @@ retStatement :: String -> VAR
 retStatement line
   | (line == "ret void") = RetVoid "terminator" "ret void"
   | (hasOpening info) = do
-    let [ty, v] = map strip (split (startsWithOneOf "{<") info)
+    let [ty, v] = map strip (Data.List.Split.split (startsWithOneOf "{<") info)
     (Ret "terminator" op ty v)
   | otherwise = do
     let (ty:v:_) = words info
@@ -485,7 +498,8 @@ parseStatement line
                 hs = v1
                 ls = v2
             (Colon "colon" ":" hs ls, [hs, ls])
-          else if(isEqualLine line || isEqualState line)
+
+          else if( ((not.or) $ map (`elem` llvmInstructions) (words line)) && (length.words) line == 1)--isEqualLine line || isEqualState line)
             then (Other "none" "equal", [getRHS line])
             else (Other "none" "other", [])
   where op = head $ words line

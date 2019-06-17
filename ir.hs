@@ -82,6 +82,74 @@ collectAddressname (line : content) = do
           name = takeWhile (/= '@') $ last (fromJust temp)
       (address, name) : (collectAddressname content)
 
+{-
+splitFunction :: [String] -> [String] -> [LeftVar] -> [RP] -> Function -> [Function]
+splitFunction [] codTxt v p f = []
+splitFunction (line: content) codeTxt vList pList fn
+  | (isFunction line) = do
+    let tmpFunc = getFunctionInfo line
+        faddr = getFunctionAddr line
+    if (isNothing tmpFunc)
+      then splitFunction content (codeTxt) vList pList fn
+      else do
+        let (fnInfo: functionName: arguments: others: _) = fromJust tmpFunc
+            returnType = last $ words fnInfo
+            args = map strip (strSplitAll "," arguments)
+            currentFn = Function faddr functionName returnType args [] [] [] [] -- blocks regs vars txt
+        splitFunction content [] [] [] currentFn
+
+  | (isFunctionEnd line) = fn{registers = pList, variables = vList, code = codeTxt} : (splitFunction content [] [] [] fn )
+  | (isBasicBlock line || isBlockLabel line || isEntryExit line) = splitFunction content (codeTxt ++ [line]) vList pList fn
+  | (isLHS line "temporary") = do
+    let (x, (des, reg)) = statement line
+        (v, state) = strSplit' "=" line
+
+        variable = fromJust x
+        vtype = variableType des
+        instr = head $ words state
+
+    case (isRegPointer v) of
+      True -> do
+        let rp = pointerInfo variable state pList vList (reverse codeTxt)
+            newList_ptr = rp: pList
+            newList_var = addVariable variable vtype instr state vList
+            newLine = concat[v, " = ", getRstate rp]--trace(v ++ ": (" ++ getBase rp ++ ", " ++ show (getIndex rp) ++ ") : " ++ getRstate rp)
+        splitFunction content (codeTxt ++ [newLine]) newList_var newList_ptr fn
+
+      _ -> do
+        let newList = addVariable variable vtype instr state vList
+        splitFunction content (codeTxt ++ [line]) newList pList fn
+
+  | otherwise = do
+    if (isPrefixOf "store" line)
+      then do
+        let (x, (var, reg)) = statement line
+            [valueStore, ptrStore] = map strip [value var, at var]
+            (v, p) = (lookupList_p valueStore pList, lookupList_p ptrStore pList) --trace("  STORE " ++ valueStore ++ " AT " ++ ptrStore)
+
+        case (isNothing v, isNothing p) of
+
+          (True, True) -> trace("NO, NO")splitFunction content (codeTxt ++ [line]) vList pList fn --Nothing Happens --(unlines $ printRP pList))splitFunction content (codeTxt ++ [line]
+
+          (True, False) -> do
+            let [justV, justP] = trace("NO, YES")map fromJust [v, p]
+                pv = fromJust $ lookupList ptrStore vList
+                (newP, newPv) = (justP{rstate = valueStore}, pv{instruction = "store", state=valueStore})
+            splitFunction content (codeTxt ++ [line]) (updateList newPv vList []) (updateList_p newP pList []) fn -- tho- v can be varaible....
+
+          (False, True) -> trace("YES, NO")splitFunction content (codeTxt ++ [line]) vList pList fn
+
+          _ -> do
+            let [regv, regp] = trace("YES, YES")map fromJust [v, p]
+                (vS, vB, vI) = (getRstate regv, getBase regv, getIndex regv)
+                valuep = fromJust $ lookupList ptrStore vList
+                newP = regp{rstate = vS, rbase = vB, ridx = vI}
+                newPv = valuep{instruction = "store", state=vS}
+            trace(valueStore ++ " at " ++ ptrStore)splitFunction content (codeTxt ++ [line]) (updateList newPv vList []) (updateList_p newP pList []) fn
+
+      else splitFunction content (codeTxt ++ [line]) vList pList fn
+-}
+
 splitFn :: [String] -> [String] -> [LeftVar] -> [RP] -> [Function]
 splitFn [] codTxt v p = []
 splitFn (line: content) codeTxt vList pList
@@ -170,20 +238,6 @@ forFunction run (f : fs) addr val asmT = do
     _-> f : (forFunction run fs addr val asmT)
 
 
-printRP [] = [ "", "--- REGISTER ---", ""]
-printRP (p:ps) =
-  (printRP ps) ++ [(rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") : " ++ getRstate p)]
-  -- (rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") : " ++ getRstate p) : (printRP ps)
-  -- (show (length ps) ++ " > " ++ rname p ++ " ("++ getBase p ++ ", " ++ show (getIndex p) ++ ") " ++ getRstate p) : (printRP ps)
-
-printLV [] = [ "", "--- VARIABLE ---", ""]
-printLV (p:ps) =
-  (printLV ps) ++ [(variable p ++ " ("++ getType p ++ ") : " ++ getState p)]
-  -- (variable p ++ " ("++ getType p ++ ") : " ++ getState p) : (printLV ps)
-  --(show (length ps) ++ " > " ++ variable p ++ " ("++ getType p ++ ", " ++ show (getInstr p) ++ ") " ++ getState p) : (printLV ps)
-
-printPair [] = []
-printPair ((a, b):xs) = (a ++ " -> " ++ b) : (printPair xs)
 
 
 {-************************************************************************

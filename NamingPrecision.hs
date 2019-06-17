@@ -21,12 +21,14 @@ import OtherFunction
 import RegexFunction
 import Lists
 
-variableName :: [String] -> [(String, String)] -> [LeftVar] -> [String] -> Integer -> ( [String], ([LeftVar], [(String, String)]) )
-variableName [] nameList vList content count = trace("\nDetected Variables: " ++ show count) (content, (vList, nameList))
-variableName (line : next) nameList vList content count
-  | (isFunction line || isFunctionEnd line || isBlockLabel line || isBasicBlock line || isEntryExit line) =
-    variableName next nameList vList (content ++ [line]) count
+{-
+  INPUT: Function content content Table counter-}
+variableName :: Function -> [String] -> [String] -> [(String, String)] -> Integer -> (Function, [(String, String)])
+variableName f [] newCode nameList count = trace("\nDetected Variables: " ++ show count) ( f{code = newCode} , nameList)
+variableName f (line : next) oldTxt nameList count
+  | (isBlockLabel line || isBasicBlock line || isEntryExit line) = variableName f next (oldTxt ++ [line]) nameList count
   | (isPrefixOf "store" line && (not $ or $ map (`elem` reg_base) (words line)) && (not $ hasInitialPointer line)) = do
+    --trace("ST: " ++line ++ (bool "\tFalse " "\tTrue " (isPrefixOf "store" line))++ (bool "False " "True " (not $ or $ map (`elem` reg_base) (words line)))++ (bool "False" "True" (not $ hasInitialPointer line)))
     let s = storeStatement line
         (vtype, v, addr) = (ty s, value s, at s)
         str = lookup addr nameList
@@ -45,15 +47,19 @@ variableName (line : next) nameList vList content count
         v' = LeftVar vname vtype "alloca" state
         newState = vname ++ " = " ++ state
 
+    let vList = variables f
+        newList = v' : vList
     if (isNothing str)
-      then variableName next (pair : nameList) (v' : vList)  ((head content : newState : tail content) ++ [line]) (count + 1)
-      else variableName next nameList vList (content ++ [line]) count
+      then variableName (f{ variables = newList }) next ((head oldTxt : newState : tail oldTxt) ++ [line]) (pair : nameList) (count + 1)
+      --trace("   YES " ++ "("++addr++", " ++ vname++")" )
+      else variableName f next (oldTxt ++ [line]) nameList count --trace("   NO " ++ "("++addr++", " ++ fromJust str++")" )
 
-  | otherwise = variableName next nameList vList (content ++ [line]) count
+  | otherwise =  variableName f next (oldTxt ++ [line]) nameList count
 
-propagateName :: [String] -> [(String, String)] -> [String]
-propagateName content [] = content
-propagateName content ((location, str) : nameList) = trace(" - " ++ str ++ " <- " ++ location)propagateName (replace' location str content) nameList --
+propagateName :: Function -> [(String, String)] -> Function
+propagateName f [] = f
+propagateName f ((location, str) : nameList) = trace(" - " ++ str ++ " <- " ++ location) propagateName (f{ code = content }) nameList
+  where content = replace' location str (code f)
 
 functionName :: [String] -> [(String, String)] -> [String]
 functionName content [] = content
