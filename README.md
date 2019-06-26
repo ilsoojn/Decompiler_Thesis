@@ -48,4 +48,5 @@ Options:
 
 [Dagger](https://github.com/repzret/dagger) - Binary transformation framework
 
-[LLVM](http://llvm.org/docs) - IR
+[LLVM](http://llvm.org/docs) - Intermediate Representation
+
