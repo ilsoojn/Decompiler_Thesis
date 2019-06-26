@@ -44,7 +44,8 @@ Options:
 
 ## Built with
 
-'objdump' and 'disassemble' Linux command lines
+'objdump' from Linux command line - Disassembling
 
 [Dagger](https://github.com/repzret/dagger) - Binary transformation framework
 
+[LLVM](http://llvm.org/docs) - IR
