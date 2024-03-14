@@ -49,5 +49,3 @@ Options:
 [Dagger](https://github.com/repzret/dagger) - Binary transformation framework
 
 [LLVM](http://llvm.org/docs) - Intermediate Representation
-
-#### [The project is originally from the Bitbucket]
